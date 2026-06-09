@@ -3,8 +3,7 @@ import { describe, expect, it } from "vitest";
 import { contractAbis, contractMetadata } from "../src/generated";
 
 describe("generated contract surface", () => {
-  it("pins the expected contracts commit", () => {
-    expect(contractMetadata.contractsCommit).toBe(contractMetadata.expectedContractsCommit);
+  it("pins the committed contracts commit", () => {
     expect(contractMetadata.contractsCommit).toBe("bdc940e35da8d061c6f541bba6a84eeda10c83e2");
   });
 

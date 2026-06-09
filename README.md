@@ -3,8 +3,7 @@
 Viem-first TypeScript SDK for the current Kuru spot/account/intent contracts.
 
 This package is intentionally private while the public npm package name is finalized. The
-generated contract surface is pinned to the contract checkout commit recorded in
-`src/generated/metadata.ts`.
+contract ABI surface is committed in `src/generated`.
 
 ## Quick Start
 
@@ -34,10 +33,5 @@ const balance = await kuru.account.getBalance({
 
 ## Contract Artifacts
 
-The SDK is self-contained for consumers and normal contributors: committed ABIs live in
-`src/generated/abis.ts` and are used by the runtime, tests, and build. You do not need a local
-`kuru-contracts-perps` checkout to install, typecheck, test, or build the SDK from GitHub.
-
-`pnpm abi:generate` is a maintainer workflow for refreshing committed ABIs. It reads Foundry artifacts
-from `../kuru-contracts-perps/out` by default. Override with
-`KURU_CONTRACTS_DIR=/path/to/contracts` when needed.
+The SDK is self-contained. Committed ABIs live in `src/generated/abis.ts` and are used by the
+runtime, tests, and build. A GitHub checkout does not need any sibling contracts repository.
