@@ -63,14 +63,15 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm generate && tsup",
+    "build": "tsup",
     "clean": "rimraf dist coverage",
     "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/intent/index.ts src/events/index.ts",
     "format": "prettier --write .",
     "generate": "node scripts/generate-contracts.mjs",
+    "abi:generate": "pnpm generate",
     "lint": "eslint .",
-    "test": "pnpm generate && vitest run",
-    "typecheck": "pnpm generate && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-test.json --noEmit"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-test.json --noEmit"
   },
   "dependencies": {
     "viem": "^2.0.0"

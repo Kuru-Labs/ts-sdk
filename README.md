@@ -10,7 +10,6 @@ generated contract surface is pinned to the contract checkout commit recorded in
 
 ```bash
 pnpm install
-pnpm generate
 pnpm typecheck
 pnpm test
 pnpm build
@@ -35,5 +34,10 @@ const balance = await kuru.account.getBalance({
 
 ## Contract Artifacts
 
-`pnpm generate` reads Foundry artifacts from `../kuru-contracts-perps/out` by default. Override
-with `KURU_CONTRACTS_DIR=/path/to/contracts` when needed.
+The SDK is self-contained for consumers and normal contributors: committed ABIs live in
+`src/generated/abis.ts` and are used by the runtime, tests, and build. You do not need a local
+`kuru-contracts-perps` checkout to install, typecheck, test, or build the SDK from GitHub.
+
+`pnpm abi:generate` is a maintainer workflow for refreshing committed ABIs. It reads Foundry artifacts
+from `../kuru-contracts-perps/out` by default. Override with
+`KURU_CONTRACTS_DIR=/path/to/contracts` when needed.
