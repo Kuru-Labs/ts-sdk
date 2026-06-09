@@ -1,0 +1,90 @@
+{
+  "name": "@kuru-labs/ts-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Viem-first TypeScript SDK for Kuru contracts.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@10.19.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./abi": {
+      "types": "./dist/abi/index.d.ts",
+      "import": "./dist/abi/index.js",
+      "require": "./dist/abi/index.cjs"
+    },
+    "./generated": {
+      "types": "./dist/generated/index.d.ts",
+      "import": "./dist/generated/index.js",
+      "require": "./dist/generated/index.cjs"
+    },
+    "./account": {
+      "types": "./dist/account/index.d.ts",
+      "import": "./dist/account/index.js",
+      "require": "./dist/account/index.cjs"
+    },
+    "./spot": {
+      "types": "./dist/spot/index.d.ts",
+      "import": "./dist/spot/index.js",
+      "require": "./dist/spot/index.cjs"
+    },
+    "./intent": {
+      "types": "./dist/intent/index.d.ts",
+      "import": "./dist/intent/index.js",
+      "require": "./dist/intent/index.cjs"
+    },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "import": "./dist/events/index.js",
+      "require": "./dist/events/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "import": "./dist/errors/index.js",
+      "require": "./dist/errors/index.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm generate && tsup",
+    "clean": "rimraf dist coverage",
+    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/intent/index.ts src/events/index.ts",
+    "format": "prettier --write .",
+    "generate": "node scripts/generate-contracts.mjs",
+    "lint": "eslint .",
+    "test": "pnpm generate && vitest run",
+    "typecheck": "pnpm generate && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-test.json --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^6.0.0",
+    "tsup": "^8.0.0",
+    "typedoc": "^0.28.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.0.0"
+  }
+}
