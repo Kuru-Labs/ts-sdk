@@ -31,10 +31,7 @@ const nativeOrderArrayAbiParameter = {
 
 const cancelSlotIdxsAbiParameter = { type: "uint8[]" } as const;
 
-export function intentExecutorDomain(
-  intentExecutor: Address,
-  chainId: number
-): TypedDataDomain {
+export function intentExecutorDomain(intentExecutor: Address, chainId: number): TypedDataDomain {
   return {
     name: "KuruIntentExecutor",
     version: "1",
@@ -48,11 +45,12 @@ export function normalizeIntentHeader(header: IntentHeaderInput): IntentHeader {
     accountId: header.accountId,
     market: header.market,
     signer: header.signer,
+    authNonce: header.authNonce,
     nonce: header.nonce,
     deadline: header.deadline,
     clientOrderId: normalizeClientOrderId(header.clientOrderId),
     builder: header.builderConfig?.builder ?? zeroAddress,
-    builderFeeBps: header.builderConfig?.feeBps ?? 0
+    builderFeePps: header.builderConfig?.feePps ?? 0
   };
 }
 
@@ -70,16 +68,21 @@ export function hashCancelSlotIdxs(cancelSlotIdxs: readonly number[] = []): Hex 
   return keccak256(encodeAbiParameters([cancelSlotIdxsAbiParameter], [[...cancelSlotIdxs]]));
 }
 
+export function hashExpectedOrderIds(expectedOrderIds: readonly bigint[] = []): Hex {
+  return keccak256(encodeAbiParameters([{ type: "uint64[]" }], [[...expectedOrderIds]]));
+}
+
 function intentBaseMessage(header: IntentHeader) {
   return {
     accountId: header.accountId,
     market: header.market,
     signer: header.signer,
+    authNonce: header.authNonce,
     nonce: header.nonce,
     deadline: header.deadline,
     clientOrderId: header.clientOrderId,
     builder: header.builder,
-    builderFeeBps: header.builderFeeBps
+    builderFeePps: header.builderFeePps
   };
 }
 
@@ -93,17 +96,20 @@ export function buildReplaceBySlotIntentTypedData(params: ReplaceBySlotIntentTyp
         { name: "accountId", type: "uint40" },
         { name: "market", type: "address" },
         { name: "signer", type: "address" },
+        { name: "authNonce", type: "uint256" },
         { name: "nonce", type: "uint64" },
         { name: "deadline", type: "uint64" },
         { name: "clientOrderId", type: "bytes32" },
         { name: "builder", type: "address" },
-        { name: "builderFeeBps", type: "uint16" },
-        { name: "packedOpsHash", type: "bytes32" }
+        { name: "builderFeePps", type: "uint32" },
+        { name: "packedOpsHash", type: "bytes32" },
+        { name: "expectedOrderIdsHash", type: "bytes32" }
       ]
     },
     message: {
       ...intentBaseMessage(header),
-      packedOpsHash: hashPackedOps(params.packedOps)
+      packedOpsHash: hashPackedOps(params.packedOps),
+      expectedOrderIdsHash: hashExpectedOrderIds(params.expectedOrderIds)
     }
   } as const;
 }
@@ -118,19 +124,22 @@ export function buildBatchIntentTypedData(params: BatchIntentTypedDataParams) {
         { name: "accountId", type: "uint40" },
         { name: "market", type: "address" },
         { name: "signer", type: "address" },
+        { name: "authNonce", type: "uint256" },
         { name: "nonce", type: "uint64" },
         { name: "deadline", type: "uint64" },
         { name: "clientOrderId", type: "bytes32" },
         { name: "builder", type: "address" },
-        { name: "builderFeeBps", type: "uint16" },
+        { name: "builderFeePps", type: "uint32" },
         { name: "ordersHash", type: "bytes32" },
-        { name: "cancelSlotIdxsHash", type: "bytes32" }
+        { name: "cancelSlotIdxsHash", type: "bytes32" },
+        { name: "expectedOrderIdsHash", type: "bytes32" }
       ]
     },
     message: {
       ...intentBaseMessage(header),
       ordersHash: hashNativeOrders(params.orders),
-      cancelSlotIdxsHash: hashCancelSlotIdxs(params.cancelSlotIdxs)
+      cancelSlotIdxsHash: hashCancelSlotIdxs(params.cancelSlotIdxs),
+      expectedOrderIdsHash: hashExpectedOrderIds(params.expectedOrderIds)
     }
   } as const;
 }

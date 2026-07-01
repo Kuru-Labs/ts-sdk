@@ -6,6 +6,7 @@ import {
   buildReplaceBySlotIntentTypedData,
   encodePackedCancelOp,
   hashCancelSlotIdxs,
+  hashExpectedOrderIds,
   hashNativeOrders,
   normalizeNativeOrders
 } from "../src";
@@ -24,10 +25,12 @@ describe("intent typed data", () => {
         accountId: 1n,
         market,
         signer,
+        authNonce: 7n,
         nonce: 1000n,
         deadline: 2000n
       },
-      packedOps
+      packedOps,
+      expectedOrderIds: [123n]
     });
 
     expect(typedData.domain).toEqual({
@@ -37,8 +40,10 @@ describe("intent typed data", () => {
       verifyingContract: intentExecutor
     });
     expect(typedData.message.builder).toBe(zeroAddress);
-    expect(typedData.message.builderFeeBps).toBe(0);
+    expect(typedData.message.authNonce).toBe(7n);
+    expect(typedData.message.builderFeePps).toBe(0);
     expect(typedData.message.packedOpsHash).toBe(keccak256(packedOps));
+    expect(typedData.message.expectedOrderIdsHash).toBe(hashExpectedOrderIds([123n]));
   });
 
   it("hashes batch intent arrays like abi.encode", () => {
@@ -84,15 +89,18 @@ describe("intent typed data", () => {
         accountId: 1n,
         market,
         signer,
+        authNonce: 7n,
         nonce: 1000n,
         deadline: 2000n
       },
       orders,
-      cancelSlotIdxs: [1, 2]
+      cancelSlotIdxs: [1, 2],
+      expectedOrderIds: [11n, 22n]
     });
 
     expect(typedData.primaryType).toBe("BatchIntent");
     expect(typedData.message.ordersHash).toBe(hashNativeOrders(orders));
     expect(typedData.message.cancelSlotIdxsHash).toBe(hashCancelSlotIdxs([1, 2]));
+    expect(typedData.message.expectedOrderIdsHash).toBe(hashExpectedOrderIds([11n, 22n]));
   });
 });

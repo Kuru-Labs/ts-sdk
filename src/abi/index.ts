@@ -4,6 +4,7 @@ export {
   erc20MetadataAbi,
   kuruErrorAbi,
   kuruIntentExecutorAbi,
+  orderBookAbi,
   spotEngineAbi,
   spotOrderBookAbi,
   spotPeripheryAbi,

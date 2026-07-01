@@ -174,33 +174,62 @@ export function buildSwapRequest(params: SwapParams): KuruContractRequest<typeof
     params.isBuy,
     params.amountIn,
     params.minAmountOut,
-    params.limitPrice,
     params.deadline
   ] as const;
 
   if (params.builderConfig) {
-    return spotRequest(params.market, "swap", [...args, params.builderConfig]);
+    return spotRequest(
+      params.market,
+      "swap",
+      [...args, params.builderConfig],
+      spotOverloadAbi("swap", ["uint40", "bool", "uint128", "uint128", "uint64", "tuple"])
+    );
   }
 
-  return spotRequest(params.market, "swap", args);
+  return spotRequest(
+    params.market,
+    "swap",
+    args,
+    spotOverloadAbi("swap", ["uint40", "bool", "uint128", "uint128", "uint64"])
+  );
 }
 
 export function buildEstimateSwapRequest(
   params: EstimateSwapParams
 ): KuruContractRequest<typeof spotOrderBookAbi> {
-  if (params.builderFeeBps !== undefined) {
-    return spotRequest(params.market, "estimateSwap", [
-      params.isBuy,
-      params.amountIn,
-      params.limitPrice,
-      params.builderFeeBps
-    ]);
+  if (params.userId !== undefined && params.builderFeePps !== undefined) {
+    return spotRequest(
+      params.market,
+      "estimateSwap",
+      [params.userId, params.isBuy, params.amountIn, params.builderFeePps],
+      spotOverloadAbi("estimateSwap", ["uint40", "bool", "uint128", "uint32"])
+    );
   }
-  return spotRequest(params.market, "estimateSwap", [
-    params.isBuy,
-    params.amountIn,
-    params.limitPrice
-  ]);
+
+  if (params.userId !== undefined) {
+    return spotRequest(
+      params.market,
+      "estimateSwap",
+      [params.userId, params.isBuy, params.amountIn],
+      spotOverloadAbi("estimateSwap", ["uint40", "bool", "uint128"])
+    );
+  }
+
+  if (params.builderFeePps !== undefined) {
+    return spotRequest(
+      params.market,
+      "estimateSwap",
+      [params.isBuy, params.amountIn, params.builderFeePps],
+      spotOverloadAbi("estimateSwap", ["bool", "uint128", "uint32"])
+    );
+  }
+
+  return spotRequest(
+    params.market,
+    "estimateSwap",
+    [params.isBuy, params.amountIn],
+    spotOverloadAbi("estimateSwap", ["bool", "uint128"])
+  );
 }
 
 export function buildMintPassiveLiquidityRequest(

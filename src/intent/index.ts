@@ -5,6 +5,7 @@ export {
   buildDefaultIntentHeader,
   buildReplaceBySlotIntentTypedData,
   hashCancelSlotIdxs,
+  hashExpectedOrderIds,
   hashNativeOrders,
   hashPackedOps,
   intentExecutorDomain,

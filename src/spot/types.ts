@@ -60,7 +60,8 @@ export interface BatchParams extends UserMarketParams, ClientOrderOptions, Write
   builderConfig?: BuilderConfig;
 }
 
-export interface ReplaceBySlotPackedParams extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface ReplaceBySlotPackedParams
+  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
   packedOps: Hex;
   builderConfig?: BuilderConfig;
 }
@@ -78,19 +79,19 @@ export interface SwapParams extends UserMarketParams, WriteOverrides {
   isBuy: boolean;
   amountIn: bigint;
   minAmountOut: bigint;
-  limitPrice: bigint;
   deadline: bigint;
   builderConfig?: BuilderConfig;
 }
 
 export interface EstimateSwapParams extends MarketAddressParam {
+  userId?: bigint;
   isBuy: boolean;
   amountIn: bigint;
-  limitPrice: bigint;
-  builderFeeBps?: number;
+  builderFeePps?: number;
 }
 
-export interface MintPassiveLiquidityParams extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface MintPassiveLiquidityParams
+  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
   lowPrice: bigint;
   baseAmount: bigint;
   quoteAmount: bigint;
@@ -106,18 +107,18 @@ export interface PassiveMintInput {
 }
 
 export interface BatchMintPassiveLiquidityParams
-  extends UserMarketParams,
-    ClientOrderOptions,
-    WriteOverrides {
+  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
   mints: readonly PassiveMintInput[];
   deadline: bigint;
 }
 
-export interface BurnPassiveLiquidityParams extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface BurnPassiveLiquidityParams
+  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
   positionId: bigint;
   sharesToBurn: bigint;
 }
 
-export interface ClaimPassiveFeesParams extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface ClaimPassiveFeesParams
+  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
   positionId: bigint;
 }

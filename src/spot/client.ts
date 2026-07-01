@@ -94,9 +94,9 @@ export function createSpotClient(config: KuruClientConfig) {
     cancelBySlots: (
       params: UserMarketParams &
         WriteOverrides & {
-        cancelSlotIdxs: readonly number[];
-        clientOrderId?: `0x${string}`;
-      }
+          cancelSlotIdxs: readonly number[];
+          clientOrderId?: `0x${string}`;
+        }
     ) =>
       executeWrite({
         config,
@@ -112,9 +112,9 @@ export function createSpotClient(config: KuruClientConfig) {
     protocolCancelBySlots: (
       params: UserMarketParams &
         WriteOverrides & {
-        slotIdxs: readonly number[];
-        clientOrderId?: `0x${string}`;
-      }
+          slotIdxs: readonly number[];
+          clientOrderId?: `0x${string}`;
+        }
     ) =>
       executeWrite({
         config,

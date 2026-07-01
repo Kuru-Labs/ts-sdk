@@ -15,3 +15,7 @@ be added without reshaping the spot API.
 
 The SDK does not fetch or generate ABIs at install, test, typecheck, or build time. Consumers cloning
 the SDK from GitHub use the committed `src/generated` files.
+
+The committed contracts metadata pins the ABI source commit. When contracts main changes, refresh
+`src/generated`, then update pure request builders and typed-data helpers to match the new ABI
+signatures before shipping the SDK.

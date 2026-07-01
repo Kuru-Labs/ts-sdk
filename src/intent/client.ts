@@ -19,19 +19,25 @@ export function createIntentClient(config: KuruClientConfig) {
     normalizeIntentHeader,
     buildBatchIntentTypedData,
     buildReplaceBySlotIntentTypedData,
-    buildExecuteBatchRequest: (params: Omit<ExecuteBatchParams, "intentExecutor"> & { intentExecutor?: Address }) =>
+    buildExecuteBatchRequest: (
+      params: Omit<ExecuteBatchParams, "intentExecutor"> & { intentExecutor?: Address }
+    ) =>
       buildExecuteBatchRequest({
         ...params,
         intentExecutor: resolveIntentExecutor(config, params.intentExecutor)
       }),
     buildExecuteReplaceBySlotPackedRequest: (
-      params: Omit<ExecuteReplaceBySlotPackedParams, "intentExecutor"> & { intentExecutor?: Address }
+      params: Omit<ExecuteReplaceBySlotPackedParams, "intentExecutor"> & {
+        intentExecutor?: Address;
+      }
     ) =>
       buildExecuteReplaceBySlotPackedRequest({
         ...params,
         intentExecutor: resolveIntentExecutor(config, params.intentExecutor)
       }),
-    executeBatch: (params: Omit<ExecuteBatchParams, "intentExecutor"> & { intentExecutor?: Address }) =>
+    executeBatch: (
+      params: Omit<ExecuteBatchParams, "intentExecutor"> & { intentExecutor?: Address }
+    ) =>
       executeWrite({
         config,
         request: buildExecuteBatchRequest({
@@ -41,7 +47,9 @@ export function createIntentClient(config: KuruClientConfig) {
         overrides: params
       }),
     executeReplaceBySlotPacked: (
-      params: Omit<ExecuteReplaceBySlotPackedParams, "intentExecutor"> & { intentExecutor?: Address }
+      params: Omit<ExecuteReplaceBySlotPackedParams, "intentExecutor"> & {
+        intentExecutor?: Address;
+      }
     ) =>
       executeWrite({
         config,

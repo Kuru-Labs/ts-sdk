@@ -7,6 +7,7 @@ export interface IntentHeaderInput {
   accountId: bigint;
   market: Address;
   signer: Address;
+  authNonce: bigint;
   nonce: bigint;
   deadline: bigint;
   clientOrderId?: Hex;
@@ -17,11 +18,12 @@ export interface IntentHeader {
   accountId: bigint;
   market: Address;
   signer: Address;
+  authNonce: bigint;
   nonce: bigint;
   deadline: bigint;
   clientOrderId: Hex;
   builder: Address;
-  builderFeeBps: number;
+  builderFeePps: number;
 }
 
 export interface IntentDomainParams {
@@ -32,18 +34,21 @@ export interface IntentDomainParams {
 export interface ReplaceBySlotIntentTypedDataParams extends IntentDomainParams {
   header: IntentHeaderInput;
   packedOps: Hex;
+  expectedOrderIds?: readonly bigint[];
 }
 
 export interface BatchIntentTypedDataParams extends IntentDomainParams {
   header: IntentHeaderInput;
   orders: readonly NativeOrderInput[];
   cancelSlotIdxs?: readonly number[];
+  expectedOrderIds?: readonly bigint[];
 }
 
 export interface ExecuteReplaceBySlotPackedParams extends WriteOverrides {
   intentExecutor: Address;
   header: IntentHeaderInput;
   packedOps: Hex;
+  expectedOrderIds?: readonly bigint[];
   signature: Hex;
 }
 
@@ -52,5 +57,6 @@ export interface ExecuteBatchParams extends WriteOverrides {
   header: IntentHeaderInput;
   orders: readonly NativeOrderInput[];
   cancelSlotIdxs?: readonly number[];
+  expectedOrderIds?: readonly bigint[];
   signature: Hex;
 }

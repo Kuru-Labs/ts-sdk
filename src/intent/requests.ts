@@ -11,7 +11,12 @@ export function buildExecuteReplaceBySlotPackedRequest(
     address: params.intentExecutor,
     abi: kuruIntentExecutorAbi,
     functionName: "executeReplaceBySlotPacked",
-    args: [normalizeIntentHeader(params.header), params.packedOps, params.signature]
+    args: [
+      normalizeIntentHeader(params.header),
+      params.packedOps,
+      [...(params.expectedOrderIds ?? [])],
+      params.signature
+    ]
   };
 }
 
@@ -26,6 +31,7 @@ export function buildExecuteBatchRequest(
       normalizeIntentHeader(params.header),
       normalizeNativeOrders(params.orders),
       [...(params.cancelSlotIdxs ?? [])],
+      [...(params.expectedOrderIds ?? [])],
       params.signature
     ]
   };

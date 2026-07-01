@@ -27,7 +27,7 @@ export interface WriteOverrides {
 
 export interface BuilderConfig {
   builder: Address;
-  feeBps: number;
+  feePps: number;
 }
 
 export interface ClientOrderOptions {

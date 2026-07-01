@@ -1,34 +1,34 @@
 // Committed Kuru contract ABI metadata used by the SDK runtime.
 export const contractMetadata = {
-  contractsCommit: "bdc940e35da8d061c6f541bba6a84eeda10c83e2",
+  contractsCommit: "393d122c40c70372373448a42612183d98fc3b34",
   artifacts: {
     AccountCore: {
       artifact: "AccountCore.sol/AccountCore.json",
-      abiSha256: "9fba053168ef1d2b475dda32e69a1b017da0a96b2b75813c562278ac0970a2df"
+      abiSha256: "89cacbb3428b07aee08af80abe39ca20eff5b9b06aba5adc501a9c9d15d0fd0b"
     },
     SpotRouter: {
       artifact: "SpotRouter.sol/SpotRouter.json",
-      abiSha256: "8bb67e47217f9a59951ea7b01d2cc96f041bc2bd6bdbfa1d96763247d5a8e5bd"
+      abiSha256: "ba597239ac3b705700d4a1458f1660de40a64adf6f6281ea6b28f9d735f6aac0"
     },
     SpotEngine: {
       artifact: "SpotEngine.sol/SpotEngine.json",
-      abiSha256: "15e70649c314139462c992387613765bd85a1a13a1858f61f6a523e37fcc0e52"
+      abiSha256: "8cbf949d2f297724bad1263f70b1ffaeb658f464d831fb886ad0193037b3de5f"
     },
-    SpotOrderBook: {
-      artifact: "SpotOrderBook.sol/SpotOrderBook.json",
-      abiSha256: "50cc2d5cb7a46b74184045aa93bdfa7e142f65676fe4b6d203b391fba5dc247b"
+    OrderBook: {
+      artifact: "OrderBook.sol/OrderBook.json",
+      abiSha256: "5ef354211494b9db66230dfe8e3ddbfe7ee5189a0bbc565588fa73fec5d7def0"
     },
     SpotPeriphery: {
       artifact: "SpotPeriphery.sol/SpotPeriphery.json",
-      abiSha256: "5f498baa37cc03ab5bc52d0df31d527f70c49313e2052035bd98d7310583b119"
+      abiSha256: "8505083188e43737b3da5d5c280f8940d0bfd5be4acb9be07103fa13f9f1be2a"
     },
     KuruIntentExecutor: {
       artifact: "KuruIntentExecutor.sol/KuruIntentExecutor.json",
-      abiSha256: "d6726117c95146d0fde1f6cf944267d32ed3e0acf5399574010424e3d93ed31a"
+      abiSha256: "5eece9b0ceacaf0f3f535eb9f93b6861c8526c97c38a77621401a60e0708cc07"
     },
     IERC20Metadata: {
       artifact: "IERC20Metadata.sol/IERC20Metadata.json",
-      abiSha256: "85aff0a108c011b2967a7f5703e1d3e69e4fd3040c00b78a90535fef708f198b"
+      abiSha256: "ebd8c069b13444f2b42ed48f6ffde97963423dc8e7591ac55276f53e04a609eb"
     }
   }
 } as const;

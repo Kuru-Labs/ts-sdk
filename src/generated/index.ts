@@ -3,6 +3,7 @@ export {
   accountCoreAbi,
   spotRouterAbi,
   spotEngineAbi,
+  orderBookAbi,
   spotOrderBookAbi,
   spotPeripheryAbi,
   kuruIntentExecutorAbi,
