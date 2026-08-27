@@ -2,7 +2,6 @@ import type { Address } from "viem";
 
 import { spotOrderBookAbi } from "../generated";
 import type { KuruContractRequest } from "../utils";
-import { normalizeClientOrderId } from "../utils";
 import { normalizeNativeOrders } from "./orders";
 import type {
   BatchMintPassiveLiquidityParams,
@@ -235,28 +234,37 @@ export function buildEstimateSwapRequest(
 export function buildMintPassiveLiquidityRequest(
   params: MintPassiveLiquidityParams
 ): KuruContractRequest<typeof spotOrderBookAbi> {
-  const clientOrderId = normalizeClientOrderId(params.clientOrderId);
   const hasSlippage = params.minSharesOut !== undefined || params.deadline !== undefined;
 
   if (hasSlippage) {
-    return spotRequest(params.market, "mintPassiveLiquidity", [
-      params.userId,
-      params.lowPrice,
-      params.baseAmount,
-      params.quoteAmount,
-      params.minSharesOut ?? 0n,
-      params.deadline ?? 0n,
-      clientOrderId
-    ]);
+    return spotRequest(
+      params.market,
+      "mintPassiveLiquidity",
+      [
+        params.userId,
+        params.lowPrice,
+        params.baseAmount,
+        params.quoteAmount,
+        params.minSharesOut ?? 0n,
+        params.deadline ?? 0n
+      ],
+      spotOverloadAbi("mintPassiveLiquidity", [
+        "uint40",
+        "uint32",
+        "uint128",
+        "uint128",
+        "uint128",
+        "uint64"
+      ])
+    );
   }
 
-  return spotRequest(params.market, "mintPassiveLiquidity", [
-    params.userId,
-    params.lowPrice,
-    params.baseAmount,
-    params.quoteAmount,
-    clientOrderId
-  ]);
+  return spotRequest(
+    params.market,
+    "mintPassiveLiquidity",
+    [params.userId, params.lowPrice, params.baseAmount, params.quoteAmount],
+    spotOverloadAbi("mintPassiveLiquidity", ["uint40", "uint32", "uint128", "uint128"])
+  );
 }
 
 export function buildBatchMintPassiveLiquidityRequest(
@@ -265,8 +273,7 @@ export function buildBatchMintPassiveLiquidityRequest(
   return spotRequest(params.market, "batchMintPassiveLiquidity", [
     params.userId,
     params.mints.map((mint) => ({ ...mint })),
-    params.deadline,
-    normalizeClientOrderId(params.clientOrderId)
+    params.deadline
   ]);
 }
 
@@ -276,17 +283,12 @@ export function buildBurnPassiveLiquidityRequest(
   return spotRequest(params.market, "burnPassiveLiquidity", [
     params.userId,
     params.positionId,
-    params.sharesToBurn,
-    normalizeClientOrderId(params.clientOrderId)
+    params.sharesToBurn
   ]);
 }
 
 export function buildClaimPassiveFeesRequest(
   params: ClaimPassiveFeesParams
 ): KuruContractRequest<typeof spotOrderBookAbi> {
-  return spotRequest(params.market, "claimPassiveFees", [
-    params.userId,
-    params.positionId,
-    normalizeClientOrderId(params.clientOrderId)
-  ]);
+  return spotRequest(params.market, "claimPassiveFees", [params.userId, params.positionId]);
 }

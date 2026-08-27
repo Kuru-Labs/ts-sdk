@@ -90,8 +90,7 @@ export interface EstimateSwapParams extends MarketAddressParam {
   builderFeePps?: number;
 }
 
-export interface MintPassiveLiquidityParams
-  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface MintPassiveLiquidityParams extends UserMarketParams, WriteOverrides {
   lowPrice: bigint;
   baseAmount: bigint;
   quoteAmount: bigint;
@@ -106,19 +105,16 @@ export interface PassiveMintInput {
   minSharesOut: bigint;
 }
 
-export interface BatchMintPassiveLiquidityParams
-  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface BatchMintPassiveLiquidityParams extends UserMarketParams, WriteOverrides {
   mints: readonly PassiveMintInput[];
   deadline: bigint;
 }
 
-export interface BurnPassiveLiquidityParams
-  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface BurnPassiveLiquidityParams extends UserMarketParams, WriteOverrides {
   positionId: bigint;
   sharesToBurn: bigint;
 }
 
-export interface ClaimPassiveFeesParams
-  extends UserMarketParams, ClientOrderOptions, WriteOverrides {
+export interface ClaimPassiveFeesParams extends UserMarketParams, WriteOverrides {
   positionId: bigint;
 }

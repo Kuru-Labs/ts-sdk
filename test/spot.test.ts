@@ -7,6 +7,10 @@ import {
   NativeSide,
   NativeTif,
   buildBatchRequest,
+  buildBatchMintPassiveLiquidityRequest,
+  buildBurnPassiveLiquidityRequest,
+  buildClaimPassiveFeesRequest,
+  buildMintPassiveLiquidityRequest,
   buildReplaceBySlotPackedRequest,
   encodePackedCancelOp,
   encodePackedReplaceOp,
@@ -130,5 +134,57 @@ describe("spot order helpers", () => {
       "bytes32"
     ]);
     expect(() => encodeFunctionData(replace as any)).not.toThrow();
+  });
+
+  it("builds latest passive liquidity calldata", () => {
+    const market = "0x0000000000000000000000000000000000000001";
+
+    const mint = buildMintPassiveLiquidityRequest({
+      market,
+      userId: 4n,
+      lowPrice: 10n,
+      baseAmount: 100n,
+      quoteAmount: 1_000n
+    });
+    expect(mint.args).toHaveLength(4);
+    expect(() => encodeFunctionData(mint as any)).not.toThrow();
+
+    const mintWithSlippage = buildMintPassiveLiquidityRequest({
+      market,
+      userId: 4n,
+      lowPrice: 10n,
+      baseAmount: 100n,
+      quoteAmount: 1_000n,
+      minSharesOut: 90n,
+      deadline: 123n
+    });
+    expect(mintWithSlippage.args).toHaveLength(6);
+    expect(() => encodeFunctionData(mintWithSlippage as any)).not.toThrow();
+
+    const batchMint = buildBatchMintPassiveLiquidityRequest({
+      market,
+      userId: 4n,
+      mints: [{ lowPrice: 10n, baseAmount: 100n, quoteAmount: 1_000n, minSharesOut: 90n }],
+      deadline: 123n
+    });
+    expect(batchMint.args).toHaveLength(3);
+    expect(() => encodeFunctionData(batchMint as any)).not.toThrow();
+
+    const burn = buildBurnPassiveLiquidityRequest({
+      market,
+      userId: 4n,
+      positionId: 1n,
+      sharesToBurn: 50n
+    });
+    expect(burn.args).toHaveLength(3);
+    expect(() => encodeFunctionData(burn as any)).not.toThrow();
+
+    const claim = buildClaimPassiveFeesRequest({
+      market,
+      userId: 4n,
+      positionId: 1n
+    });
+    expect(claim.args).toHaveLength(2);
+    expect(() => encodeFunctionData(claim as any)).not.toThrow();
   });
 });

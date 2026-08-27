@@ -1,0 +1,35 @@
+# Architectural Decisions
+
+## 2026-08-27: SDK Uses Committed Spot/Account ABIs Pinned To Contracts Main
+
+**Status:** accepted
+
+The SDK runtime uses committed ABI files under `src/generated` rather than generating from a sibling
+contracts repo during install, build, typecheck, or test. Each sync pins
+`contractMetadata.contractsCommit` to the exact contracts commit used to produce the ABIs.
+
+This keeps GitHub and npm consumers self-contained and makes contract-surface drift explicit in SDK
+review. The tradeoff is that ABI refreshes are a deliberate SDK maintenance step; local generated
+artifacts in the contracts repo are not a source of truth unless committed into the SDK.
+
+## 2026-08-27: Remove Legacy Intent Executor Surface
+
+**Status:** accepted
+
+The legacy `KuruIntentExecutor` module and `./intent` package subpath are removed from the SDK.
+Current spot relay work is expected to use EIP-7702 delegated trading wallets later, and that flow
+has a different EIP-712 signing domain and trust model from the executor contract.
+
+This is a breaking SDK surface change, but the package is still private and pre-release. Keeping the
+executor helpers would invite frontends to integrate a path the protocol is retiring.
+
+## 2026-08-27: Defer Trading Wallet SDK Module Until Requested
+
+**Status:** accepted
+
+The latest contracts include `KuruTradingWallet`, but this sync does not expose it. The current goal
+is to bring account, spot, periphery, ABIs, and event decoders to latest main while avoiding a
+partially designed Mera/relay API.
+
+The tradeoff is that the generated ABI allowlist intentionally omits a production contract. That
+omission is temporary and should be revisited when the EIP-7702/Mera SDK surface is implemented.

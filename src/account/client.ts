@@ -11,6 +11,8 @@ import {
   buildClaimBuilderFeesRequest,
   buildDepositForAccountRequest,
   buildDepositRequest,
+  buildRevokeAccountSignerBySigRequest,
+  buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
   buildTransferBetweenAccountsRequest,
   buildWithdrawFromAccountRequest,
@@ -27,6 +29,8 @@ import type {
   DepositForAccountParams,
   DepositParams,
   Erc20AddressParams,
+  RevokeAccountSignerBySigParams,
+  RevokeAccountSignerParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams
@@ -197,6 +201,24 @@ export function createAccountClient(config: KuruClientConfig) {
       executeWrite({
         config,
         request: buildAuthorizeAccountSignerBySigRequest({
+          ...params,
+          accountCore: resolveAccountCore(config, params.accountCore)
+        }),
+        overrides: simulateOnly(params)
+      }),
+    revokeAccountSigner: (params: RevokeAccountSignerParams) =>
+      executeWrite({
+        config,
+        request: buildRevokeAccountSignerRequest({
+          ...params,
+          accountCore: resolveAccountCore(config, params.accountCore)
+        }),
+        overrides: simulateOnly(params)
+      }),
+    revokeAccountSignerBySig: (params: RevokeAccountSignerBySigParams) =>
+      executeWrite({
+        config,
+        request: buildRevokeAccountSignerBySigRequest({
           ...params,
           accountCore: resolveAccountCore(config, params.accountCore)
         }),

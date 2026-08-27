@@ -38,11 +38,6 @@
       "import": "./dist/spot/index.js",
       "require": "./dist/spot/index.cjs"
     },
-    "./intent": {
-      "types": "./dist/intent/index.d.ts",
-      "import": "./dist/intent/index.js",
-      "require": "./dist/intent/index.cjs"
-    },
     "./events": {
       "types": "./dist/events/index.d.ts",
       "import": "./dist/events/index.js",
@@ -65,7 +60,7 @@
   "scripts": {
     "build": "tsup",
     "clean": "rimraf dist coverage",
-    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/intent/index.ts src/events/index.ts",
+    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/events/index.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run",

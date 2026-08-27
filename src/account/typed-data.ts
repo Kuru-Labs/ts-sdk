@@ -4,9 +4,20 @@ export interface AuthorizeAccountSignerTypedDataParams {
   accountCore: Address;
   chainId: number;
   account: Address;
+  authorizer: Address;
   signer: Address;
   permissions: number;
   expiry: bigint;
+  nonce: bigint;
+  deadline: bigint;
+}
+
+export interface RevokeAccountSignerTypedDataParams {
+  accountCore: Address;
+  chainId: number;
+  account: Address;
+  authorizer: Address;
+  signer: Address;
   nonce: bigint;
   deadline: bigint;
 }
@@ -29,13 +40,16 @@ export function accountCoreDomain(accountCore: Address, chainId: number): TypedD
   };
 }
 
-export function buildAuthorizeAccountSignerTypedData(params: AuthorizeAccountSignerTypedDataParams) {
+export function buildAuthorizeAccountSignerTypedData(
+  params: AuthorizeAccountSignerTypedDataParams
+) {
   return {
     domain: accountCoreDomain(params.accountCore, params.chainId),
     primaryType: "AuthorizeAccountSigner",
     types: {
       AuthorizeAccountSigner: [
         { name: "account", type: "address" },
+        { name: "authorizer", type: "address" },
         { name: "signer", type: "address" },
         { name: "permissions", type: "uint32" },
         { name: "expiry", type: "uint64" },
@@ -45,9 +59,33 @@ export function buildAuthorizeAccountSignerTypedData(params: AuthorizeAccountSig
     },
     message: {
       account: params.account,
+      authorizer: params.authorizer,
       signer: params.signer,
       permissions: params.permissions,
       expiry: params.expiry,
+      nonce: params.nonce,
+      deadline: params.deadline
+    }
+  } as const;
+}
+
+export function buildRevokeAccountSignerTypedData(params: RevokeAccountSignerTypedDataParams) {
+  return {
+    domain: accountCoreDomain(params.accountCore, params.chainId),
+    primaryType: "RevokeAccountSigner",
+    types: {
+      RevokeAccountSigner: [
+        { name: "account", type: "address" },
+        { name: "authorizer", type: "address" },
+        { name: "signer", type: "address" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" }
+      ]
+    },
+    message: {
+      account: params.account,
+      authorizer: params.authorizer,
+      signer: params.signer,
       nonce: params.nonce,
       deadline: params.deadline
     }

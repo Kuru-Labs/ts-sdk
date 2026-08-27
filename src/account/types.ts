@@ -44,6 +44,7 @@ export interface AuthorizeAccountSignerParams extends AccountCoreOverride, Write
 }
 
 export interface AuthorizeAccountSignerBySigParams extends AuthorizeAccountSignerParams {
+  authorizer: Address;
   nonce: bigint;
   deadline: bigint;
   signature: Hex;
@@ -51,8 +52,20 @@ export interface AuthorizeAccountSignerBySigParams extends AuthorizeAccountSigne
 
 export interface BuilderApprovalParams extends AccountCoreOverride, WriteOverrides {
   builder: Address;
-  maxFeeBps: number;
+  maxFeePps: number;
   expiry: bigint;
+}
+
+export interface RevokeAccountSignerParams extends AccountCoreOverride, WriteOverrides {
+  account: Address;
+  signer: Address;
+}
+
+export interface RevokeAccountSignerBySigParams extends RevokeAccountSignerParams {
+  authorizer: Address;
+  nonce: bigint;
+  deadline: bigint;
+  signature: Hex;
 }
 
 export interface BuilderAddressParams extends AccountCoreOverride, WriteOverrides {

@@ -1,10 +1,13 @@
-import { zeroAddress } from "viem";
+import { encodeFunctionData, zeroAddress } from "viem";
 import { describe, expect, it, vi } from "vitest";
 
 import { NATIVE_TOKEN_ADDRESS } from "../src/constants";
 import {
   AccountPermission,
+  buildApproveBuilderRequest,
+  buildAuthorizeAccountSignerBySigRequest,
   buildDepositRequest,
+  buildRevokeAccountSignerBySigRequest,
   clientOrderIdFromString,
   createKuruClient,
   deadlineSeconds
@@ -39,6 +42,50 @@ describe("account helpers", () => {
   it("builds deterministic client order ids and relative deadlines", () => {
     expect(clientOrderIdFromString("kuru-test")).toMatch(/^0x[0-9a-f]{64}$/u);
     expect(deadlineSeconds(60n)).toBeGreaterThan(BigInt(Math.floor(Date.now() / 1000)));
+  });
+
+  it("builds latest account signer by-sig calldata", () => {
+    const request = buildAuthorizeAccountSignerBySigRequest({
+      accountCore,
+      account: "0x00000000000000000000000000000000000000aa",
+      authorizer: "0x00000000000000000000000000000000000000bb",
+      signer: "0x00000000000000000000000000000000000000cc",
+      permissions: AccountPermission.TRADE,
+      expiry: 123n,
+      nonce: 1n,
+      deadline: 456n,
+      signature: `0x${"11".repeat(65)}`
+    });
+
+    expect(request.args).toHaveLength(8);
+    expect(() => encodeFunctionData(request as any)).not.toThrow();
+  });
+
+  it("builds latest revoke signer by-sig calldata", () => {
+    const request = buildRevokeAccountSignerBySigRequest({
+      accountCore,
+      account: "0x00000000000000000000000000000000000000aa",
+      authorizer: "0x00000000000000000000000000000000000000bb",
+      signer: "0x00000000000000000000000000000000000000cc",
+      nonce: 1n,
+      deadline: 456n,
+      signature: `0x${"22".repeat(65)}`
+    });
+
+    expect(request.args).toHaveLength(6);
+    expect(() => encodeFunctionData(request as any)).not.toThrow();
+  });
+
+  it("uses pps naming for builder approval", () => {
+    const request = buildApproveBuilderRequest({
+      accountCore,
+      builder: "0x00000000000000000000000000000000000000dd",
+      maxFeePps: 500,
+      expiry: 789n
+    });
+
+    expect(request.args).toEqual(["0x00000000000000000000000000000000000000dd", 500, 789n]);
+    expect(() => encodeFunctionData(request as any)).not.toThrow();
   });
 
   it("does not confuse account-domain params with the transaction signer", async () => {

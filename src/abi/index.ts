@@ -3,9 +3,7 @@ export {
   contractAbis,
   erc20MetadataAbi,
   kuruErrorAbi,
-  kuruIntentExecutorAbi,
   orderBookAbi,
-  spotEngineAbi,
   spotOrderBookAbi,
   spotPeripheryAbi,
   spotRouterAbi

@@ -4,16 +4,14 @@ import { contractAbis, contractMetadata } from "../src/generated";
 
 describe("generated contract surface", () => {
   it("pins the committed contracts commit", () => {
-    expect(contractMetadata.contractsCommit).toBe("393d122c40c70372373448a42612183d98fc3b34");
+    expect(contractMetadata.contractsCommit).toBe("e37bc3961c23e0bdb0ce23477cffc2b2482a1b72");
   });
 
   it("includes only the production ABI allowlist", () => {
     expect(Object.keys(contractAbis).sort()).toEqual([
       "AccountCore",
       "IERC20Metadata",
-      "KuruIntentExecutor",
       "OrderBook",
-      "SpotEngine",
       "SpotOrderBook",
       "SpotPeriphery",
       "SpotRouter"
@@ -28,9 +26,7 @@ describe("generated contract surface", () => {
     expect(Object.keys(contractMetadata.artifacts).sort()).toEqual([
       "AccountCore",
       "IERC20Metadata",
-      "KuruIntentExecutor",
       "OrderBook",
-      "SpotEngine",
       "SpotPeriphery",
       "SpotRouter"
     ]);

@@ -13,6 +13,9 @@ submission pipeline.
 Perps are intentionally not exposed in v1. The `products` module exists so future product modules can
 be added without reshaping the spot API.
 
+Legacy intent executor helpers are intentionally not exposed. Future EIP-7702 trading-wallet and
+relay support should get its own module once that signing and submission flow is finalized.
+
 The SDK does not fetch or generate ABIs at install, test, typecheck, or build time. Consumers cloning
 the SDK from GitHub use the committed `src/generated` files.
 

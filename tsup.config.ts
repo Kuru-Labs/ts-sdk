@@ -7,7 +7,6 @@ export default defineConfig({
     "src/generated/index.ts",
     "src/account/index.ts",
     "src/spot/index.ts",
-    "src/intent/index.ts",
     "src/events/index.ts",
     "src/errors/index.ts",
     "src/utils/index.ts"

@@ -7,6 +7,8 @@ export {
   buildClaimBuilderFeesRequest,
   buildDepositForAccountRequest,
   buildDepositRequest,
+  buildRevokeAccountSignerBySigRequest,
+  buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
   buildTransferBetweenAccountsRequest,
   buildWithdrawFromAccountRequest,
@@ -17,9 +19,11 @@ export {
   accountCoreDomain,
   buildAuthorizeAccountSignerTypedData,
   buildCreateSubaccountTypedData,
+  buildRevokeAccountSignerTypedData,
   splitSignature,
   type AuthorizeAccountSignerTypedDataParams,
-  type CreateSubaccountTypedDataParams
+  type CreateSubaccountTypedDataParams,
+  type RevokeAccountSignerTypedDataParams
 } from "./typed-data";
 export type {
   AccountCoreOverride,
@@ -32,6 +36,8 @@ export type {
   DepositForAccountParams,
   DepositParams,
   Erc20AddressParams,
+  RevokeAccountSignerBySigParams,
+  RevokeAccountSignerParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams

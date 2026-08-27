@@ -12,6 +12,8 @@ import type {
   DepositForAccountParams,
   DepositParams,
   Erc20AddressParams,
+  RevokeAccountSignerBySigParams,
+  RevokeAccountSignerParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams
@@ -102,6 +104,7 @@ export function buildAuthorizeAccountSignerBySigRequest(
 ): KuruContractRequest<typeof accountCoreAbi> {
   return accountCoreRequest(params.accountCore, "authorizeAccountSignerBySig", [
     params.account,
+    params.authorizer,
     params.signer,
     params.permissions,
     params.expiry,
@@ -116,8 +119,30 @@ export function buildApproveBuilderRequest(
 ): KuruContractRequest<typeof accountCoreAbi> {
   return accountCoreRequest(params.accountCore, "approveBuilder", [
     params.builder,
-    params.maxFeeBps,
+    params.maxFeePps,
     params.expiry
+  ]);
+}
+
+export function buildRevokeAccountSignerRequest(
+  params: RevokeAccountSignerParams & { accountCore: Address }
+): KuruContractRequest<typeof accountCoreAbi> {
+  return accountCoreRequest(params.accountCore, "revokeAccountSigner", [
+    params.account,
+    params.signer
+  ]);
+}
+
+export function buildRevokeAccountSignerBySigRequest(
+  params: RevokeAccountSignerBySigParams & { accountCore: Address }
+): KuruContractRequest<typeof accountCoreAbi> {
+  return accountCoreRequest(params.accountCore, "revokeAccountSignerBySig", [
+    params.account,
+    params.authorizer,
+    params.signer,
+    params.nonce,
+    params.deadline,
+    params.signature
   ]);
 }
 

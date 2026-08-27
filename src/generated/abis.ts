@@ -65,6 +65,19 @@ export const accountCoreAbi = [
   },
   {
     type: "function",
+    name: "AUTHORIZE_ACCOUNT_SIGNER_TYPEHASH",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32"
+      }
+    ],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
     name: "BUILDER_REFERRAL_AUTHORIZATION_TYPEHASH",
     inputs: [],
     outputs: [
@@ -137,6 +150,19 @@ export const accountCoreAbi = [
         name: "",
         type: "uint256",
         internalType: "uint256"
+      }
+    ],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "REVOKE_ACCOUNT_SIGNER_TYPEHASH",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32"
       }
     ],
     stateMutability: "view"
@@ -259,6 +285,54 @@ export const accountCoreAbi = [
   },
   {
     type: "function",
+    name: "authorizeAccountSignerBySig",
+    inputs: [
+      {
+        name: "account",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "authorizer",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "signer",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "permissions",
+        type: "uint32",
+        internalType: "uint32"
+      },
+      {
+        name: "expiry",
+        type: "uint64",
+        internalType: "uint64"
+      },
+      {
+        name: "nonce",
+        type: "uint256",
+        internalType: "uint256"
+      },
+      {
+        name: "deadline",
+        type: "uint256",
+        internalType: "uint256"
+      },
+      {
+        name: "signature",
+        type: "bytes",
+        internalType: "bytes"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
     name: "builderReferralAuthorizationUsed",
     inputs: [
       {
@@ -372,6 +446,29 @@ export const accountCoreAbi = [
         internalType: "uint40"
       }
     ],
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
+    name: "debitSpotPassiveInput",
+    inputs: [
+      {
+        name: "takerId",
+        type: "uint40",
+        internalType: "uint40"
+      },
+      {
+        name: "takerIsBuy",
+        type: "bool",
+        internalType: "bool"
+      },
+      {
+        name: "rawInputAmount",
+        type: "uint128",
+        internalType: "uint128"
+      }
+    ],
+    outputs: [],
     stateMutability: "nonpayable"
   },
   {
@@ -630,6 +727,93 @@ export const accountCoreAbi = [
       }
     ],
     stateMutability: "view"
+  },
+  {
+    type: "function",
+    name: "finalizeSpotMatch",
+    inputs: [
+      {
+        name: "activeFills",
+        type: "tuple[]",
+        internalType: "struct ISpotBalanceAccount.SpotFill[]",
+        components: [
+          {
+            name: "userId",
+            type: "uint40",
+            internalType: "uint40"
+          },
+          {
+            name: "baseAmount",
+            type: "uint96",
+            internalType: "uint96"
+          },
+          {
+            name: "quoteAmount",
+            type: "uint128",
+            internalType: "uint128"
+          },
+          {
+            name: "makerIsBuy",
+            type: "bool",
+            internalType: "bool"
+          },
+          {
+            name: "makerReserveConsumed",
+            type: "uint96",
+            internalType: "uint96"
+          },
+          {
+            name: "makerFeePps",
+            type: "uint32",
+            internalType: "uint32"
+          }
+        ]
+      },
+      {
+        name: "passiveTotals",
+        type: "tuple",
+        internalType: "struct ISpotBalanceAccount.SpotPassiveTotals",
+        components: [
+          {
+            name: "baseAmount",
+            type: "uint256",
+            internalType: "uint256"
+          },
+          {
+            name: "quoteAmount",
+            type: "uint256",
+            internalType: "uint256"
+          }
+        ]
+      },
+      {
+        name: "takerId",
+        type: "uint40",
+        internalType: "uint40"
+      },
+      {
+        name: "takerIsBuy",
+        type: "bool",
+        internalType: "bool"
+      },
+      {
+        name: "effectiveTakerFeePps",
+        type: "uint32",
+        internalType: "uint32"
+      },
+      {
+        name: "builder",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "builderFeePps",
+        type: "uint32",
+        internalType: "uint32"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
   },
   {
     type: "function",
@@ -1184,6 +1368,25 @@ export const accountCoreAbi = [
   },
   {
     type: "function",
+    name: "postFillHookAccess",
+    inputs: [
+      {
+        name: "",
+        type: "uint40",
+        internalType: "uint40"
+      }
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool"
+      }
+    ],
+    stateMutability: "view"
+  },
+  {
+    type: "function",
     name: "protocolPaused",
     inputs: [],
     outputs: [
@@ -1304,6 +1507,44 @@ export const accountCoreAbi = [
         name: "signer",
         type: "address",
         internalType: "address"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
+    name: "revokeAccountSignerBySig",
+    inputs: [
+      {
+        name: "account",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "authorizer",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "signer",
+        type: "address",
+        internalType: "address"
+      },
+      {
+        name: "nonce",
+        type: "uint256",
+        internalType: "uint256"
+      },
+      {
+        name: "deadline",
+        type: "uint256",
+        internalType: "uint256"
+      },
+      {
+        name: "signature",
+        type: "bytes",
+        internalType: "bytes"
       }
     ],
     outputs: [],
@@ -1475,125 +1716,30 @@ export const accountCoreAbi = [
   },
   {
     type: "function",
+    name: "setPostFillHookAccess",
+    inputs: [
+      {
+        name: "accountId",
+        type: "uint40",
+        internalType: "uint40"
+      },
+      {
+        name: "allowed",
+        type: "bool",
+        internalType: "bool"
+      }
+    ],
+    outputs: [],
+    stateMutability: "nonpayable"
+  },
+  {
+    type: "function",
     name: "setSpotRouter",
     inputs: [
       {
         name: "newSpotRouter",
         type: "address",
         internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "settleSpotPassiveTrade",
-    inputs: [
-      {
-        name: "takerId",
-        type: "uint40",
-        internalType: "uint40"
-      },
-      {
-        name: "takerIsBuy",
-        type: "bool",
-        internalType: "bool"
-      },
-      {
-        name: "baseAmount",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "quoteAmount",
-        type: "uint128",
-        internalType: "uint128"
-      },
-      {
-        name: "takerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "builder",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "builderFeePps",
-        type: "uint32",
-        internalType: "uint32"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "settleSpotTradesWithBuilder",
-    inputs: [
-      {
-        name: "makerFills",
-        type: "tuple[]",
-        internalType: "struct ISpotBalanceAccount.SpotFill[]",
-        components: [
-          {
-            name: "userId",
-            type: "uint40",
-            internalType: "uint40"
-          },
-          {
-            name: "baseAmount",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "quoteAmount",
-            type: "uint128",
-            internalType: "uint128"
-          },
-          {
-            name: "makerIsBuy",
-            type: "bool",
-            internalType: "bool"
-          },
-          {
-            name: "makerReserveConsumed",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "makerFeePps",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "takerId",
-        type: "uint40",
-        internalType: "uint40"
-      },
-      {
-        name: "takerIsBuy",
-        type: "bool",
-        internalType: "bool"
-      },
-      {
-        name: "takerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "builder",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "builderFeePps",
-        type: "uint32",
-        internalType: "uint32"
       }
     ],
     outputs: [],
@@ -1941,21 +2087,27 @@ export const accountCoreAbi = [
       },
       {
         name: "makerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "takerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "active",
         type: "bool",
         indexed: false,
         internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2014,6 +2166,12 @@ export const accountCoreAbi = [
         internalType: "address"
       },
       {
+        name: "authorizer",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "permissions",
         type: "uint32",
         indexed: false,
@@ -2040,6 +2198,12 @@ export const accountCoreAbi = [
       },
       {
         name: "signer",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "authorizer",
         type: "address",
         indexed: true,
         internalType: "address"
@@ -2084,9 +2248,9 @@ export const accountCoreAbi = [
       },
       {
         name: "maxFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "expiry",
@@ -2120,10 +2284,22 @@ export const accountCoreAbi = [
         internalType: "address"
       },
       {
-        name: "accountId",
+        name: "takerAccountId",
         type: "uint40",
         indexed: true,
         internalType: "uint40"
+      },
+      {
+        name: "orderBook",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "builderFeePps",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24"
       },
       {
         name: "amount",
@@ -2171,15 +2347,15 @@ export const accountCoreAbi = [
       },
       {
         name: "makerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "takerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "expiry",
@@ -2192,6 +2368,12 @@ export const accountCoreAbi = [
         type: "bool",
         indexed: false,
         internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2213,16 +2395,22 @@ export const accountCoreAbi = [
         internalType: "address"
       },
       {
+        name: "actor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "makerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "takerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "expiry",
@@ -2245,21 +2433,27 @@ export const accountCoreAbi = [
     inputs: [
       {
         name: "makerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "takerFeePps",
-        type: "uint32",
+        type: "uint24",
         indexed: false,
-        internalType: "uint32"
+        internalType: "uint24"
       },
       {
         name: "active",
         type: "bool",
         indexed: false,
         internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2281,10 +2475,41 @@ export const accountCoreAbi = [
         internalType: "address"
       },
       {
+        name: "payer",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "amount",
         type: "uint256",
         indexed: false,
         internalType: "uint256"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "FeeCollectorUpdated",
+    inputs: [
+      {
+        name: "oldFeeCollector",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "newFeeCollector",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2322,6 +2547,12 @@ export const accountCoreAbi = [
         name: "token",
         type: "address",
         indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "executor",
+        type: "address",
+        indexed: false,
         internalType: "address"
       },
       {
@@ -2380,6 +2611,56 @@ export const accountCoreAbi = [
   },
   {
     type: "event",
+    name: "PostFillHookAccessUpdated",
+    inputs: [
+      {
+        name: "accountId",
+        type: "uint40",
+        indexed: true,
+        internalType: "uint40"
+      },
+      {
+        name: "allowed",
+        type: "bool",
+        indexed: false,
+        internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "ProtocolStateUpdated",
+    inputs: [
+      {
+        name: "previousPaused",
+        type: "bool",
+        indexed: false,
+        internalType: "bool"
+      },
+      {
+        name: "paused",
+        type: "bool",
+        indexed: false,
+        internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
     name: "SpotMarketRegistered",
     inputs: [
       {
@@ -2398,6 +2679,12 @@ export const accountCoreAbi = [
         name: "quoteToken",
         type: "address",
         indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "registrar",
+        type: "address",
+        indexed: false,
         internalType: "address"
       }
     ],
@@ -2449,6 +2736,12 @@ export const accountCoreAbi = [
         type: "address",
         indexed: true,
         internalType: "address"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2474,6 +2767,12 @@ export const accountCoreAbi = [
         type: "bool",
         indexed: false,
         internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -2534,6 +2833,12 @@ export const accountCoreAbi = [
       },
       {
         name: "token",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "recipient",
         type: "address",
         indexed: true,
         internalType: "address"
@@ -2700,6 +3005,11 @@ export const accountCoreAbi = [
   {
     type: "error",
     name: "SameRootRequired",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "SpotFeesExceedProceeds",
     inputs: []
   },
   {
@@ -2924,11 +3234,6 @@ export const spotRouterAbi = [
         name: "_spotBalanceAccount",
         type: "address",
         internalType: "address"
-      },
-      {
-        name: "_spotEngine",
-        type: "address",
-        internalType: "address"
       }
     ],
     outputs: [],
@@ -3034,19 +3339,6 @@ export const spotRouterAbi = [
   },
   {
     type: "function",
-    name: "spotEngineAddress",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
     name: "spotOrderBookImplementation",
     inputs: [],
     outputs: [
@@ -3070,7 +3362,7 @@ export const spotRouterAbi = [
       {
         name: "state",
         type: "uint8",
-        internalType: "enum ISpotOrderBook.MarketState"
+        internalType: "enum IActiveOrderBook.MarketState"
       }
     ],
     outputs: [],
@@ -3124,70 +3416,6 @@ export const spotRouterAbi = [
     ],
     outputs: [],
     stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "verifiedMarket",
-    inputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "baseToken",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "quoteToken",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "pricePrecision",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "sizePrecision",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "tickSize",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "passiveSpreadTicks",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "minQuoteNotional",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "maxQuoteNotional",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "takerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "makerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      }
-    ],
-    stateMutability: "view"
   },
   {
     type: "function",
@@ -3279,6 +3507,37 @@ export const spotRouterAbi = [
   },
   {
     type: "event",
+    name: "ManagedContractOwnershipTransferred",
+    inputs: [
+      {
+        name: "managedContract",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "previousOwner",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
     name: "OwnershipHandoverCanceled",
     inputs: [
       {
@@ -3343,6 +3602,43 @@ export const spotRouterAbi = [
         type: "address",
         indexed: true,
         internalType: "address"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      }
+    ],
+    anonymous: false
+  },
+  {
+    type: "event",
+    name: "SpotMarketStateUpdated",
+    inputs: [
+      {
+        name: "orderBook",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "previousState",
+        type: "uint8",
+        indexed: false,
+        internalType: "enum IActiveOrderBook.MarketState"
+      },
+      {
+        name: "newState",
+        type: "uint8",
+        indexed: false,
+        internalType: "enum IActiveOrderBook.MarketState"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -3361,6 +3657,12 @@ export const spotRouterAbi = [
         name: "newImplementation",
         type: "address",
         indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
         internalType: "address"
       }
     ],
@@ -3381,6 +3683,12 @@ export const spotRouterAbi = [
         type: "bool",
         indexed: false,
         internalType: "bool"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -3472,558 +3780,6 @@ export const spotRouterAbi = [
   {
     type: "error",
     name: "SpotTokenNotWhitelisted",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "Unauthorized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "Unauthorized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UnauthorizedCallContext",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UpgradeFailed",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "ZeroAddress",
-    inputs: []
-  }
-] as const satisfies Abi;
-
-export const spotEngineAbi = [
-  {
-    type: "constructor",
-    inputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "addMarket",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "baseToken",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "quoteToken",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "sizePrecision",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "pricePrecision",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "tickSize",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "passiveSpreadTicks",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "minQuoteNotional",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "maxQuoteNotional",
-        type: "uint96",
-        internalType: "uint96"
-      },
-      {
-        name: "takerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "makerFeePps",
-        type: "uint256",
-        internalType: "uint256"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "authority",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "cancelOwnershipHandover",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "completeOwnershipHandover",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "getMarketConfig",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "config",
-        type: "tuple",
-        internalType: "struct ISpotEngine.SpotMarketConfig",
-        components: [
-          {
-            name: "baseToken",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "quoteToken",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "sizePrecision",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "pricePrecision",
-            type: "uint32",
-            internalType: "uint32"
-          },
-          {
-            name: "tickSize",
-            type: "uint32",
-            internalType: "uint32"
-          },
-          {
-            name: "passiveSpreadTicks",
-            type: "uint32",
-            internalType: "uint32"
-          },
-          {
-            name: "minQuoteNotional",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "maxQuoteNotional",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "takerFeePps",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "makerFeePps",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "active",
-            type: "bool",
-            internalType: "bool"
-          }
-        ]
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "initialize",
-    inputs: [
-      {
-        name: "_owner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "marketExists",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "owner",
-    inputs: [],
-    outputs: [
-      {
-        name: "result",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "ownershipHandoverExpiresAt",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "result",
-        type: "uint256",
-        internalType: "uint256"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "proxiableUUID",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "renounceOwnership",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "requestOwnershipHandover",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "setAuthority",
-    inputs: [
-      {
-        name: "newAuthority",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "setMarketActive",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "active",
-        type: "bool",
-        internalType: "bool"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "transferOwnership",
-    inputs: [
-      {
-        name: "newOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "upgradeToAndCall",
-    inputs: [
-      {
-        name: "newImplementation",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "data",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "event",
-    name: "AuthorityUpdated",
-    inputs: [
-      {
-        name: "oldAuthority",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "newAuthority",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "Initialized",
-    inputs: [
-      {
-        name: "version",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipHandoverCanceled",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipHandoverRequested",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipTransferred",
-    inputs: [
-      {
-        name: "oldOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "newOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "SpotMarketActiveUpdated",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "active",
-        type: "bool",
-        indexed: false,
-        internalType: "bool"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "SpotMarketAdded",
-    inputs: [
-      {
-        name: "orderBook",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "baseToken",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "quoteToken",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "Upgraded",
-    inputs: [
-      {
-        name: "implementation",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "error",
-    name: "AlreadyInitialized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidAuthority",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidCollateral",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidInitialization",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidMarketConfig",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "MarketAlreadyExists",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "MarketFeeError",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "MarketNotFound",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "MarketSizeError",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NewOwnerIsZeroAddress",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NoHandoverRequest",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NotInitializing",
     inputs: []
   },
   {
@@ -5014,11 +4770,6 @@ export const orderBookAbi = [
         internalType: "address"
       },
       {
-        name: "_spotEngine",
-        type: "address",
-        internalType: "address"
-      },
-      {
         name: "_baseToken",
         type: "address",
         internalType: "address"
@@ -5135,7 +4886,7 @@ export const orderBookAbi = [
       {
         name: "",
         type: "uint8",
-        internalType: "enum ISpotOrderBook.MarketState"
+        internalType: "enum IActiveOrderBook.MarketState"
       }
     ],
     stateMutability: "view"
@@ -5671,32 +5422,6 @@ export const orderBookAbi = [
   },
   {
     type: "function",
-    name: "spotEngine",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "contract ISpotEngine"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "spotEngineAddress",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
     name: "swap",
     inputs: [
       {
@@ -5845,9 +5570,9 @@ export const orderBookAbi = [
     name: "toggleMarket",
     inputs: [
       {
-        name: "_state",
+        name: "state",
         type: "uint8",
-        internalType: "enum ISpotOrderBook.MarketState"
+        internalType: "enum IActiveOrderBook.MarketState"
       }
     ],
     outputs: [],
@@ -5858,7 +5583,7 @@ export const orderBookAbi = [
     name: "transferOwnership",
     inputs: [
       {
-        name: "_newOwner",
+        name: "newOwner",
         type: "address",
         internalType: "address"
       }
@@ -5912,6 +5637,12 @@ export const orderBookAbi = [
         type: "uint40",
         indexed: true,
         internalType: "uint40"
+      },
+      {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       },
       {
         name: "clientOrderId",
@@ -5981,13 +5712,13 @@ export const orderBookAbi = [
         name: "previousState",
         type: "uint8",
         indexed: false,
-        internalType: "enum ISpotOrderBook.MarketState"
+        internalType: "enum IActiveOrderBook.MarketState"
       },
       {
         name: "newState",
         type: "uint8",
         indexed: false,
-        internalType: "enum ISpotOrderBook.MarketState"
+        internalType: "enum IActiveOrderBook.MarketState"
       }
     ],
     anonymous: false
@@ -6059,6 +5790,12 @@ export const orderBookAbi = [
         internalType: "uint64"
       },
       {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "baseFeeOut",
         type: "uint128",
         indexed: false,
@@ -6088,6 +5825,12 @@ export const orderBookAbi = [
         type: "uint64",
         indexed: true,
         internalType: "uint64"
+      },
+      {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       },
       {
         name: "sharesBurned",
@@ -6139,6 +5882,12 @@ export const orderBookAbi = [
         internalType: "uint64"
       },
       {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "lowPrice",
         type: "uint32",
         indexed: false,
@@ -6180,6 +5929,12 @@ export const orderBookAbi = [
         type: "uint64",
         indexed: false,
         internalType: "uint64"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -6199,6 +5954,12 @@ export const orderBookAbi = [
         type: "uint96",
         indexed: false,
         internalType: "uint96"
+      },
+      {
+        name: "operator",
+        type: "address",
+        indexed: true,
+        internalType: "address"
       }
     ],
     anonymous: false
@@ -6215,6 +5976,12 @@ export const orderBookAbi = [
       },
       {
         name: "hook",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
+        name: "executor",
         type: "address",
         indexed: true,
         internalType: "address"
@@ -6276,6 +6043,12 @@ export const orderBookAbi = [
         internalType: "uint40"
       },
       {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "isBuy",
         type: "bool",
         indexed: true,
@@ -6313,10 +6086,34 @@ export const orderBookAbi = [
         internalType: "uint40"
       },
       {
+        name: "executor",
+        type: "address",
+        indexed: true,
+        internalType: "address"
+      },
+      {
         name: "clientOrderId",
         type: "bytes32",
         indexed: false,
         internalType: "bytes32"
+      },
+      {
+        name: "effectiveTakerFeePps",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24"
+      },
+      {
+        name: "builder",
+        type: "address",
+        indexed: false,
+        internalType: "address"
+      },
+      {
+        name: "builderFeePps",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24"
       },
       {
         name: "packedTrades",
@@ -6397,11 +6194,6 @@ export const orderBookAbi = [
   },
   {
     type: "error",
-    name: "MarketNotActive",
-    inputs: []
-  },
-  {
-    type: "error",
     name: "MarketSizeError",
     inputs: []
   },
@@ -6432,6 +6224,11 @@ export const orderBookAbi = [
   },
   {
     type: "error",
+    name: "PostFillHookAccessDenied",
+    inputs: []
+  },
+  {
+    type: "error",
     name: "PostOnlyError",
     inputs: []
   },
@@ -6458,6 +6255,16 @@ export const orderBookAbi = [
   {
     type: "error",
     name: "SlippageExceeded",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "SpotFeesExceedProceeds",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "SpotMatchLifecycleError",
     inputs: []
   },
   {
@@ -6962,1265 +6769,6 @@ export const spotPeripheryAbi = [
   }
 ] as const satisfies Abi;
 
-export const kuruIntentExecutorAbi = [
-  {
-    type: "constructor",
-    inputs: [
-      {
-        name: "_accountCore",
-        type: "address",
-        internalType: "contract IAccountCore"
-      },
-      {
-        name: "owner_",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "_maxFutureNonceSkewMillis",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "ACCOUNT_PERMISSION_TRADE",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint32",
-        internalType: "uint32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "ANY_ORDER_ID",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "BATCH_INTENT_TYPEHASH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "CANCEL_TRIGGER_TYPEHASH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "CREATE_BATCH_TRIGGER_TYPEHASH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "CREATE_REPLACE_TRIGGER_TYPEHASH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "REPLACE_BY_SLOT_INTENT_TYPEHASH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "accountCore",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "contract IAccountCore"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "authorizedSubmitter",
-    inputs: [
-      {
-        name: "submitter",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "authorized",
-        type: "bool",
-        internalType: "bool"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "cancelOwnershipHandover",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "cancelTrigger",
-    inputs: [
-      {
-        name: "accountId",
-        type: "uint40",
-        internalType: "uint40"
-      },
-      {
-        name: "signer",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "authNonce",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "nonce",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "deadline",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "triggerId",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "signature",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "completeOwnershipHandover",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "createBatchTrigger",
-    inputs: [
-      {
-        name: "header",
-        type: "tuple",
-        internalType: "struct KuruIntentExecutor.IntentHeader",
-        components: [
-          {
-            name: "accountId",
-            type: "uint40",
-            internalType: "uint40"
-          },
-          {
-            name: "market",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "signer",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "authNonce",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "nonce",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "deadline",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "clientOrderId",
-            type: "bytes32",
-            internalType: "bytes32"
-          },
-          {
-            name: "builder",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "builderFeePps",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "triggerExpiry",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "conditionHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "orders",
-        type: "tuple[]",
-        internalType: "struct ISpotOrderBook.NativeOrder[]",
-        components: [
-          {
-            name: "side",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeSide"
-          },
-          {
-            name: "quantity",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "price",
-            type: "uint32",
-            internalType: "uint32"
-          },
-          {
-            name: "tif",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeTif"
-          },
-          {
-            name: "executionInstruction",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeExecInstruction"
-          },
-          {
-            name: "minSizeAfterBlock",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "cancelSlotIdxs",
-        type: "uint8[]",
-        internalType: "uint8[]"
-      },
-      {
-        name: "expectedOrderIds",
-        type: "uint64[]",
-        internalType: "uint64[]"
-      },
-      {
-        name: "signature",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "createReplaceTrigger",
-    inputs: [
-      {
-        name: "header",
-        type: "tuple",
-        internalType: "struct KuruIntentExecutor.IntentHeader",
-        components: [
-          {
-            name: "accountId",
-            type: "uint40",
-            internalType: "uint40"
-          },
-          {
-            name: "market",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "signer",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "authNonce",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "nonce",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "deadline",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "clientOrderId",
-            type: "bytes32",
-            internalType: "bytes32"
-          },
-          {
-            name: "builder",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "builderFeePps",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "triggerExpiry",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "conditionHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "packedOps",
-        type: "bytes",
-        internalType: "bytes"
-      },
-      {
-        name: "expectedOrderIds",
-        type: "uint64[]",
-        internalType: "uint64[]"
-      },
-      {
-        name: "signature",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "eip712Domain",
-    inputs: [],
-    outputs: [
-      {
-        name: "fields",
-        type: "bytes1",
-        internalType: "bytes1"
-      },
-      {
-        name: "name",
-        type: "string",
-        internalType: "string"
-      },
-      {
-        name: "version",
-        type: "string",
-        internalType: "string"
-      },
-      {
-        name: "chainId",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "verifyingContract",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "salt",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "extensions",
-        type: "uint256[]",
-        internalType: "uint256[]"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "executeBatch",
-    inputs: [
-      {
-        name: "header",
-        type: "tuple",
-        internalType: "struct KuruIntentExecutor.IntentHeader",
-        components: [
-          {
-            name: "accountId",
-            type: "uint40",
-            internalType: "uint40"
-          },
-          {
-            name: "market",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "signer",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "authNonce",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "nonce",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "deadline",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "clientOrderId",
-            type: "bytes32",
-            internalType: "bytes32"
-          },
-          {
-            name: "builder",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "builderFeePps",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "orders",
-        type: "tuple[]",
-        internalType: "struct ISpotOrderBook.NativeOrder[]",
-        components: [
-          {
-            name: "side",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeSide"
-          },
-          {
-            name: "quantity",
-            type: "uint96",
-            internalType: "uint96"
-          },
-          {
-            name: "price",
-            type: "uint32",
-            internalType: "uint32"
-          },
-          {
-            name: "tif",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeTif"
-          },
-          {
-            name: "executionInstruction",
-            type: "uint8",
-            internalType: "enum ISpotOrderBook.NativeExecInstruction"
-          },
-          {
-            name: "minSizeAfterBlock",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "cancelSlotIdxs",
-        type: "uint8[]",
-        internalType: "uint8[]"
-      },
-      {
-        name: "expectedOrderIds",
-        type: "uint64[]",
-        internalType: "uint64[]"
-      },
-      {
-        name: "signature",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [
-      {
-        name: "intentHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "executeReplaceBySlotPacked",
-    inputs: [
-      {
-        name: "header",
-        type: "tuple",
-        internalType: "struct KuruIntentExecutor.IntentHeader",
-        components: [
-          {
-            name: "accountId",
-            type: "uint40",
-            internalType: "uint40"
-          },
-          {
-            name: "market",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "signer",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "authNonce",
-            type: "uint256",
-            internalType: "uint256"
-          },
-          {
-            name: "nonce",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "deadline",
-            type: "uint64",
-            internalType: "uint64"
-          },
-          {
-            name: "clientOrderId",
-            type: "bytes32",
-            internalType: "bytes32"
-          },
-          {
-            name: "builder",
-            type: "address",
-            internalType: "address"
-          },
-          {
-            name: "builderFeePps",
-            type: "uint32",
-            internalType: "uint32"
-          }
-        ]
-      },
-      {
-        name: "packedOps",
-        type: "bytes",
-        internalType: "bytes"
-      },
-      {
-        name: "expectedOrderIds",
-        type: "uint64[]",
-        internalType: "uint64[]"
-      },
-      {
-        name: "signature",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    outputs: [
-      {
-        name: "intentHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "executeTrigger",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "executionReportHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "lastSeenOrderNonce",
-    inputs: [
-      {
-        name: "signer",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "nonce",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "maxFutureNonceSkewMillis",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "owner",
-    inputs: [],
-    outputs: [
-      {
-        name: "result",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "ownershipHandoverExpiresAt",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [
-      {
-        name: "result",
-        type: "uint256",
-        internalType: "uint256"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "renounceOwnership",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "requestOwnershipHandover",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "setAuthorizedSubmitter",
-    inputs: [
-      {
-        name: "submitter",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "authorized",
-        type: "bool",
-        internalType: "bool"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "setMaxFutureNonceSkewMillis",
-    inputs: [
-      {
-        name: "newSkewMillis",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    outputs: [],
-    stateMutability: "nonpayable"
-  },
-  {
-    type: "function",
-    name: "transferOwnership",
-    inputs: [
-      {
-        name: "newOwner",
-        type: "address",
-        internalType: "address"
-      }
-    ],
-    outputs: [],
-    stateMutability: "payable"
-  },
-  {
-    type: "function",
-    name: "triggers",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        internalType: "bytes32"
-      }
-    ],
-    outputs: [
-      {
-        name: "accountId",
-        type: "uint40",
-        internalType: "uint40"
-      },
-      {
-        name: "signer",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "market",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "authNonce",
-        type: "uint256",
-        internalType: "uint256"
-      },
-      {
-        name: "nonce",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "expiry",
-        type: "uint64",
-        internalType: "uint64"
-      },
-      {
-        name: "clientOrderId",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "builder",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "builderFeePps",
-        type: "uint32",
-        internalType: "uint32"
-      },
-      {
-        name: "conditionHash",
-        type: "bytes32",
-        internalType: "bytes32"
-      },
-      {
-        name: "action",
-        type: "uint8",
-        internalType: "enum KuruIntentExecutor.TriggerAction"
-      },
-      {
-        name: "status",
-        type: "uint8",
-        internalType: "enum KuruIntentExecutor.TriggerStatus"
-      },
-      {
-        name: "payload",
-        type: "bytes",
-        internalType: "bytes"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "function",
-    name: "usedTriggerNonce",
-    inputs: [
-      {
-        name: "signer",
-        type: "address",
-        internalType: "address"
-      },
-      {
-        name: "nonce",
-        type: "uint64",
-        internalType: "uint64"
-      }
-    ],
-    outputs: [
-      {
-        name: "used",
-        type: "bool",
-        internalType: "bool"
-      }
-    ],
-    stateMutability: "view"
-  },
-  {
-    type: "event",
-    name: "IntentExecuted",
-    inputs: [
-      {
-        name: "intentHash",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32"
-      },
-      {
-        name: "signer",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "accountId",
-        type: "uint40",
-        indexed: true,
-        internalType: "uint40"
-      },
-      {
-        name: "market",
-        type: "address",
-        indexed: false,
-        internalType: "address"
-      },
-      {
-        name: "clientOrderId",
-        type: "bytes32",
-        indexed: false,
-        internalType: "bytes32"
-      },
-      {
-        name: "nonce",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "MaxFutureNonceSkewUpdated",
-    inputs: [
-      {
-        name: "oldSkewMillis",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      },
-      {
-        name: "newSkewMillis",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipHandoverCanceled",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipHandoverRequested",
-    inputs: [
-      {
-        name: "pendingOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "OwnershipTransferred",
-    inputs: [
-      {
-        name: "oldOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "newOwner",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "SubmitterAuthorizationUpdated",
-    inputs: [
-      {
-        name: "submitter",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "authorized",
-        type: "bool",
-        indexed: false,
-        internalType: "bool"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "TriggerCanceled",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32"
-      },
-      {
-        name: "signer",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "accountId",
-        type: "uint40",
-        indexed: true,
-        internalType: "uint40"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "TriggerCreated",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32"
-      },
-      {
-        name: "signer",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "accountId",
-        type: "uint40",
-        indexed: true,
-        internalType: "uint40"
-      },
-      {
-        name: "market",
-        type: "address",
-        indexed: false,
-        internalType: "address"
-      },
-      {
-        name: "clientOrderId",
-        type: "bytes32",
-        indexed: false,
-        internalType: "bytes32"
-      },
-      {
-        name: "nonce",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      },
-      {
-        name: "expiry",
-        type: "uint64",
-        indexed: false,
-        internalType: "uint64"
-      },
-      {
-        name: "conditionHash",
-        type: "bytes32",
-        indexed: false,
-        internalType: "bytes32"
-      },
-      {
-        name: "action",
-        type: "uint8",
-        indexed: false,
-        internalType: "enum KuruIntentExecutor.TriggerAction"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "TriggerExpired",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "event",
-    name: "TriggerFired",
-    inputs: [
-      {
-        name: "triggerId",
-        type: "bytes32",
-        indexed: true,
-        internalType: "bytes32"
-      },
-      {
-        name: "submitter",
-        type: "address",
-        indexed: true,
-        internalType: "address"
-      },
-      {
-        name: "executionReportHash",
-        type: "bytes32",
-        indexed: false,
-        internalType: "bytes32"
-      }
-    ],
-    anonymous: false
-  },
-  {
-    type: "error",
-    name: "AlreadyInitialized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "DeadlineExpired",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidBuilder",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidExpireTime",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "InvalidSignature",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NewOwnerIsZeroAddress",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NoHandoverRequest",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NonceTooFarInFuture",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NonceTooLow",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "OrderIdBindingLengthMismatch",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "Reentrancy",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "StaleAuthorizationEpoch",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "TriggerNonceUsed",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "TriggerNotActive",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "Unauthorized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "Unauthorized",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UnauthorizedSubmitter",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UnexpectedSlotOrderId",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "ZeroAddress",
-    inputs: []
-  }
-] as const satisfies Abi;
-
 export const erc20MetadataAbi = [
   {
     type: "function",
@@ -8452,10 +7000,8 @@ export const spotOrderBookAbi = orderBookAbi;
 export const contractAbis = {
   AccountCore: accountCoreAbi,
   SpotRouter: spotRouterAbi,
-  SpotEngine: spotEngineAbi,
   OrderBook: orderBookAbi,
   SpotPeriphery: spotPeripheryAbi,
-  KuruIntentExecutor: kuruIntentExecutorAbi,
   IERC20Metadata: erc20MetadataAbi,
   SpotOrderBook: spotOrderBookAbi
 } as const;
@@ -8519,11 +7065,6 @@ export const kuruErrorAbi = [
   {
     type: "error",
     name: "Create2EmptyBytecode",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "DeadlineExpired",
     inputs: []
   },
   {
@@ -8614,17 +7155,7 @@ export const kuruErrorAbi = [
   },
   {
     type: "error",
-    name: "MarketAlreadyExists",
-    inputs: []
-  },
-  {
-    type: "error",
     name: "MarketFeeError",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "MarketNotActive",
     inputs: []
   },
   {
@@ -8664,16 +7195,6 @@ export const kuruErrorAbi = [
   },
   {
     type: "error",
-    name: "NonceTooFarInFuture",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "NonceTooLow",
-    inputs: []
-  },
-  {
-    type: "error",
     name: "NotInitializing",
     inputs: []
   },
@@ -8694,17 +7215,17 @@ export const kuruErrorAbi = [
   },
   {
     type: "error",
-    name: "OrderIdBindingLengthMismatch",
-    inputs: []
-  },
-  {
-    type: "error",
     name: "PassiveLiquidityCrossesBook",
     inputs: []
   },
   {
     type: "error",
     name: "PositionNotFound",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "PostFillHookAccessDenied",
     inputs: []
   },
   {
@@ -8749,6 +7270,16 @@ export const kuruErrorAbi = [
   },
   {
     type: "error",
+    name: "SpotFeesExceedProceeds",
+    inputs: []
+  },
+  {
+    type: "error",
+    name: "SpotMatchLifecycleError",
+    inputs: []
+  },
+  {
+    type: "error",
     name: "SpotTokenNotEnabled",
     inputs: []
   },
@@ -8759,27 +7290,12 @@ export const kuruErrorAbi = [
   },
   {
     type: "error",
-    name: "StaleAuthorizationEpoch",
-    inputs: []
-  },
-  {
-    type: "error",
     name: "SubaccountLimitReached",
     inputs: []
   },
   {
     type: "error",
     name: "TickSizeError",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "TriggerNonceUsed",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "TriggerNotActive",
     inputs: []
   },
   {
@@ -8795,16 +7311,6 @@ export const kuruErrorAbi = [
   {
     type: "error",
     name: "UnauthorizedCallContext",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UnauthorizedSubmitter",
-    inputs: []
-  },
-  {
-    type: "error",
-    name: "UnexpectedSlotOrderId",
     inputs: []
   },
   {

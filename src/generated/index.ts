@@ -2,11 +2,9 @@
 export {
   accountCoreAbi,
   spotRouterAbi,
-  spotEngineAbi,
   orderBookAbi,
   spotOrderBookAbi,
   spotPeripheryAbi,
-  kuruIntentExecutorAbi,
   erc20MetadataAbi,
   contractAbis,
   kuruErrorAbi

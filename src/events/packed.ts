@@ -7,9 +7,14 @@ export interface PackedTrade {
   slotIdx: number;
   makerFlags: number;
   makerIsBuy: boolean;
+  makerIsPassive: boolean;
+  isMatchEnd: boolean;
   price: bigint;
   fillSize: bigint;
   orderId: bigint;
+  updatedSize: bigint;
+  makerFeePps: number;
+  tradeId: bigint;
 }
 
 export interface PackedBookUpdate {
@@ -22,6 +27,7 @@ export interface PackedBookUpdate {
   size: bigint;
   orderId: bigint;
   minSizeAfterBlock: bigint;
+  makerFeePps: number;
 }
 
 function bytesToBigInt(bytes: Uint8Array, start: number, length: number): bigint {
@@ -41,7 +47,7 @@ function assertPackedLength(bytes: Uint8Array, recordSize: number, label: string
   }
 }
 
-function decodeTradeRecord(bytes: Uint8Array, offset: number): PackedTrade {
+function decodeFirstPackedWord(bytes: Uint8Array, offset: number) {
   const word = bytesToBigInt(bytes, offset, 32);
   const makerFlags = Number((word >> 200n) & 0xffn);
   return {
@@ -55,11 +61,24 @@ function decodeTradeRecord(bytes: Uint8Array, offset: number): PackedTrade {
   };
 }
 
+function decodeTradeRecord(bytes: Uint8Array, offset: number): PackedTrade {
+  const firstWord = decodeFirstPackedWord(bytes, offset);
+  const secondWord = bytesToBigInt(bytes, offset + 32, 32);
+  return {
+    ...firstWord,
+    makerIsPassive: (firstWord.makerFlags & 2) !== 0,
+    isMatchEnd: (firstWord.makerFlags & 4) !== 0,
+    updatedSize: (secondWord >> 160n) & ((1n << 96n) - 1n),
+    makerFeePps: Number((secondWord >> 136n) & ((1n << 24n) - 1n)),
+    tradeId: secondWord & ((1n << 64n) - 1n)
+  };
+}
+
 export function decodeTradesPacked(packedTrades: Hex): PackedTrade[] {
   const bytes = hexToBytes(packedTrades);
-  assertPackedLength(bytes, 32, "TradesPacked.packedTrades");
+  assertPackedLength(bytes, 64, "TradesPacked.packedTrades");
   const records: PackedTrade[] = [];
-  for (let offset = 0; offset < bytes.length; offset += 32) {
+  for (let offset = 0; offset < bytes.length; offset += 64) {
     records.push(decodeTradeRecord(bytes, offset));
   }
   return records;
@@ -67,20 +86,21 @@ export function decodeTradesPacked(packedTrades: Hex): PackedTrade[] {
 
 export function decodeBookUpdatesPacked(packedUpdates: Hex): PackedBookUpdate[] {
   const bytes = hexToBytes(packedUpdates);
-  assertPackedLength(bytes, 36, "BookUpdatesPacked.packedUpdates");
+  assertPackedLength(bytes, 39, "BookUpdatesPacked.packedUpdates");
   const records: PackedBookUpdate[] = [];
-  for (let offset = 0; offset < bytes.length; offset += 36) {
-    const trade = decodeTradeRecord(bytes, offset);
+  for (let offset = 0; offset < bytes.length; offset += 39) {
+    const update = decodeFirstPackedWord(bytes, offset);
     records.push({
-      makerId: trade.makerId,
-      slotIdx: trade.slotIdx,
-      bookFlags: trade.makerFlags,
-      isLive: (trade.makerFlags & 0x80) !== 0,
-      makerIsBuy: trade.makerIsBuy,
-      price: trade.price,
-      size: trade.fillSize,
-      orderId: trade.orderId,
-      minSizeAfterBlock: bytesToBigInt(bytes, offset + 32, 4)
+      makerId: update.makerId,
+      slotIdx: update.slotIdx,
+      bookFlags: update.makerFlags,
+      isLive: (update.makerFlags & 0x80) !== 0,
+      makerIsBuy: update.makerIsBuy,
+      price: update.price,
+      size: update.fillSize,
+      orderId: update.orderId,
+      minSizeAfterBlock: bytesToBigInt(bytes, offset + 32, 4),
+      makerFeePps: Number(bytesToBigInt(bytes, offset + 36, 3))
     });
   }
   return records;

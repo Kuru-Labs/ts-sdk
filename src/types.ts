@@ -7,9 +7,7 @@ export type WalletAccount = Account | Address;
 export interface KuruContractAddresses {
   accountCore?: Address;
   spotRouter?: Address;
-  spotEngine?: Address;
   spotPeriphery?: Address;
-  intentExecutor?: Address;
 }
 
 export interface KuruClientConfig {
