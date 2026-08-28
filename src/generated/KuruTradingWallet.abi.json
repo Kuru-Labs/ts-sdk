@@ -1,0 +1,1018 @@
+[
+  {
+    "type": "function",
+    "name": "ACCOUNT_PERMISSION_TRADE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ANY_ORDER_ID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "BATCH_INTENT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CANCEL_TRIGGER_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CREATE_BATCH_TRIGGER_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CREATE_REPLACE_TRIGGER_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "REPLACE_BY_SLOT_INTENT_TYPEHASH",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accountCore",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IAccountCore"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cancelTrigger",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "authNonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "nonce",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "deadline",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createBatchTrigger",
+    "inputs": [
+      {
+        "name": "header",
+        "type": "tuple",
+        "internalType": "struct KuruTradingWallet.IntentHeader",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "market",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authNonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "builder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "builderFeePps",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "triggerExpiry",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "conditionHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "orders",
+        "type": "tuple[]",
+        "internalType": "struct ISpotOrderBook.NativeOrder[]",
+        "components": [
+          {
+            "name": "side",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeSide"
+          },
+          {
+            "name": "quantity",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "price",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "tif",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeTif"
+          },
+          {
+            "name": "executionInstruction",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeExecInstruction"
+          },
+          {
+            "name": "minSizeAfterBlock",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "cancelSlotIdxs",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "expectedOrderIds",
+        "type": "uint64[]",
+        "internalType": "uint64[]"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createReplaceTrigger",
+    "inputs": [
+      {
+        "name": "header",
+        "type": "tuple",
+        "internalType": "struct KuruTradingWallet.IntentHeader",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "market",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authNonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "builder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "builderFeePps",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "triggerExpiry",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "conditionHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "packedOps",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "expectedOrderIds",
+        "type": "uint64[]",
+        "internalType": "uint64[]"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "executeBatch",
+    "inputs": [
+      {
+        "name": "header",
+        "type": "tuple",
+        "internalType": "struct KuruTradingWallet.IntentHeader",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "market",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authNonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "builder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "builderFeePps",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "orders",
+        "type": "tuple[]",
+        "internalType": "struct ISpotOrderBook.NativeOrder[]",
+        "components": [
+          {
+            "name": "side",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeSide"
+          },
+          {
+            "name": "quantity",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "price",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "tif",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeTif"
+          },
+          {
+            "name": "executionInstruction",
+            "type": "uint8",
+            "internalType": "enum ISpotOrderBook.NativeExecInstruction"
+          },
+          {
+            "name": "minSizeAfterBlock",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "cancelSlotIdxs",
+        "type": "uint8[]",
+        "internalType": "uint8[]"
+      },
+      {
+        "name": "expectedOrderIds",
+        "type": "uint64[]",
+        "internalType": "uint64[]"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "intentHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeReplaceBySlotPacked",
+    "inputs": [
+      {
+        "name": "header",
+        "type": "tuple",
+        "internalType": "struct KuruTradingWallet.IntentHeader",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "market",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authNonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "deadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "builder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "builderFeePps",
+            "type": "uint32",
+            "internalType": "uint32"
+          }
+        ]
+      },
+      {
+        "name": "packedOps",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "expectedOrderIds",
+        "type": "uint64[]",
+        "internalType": "uint64[]"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "intentHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeTrigger",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "executionReportHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getTrigger",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct KuruTradingWallet.TriggerOrder",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "uint40",
+            "internalType": "uint40"
+          },
+          {
+            "name": "market",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authNonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "nonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "creationDeadline",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "expiry",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "clientOrderId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "builder",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "builderFeePps",
+            "type": "uint32",
+            "internalType": "uint32"
+          },
+          {
+            "name": "conditionHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "action",
+            "type": "uint8",
+            "internalType": "enum KuruTradingWallet.TriggerAction"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum KuruTradingWallet.TriggerStatus"
+          },
+          {
+            "name": "payload",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isValidSignature",
+    "inputs": [
+      {
+        "name": "hash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "keeperAuthority",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IKeeperAuthority"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lastSeenOrderNonce",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "maxFutureNonceSkewMillis",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "usedTriggerNonce",
+    "inputs": [
+      {
+        "name": "nonce",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "IntentExecuted",
+    "inputs": [
+      {
+        "name": "intentHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "accountId",
+        "type": "uint40",
+        "indexed": true,
+        "internalType": "uint40"
+      },
+      {
+        "name": "market",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "clientOrderId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TriggerCanceled",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "accountId",
+        "type": "uint40",
+        "indexed": true,
+        "internalType": "uint40"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TriggerCreated",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "wallet",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "accountId",
+        "type": "uint40",
+        "indexed": true,
+        "internalType": "uint40"
+      },
+      {
+        "name": "market",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "clientOrderId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "expiry",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "conditionHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "action",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum KuruTradingWallet.TriggerAction"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TriggerExpired",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TriggerFired",
+    "inputs": [
+      {
+        "name": "triggerId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "keeper",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "executionReportHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "DeadlineExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidBuilder",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidExpireTime",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonceTooFarInFuture",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonceTooLow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OrderIdBindingLengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Reentrancy",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StaleAuthorizationEpoch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TriggerNonceUsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TriggerNotActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnauthorizedKeeper",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedSlotOrderId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnverifiedSpotMarket",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroAddress",
+    "inputs": []
+  }
+]

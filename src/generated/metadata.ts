@@ -6,6 +6,10 @@ export const contractMetadata = {
       artifact: "AccountCore.sol/AccountCore.json",
       abiSha256: "445b3b5acc25edfaa8859f97265669b70c2528622bf6be093f8c029c94f7134e"
     },
+    KuruTradingWallet: {
+      artifact: "KuruTradingWallet.sol/KuruTradingWallet.json",
+      abiSha256: "212d3f9d85fc9d92941bfcac01aeaa1e267cc7d182687213aba53ed59b0f7e7d"
+    },
     SpotRouter: {
       artifact: "SpotRouter.sol/SpotRouter.json",
       abiSha256: "d22e77451b596fa2f8c02d571bc1b53dc6790804dfbef685bc266dc128b2c5d0"

@@ -4,9 +4,17 @@ import { kuruErrorAbi } from "../generated";
 
 export type KuruSdkErrorCode =
   | "ADDRESS_REQUIRED"
+  | "INVALID_ADDRESS"
   | "INVALID_BYTES_LENGTH"
+  | "INVALID_HEX"
+  | "INVALID_SIGNATURE"
   | "INVALID_UINT"
+  | "INVALID_WALLET_INTENT"
   | "MISSING_WALLET_CLIENT"
+  | "MISSING_NONCE_RESOLVER"
+  | "NONCE_RESOLUTION_FAILED"
+  | "SIGNER_MISMATCH"
+  | "UNSUPPORTED_SIGNER"
   | "CONTRACT_ERROR_DECODE_FAILED";
 
 export class KuruSdkError extends Error {

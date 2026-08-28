@@ -2,6 +2,7 @@ export {
   accountCoreAbi,
   contractAbis,
   erc20MetadataAbi,
+  kuruTradingWalletAbi,
   kuruErrorAbi,
   orderBookAbi,
   spotOrderBookAbi,

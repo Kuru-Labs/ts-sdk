@@ -1,6 +1,8 @@
 // Committed Kuru contract ABIs used by the SDK runtime.
 import type { Abi } from "viem";
 
+import kuruTradingWalletArtifact from "./KuruTradingWallet.abi.json";
+
 export const accountCoreAbi = [
   {
     type: "constructor",
@@ -6997,8 +6999,12 @@ export const erc20MetadataAbi = [
 /** Compatibility alias for SDK consumers that imported the pre-rename spot order book ABI. */
 export const spotOrderBookAbi = orderBookAbi;
 
+/** Full KuruTradingWallet ABI pinned to the contract revision in contractMetadata. */
+export const kuruTradingWalletAbi = kuruTradingWalletArtifact as Abi;
+
 export const contractAbis = {
   AccountCore: accountCoreAbi,
+  KuruTradingWallet: kuruTradingWalletAbi,
   SpotRouter: spotRouterAbi,
   OrderBook: orderBookAbi,
   SpotPeriphery: spotPeripheryAbi,
