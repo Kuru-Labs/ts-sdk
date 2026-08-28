@@ -102,6 +102,9 @@ export function buildCreateReplaceTriggerTypedData(parameters: {
 }): WalletTypedDataDefinition {
   const header = normalizeWalletIntentHeader(parameters.header);
   const triggerExpiry = assertUint(parameters.triggerExpiry, 64, "triggerExpiry");
+  if (triggerExpiry === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "triggerExpiry must not be zero.");
+  }
   return {
     domain: tradingWalletDomain(parameters.wallet, parameters.chainId),
     primaryType: "CreateReplaceTriggerIntent",
@@ -153,6 +156,9 @@ export function buildCreateBatchTriggerTypedData(parameters: {
 }): WalletTypedDataDefinition {
   const header = normalizeWalletIntentHeader(parameters.header);
   const triggerExpiry = assertUint(parameters.triggerExpiry, 64, "triggerExpiry");
+  if (triggerExpiry === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "triggerExpiry must not be zero.");
+  }
   return {
     domain: tradingWalletDomain(parameters.wallet, parameters.chainId),
     primaryType: "CreateBatchTriggerIntent",
@@ -210,6 +216,9 @@ export function buildCancelTriggerTypedData(parameters: {
   const authNonce = assertUint(parameters.authNonce, 256, "authNonce");
   const nonce = assertUint(parameters.nonce, 64, "nonce");
   const deadline = assertUint(parameters.deadline, 64, "deadline");
+  if (deadline === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "deadline must not be zero.");
+  }
   return {
     domain: tradingWalletDomain(parameters.wallet, parameters.chainId),
     primaryType: "CancelTriggerIntent",

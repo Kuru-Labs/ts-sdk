@@ -42,9 +42,19 @@ import { assertUint } from "../utils";
 export function prepareReplaceBySlotIntent(
   input: ReplaceBySlotIntentInput
 ): PreparedReplaceBySlotIntent {
+  return prepareReplaceBySlotIntentInternal(input, true);
+}
+
+function prepareReplaceBySlotIntentInternal(
+  input: ReplaceBySlotIntentInput,
+  immediate: boolean
+): PreparedReplaceBySlotIntent {
   const wallet = normalizeAddress(input.wallet, "wallet");
   const chainId = normalizeChainId(input.chainId);
   const header = normalizeWalletIntentHeader(input.header);
+  if (immediate && header.nonce === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "Immediate intent nonce must not be zero.");
+  }
   const { packedOps, operationCount } = normalizePackedOperations(input.packedOps);
   const expectedOrderIds = normalizeExpectedOrderIds(input.expectedOrderIds);
   if (expectedOrderIds.length !== operationCount) {
@@ -76,9 +86,19 @@ export function prepareReplaceBySlotIntent(
 }
 
 export function prepareBatchIntent(input: BatchIntentInput): PreparedBatchIntent {
+  return prepareBatchIntentInternal(input, true);
+}
+
+function prepareBatchIntentInternal(
+  input: BatchIntentInput,
+  immediate: boolean
+): PreparedBatchIntent {
   const wallet = normalizeAddress(input.wallet, "wallet");
   const chainId = normalizeChainId(input.chainId);
   const header = normalizeWalletIntentHeader(input.header);
+  if (immediate && header.nonce === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "Immediate intent nonce must not be zero.");
+  }
   const { orders, hash: ordersHash } = normalizeAndHashNativeOrders(input.orders);
   const cancelSlotIdxs = normalizeCancelSlotIndexes(input.cancelSlotIdxs);
   if (orders.length + cancelSlotIdxs.length === 0) {
@@ -122,7 +142,7 @@ export function prepareBatchIntent(input: BatchIntentInput): PreparedBatchIntent
 export function prepareCreateReplaceTriggerIntent(
   input: CreateReplaceTriggerIntentInput
 ): PreparedCreateReplaceTriggerIntent {
-  const immediate = prepareReplaceBySlotIntent(input);
+  const immediate = prepareReplaceBySlotIntentInternal(input, false);
   const triggerExpiry = assertUint(input.triggerExpiry, 64, "triggerExpiry");
   const conditionHash = normalizeBytes32(input.conditionHash, "conditionHash");
   const chainId = normalizeChainId(input.chainId);
@@ -153,7 +173,7 @@ export function prepareCreateReplaceTriggerIntent(
 export function prepareCreateBatchTriggerIntent(
   input: CreateBatchTriggerIntentInput
 ): PreparedCreateBatchTriggerIntent {
-  const immediate = prepareBatchIntent(input);
+  const immediate = prepareBatchIntentInternal(input, false);
   const triggerExpiry = assertUint(input.triggerExpiry, 64, "triggerExpiry");
   const conditionHash = normalizeBytes32(input.conditionHash, "conditionHash");
   const chainId = normalizeChainId(input.chainId);
@@ -196,6 +216,9 @@ export function prepareCancelTriggerIntent(
   const authNonce = assertUint(input.authNonce, 256, "authNonce");
   const nonce = assertUint(input.nonce, 64, "nonce");
   const deadline = assertUint(input.deadline, 64, "deadline");
+  if (deadline === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "deadline must not be zero.");
+  }
   const triggerId = normalizeBytes32(input.triggerId, "triggerId", false);
   const typedData = buildCancelTriggerTypedData({
     wallet,
