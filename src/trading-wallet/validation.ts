@@ -79,12 +79,17 @@ export function normalizeWalletIntentHeader(header: WalletIntentHeaderInput): Wa
     );
   }
 
+  const deadline = assertUint(header.deadline, 64, "header.deadline");
+  if (deadline === 0n) {
+    throw new KuruSdkError("INVALID_WALLET_INTENT", "header.deadline must not be zero.");
+  }
+
   return {
     accountId,
     market: normalizeAddress(header.market, "header.market"),
     authNonce: assertUint(header.authNonce, 256, "header.authNonce"),
     nonce: assertUint(header.nonce, 64, "header.nonce"),
-    deadline: assertUint(header.deadline, 64, "header.deadline"),
+    deadline,
     clientOrderId: normalizeBytes32(header.clientOrderId, "header.clientOrderId"),
     builder,
     builderFeePps

@@ -18,6 +18,7 @@ import {
   prepareBatchIntent,
   prepareCancelTriggerIntent,
   prepareCreateBatchTriggerIntent,
+  prepareCreateReplaceTriggerIntent,
   prepareReplaceBySlotIntent,
   recoverWalletIntentSigner,
   signEip7702Authorization,
@@ -236,6 +237,68 @@ describe("wallet intent preparation and signing", () => {
         expectedOrderIds: [1n]
       })
     ).toThrow(/below uint32.max/u);
+  });
+
+  it("rejects deterministically unusable deadlines and immediate nonces", () => {
+    expect(() =>
+      prepareReplaceBySlotIntent({
+        wallet,
+        chainId: 143,
+        header: { ...headerInput, deadline: 0n },
+        packedOps,
+        expectedOrderIds: [31n]
+      })
+    ).toThrow(/deadline must not be zero/u);
+
+    expect(() =>
+      prepareBatchIntent({
+        ...validBatchInput(),
+        header: { ...headerInput, nonce: 0n }
+      })
+    ).toThrow(/Immediate intent nonce must not be zero/u);
+
+    expect(() =>
+      prepareReplaceBySlotIntent({
+        wallet,
+        chainId: 143,
+        header: { ...headerInput, nonce: 0n },
+        packedOps,
+        expectedOrderIds: [31n]
+      })
+    ).toThrow(/Immediate intent nonce must not be zero/u);
+
+    expect(() =>
+      prepareCancelTriggerIntent({
+        wallet,
+        chainId: 143,
+        accountId: 123n,
+        authNonce: 9n,
+        nonce: 1n,
+        deadline: 0n,
+        triggerId
+      })
+    ).toThrow(/deadline must not be zero/u);
+  });
+
+  it("keeps unordered trigger nonce zero valid but rejects zero trigger expiry", () => {
+    const trigger = prepareCreateReplaceTriggerIntent({
+      wallet,
+      chainId: 143,
+      header: { ...headerInput, nonce: 0n },
+      packedOps,
+      expectedOrderIds: [31n],
+      triggerExpiry: 1_720_003_600n,
+      conditionHash
+    });
+    expect(trigger.header.nonce).toBe(0n);
+
+    expect(() =>
+      prepareCreateBatchTriggerIntent({
+        ...validBatchInput(),
+        triggerExpiry: 0n,
+        conditionHash
+      })
+    ).toThrow(/triggerExpiry must not be zero/u);
   });
 
   it("rejects a signer bound to another wallet before asking it to sign", async () => {

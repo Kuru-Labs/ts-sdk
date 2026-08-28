@@ -25,7 +25,7 @@ executor helpers would invite frontends to integrate a path the protocol is reti
 
 ## 2026-08-27: Defer Trading Wallet SDK Module Until Requested
 
-**Status:** superseded by the 2026-08-28 decision below
+**Status:** reverted on 2026-08-28 by the decision below
 
 The latest contracts include `KuruTradingWallet`, but this sync does not expose it. The current goal
 is to bring account, spot, periphery, ABIs, and event decoders to latest main while avoiding a
@@ -33,6 +33,8 @@ partially designed Mera/relay API.
 
 The tradeoff is that the generated ABI allowlist intentionally omits a production contract. That
 omission is temporary and should be revisited when the EIP-7702/Mera SDK surface is implemented.
+The decision was reverted after the wallet and relay signing surface was explicitly requested and
+its trust, nonce, and transport boundaries were specified.
 
 ## 2026-08-28: Isolate KuruTradingWallet Signing From Relay Transport
 
