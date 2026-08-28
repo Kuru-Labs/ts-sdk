@@ -9,7 +9,8 @@ import {
   buildCreateBatchTriggerRelayRequest,
   buildCreateReplaceTriggerRelayRequest,
   buildExecuteBatchRelayRequest,
-  buildExecuteReplaceBySlotRelayRequest
+  buildExecuteReplaceBySlotRelayRequest,
+  validateRelayRequest
 } from "./requests";
 import { assertRelayRequestId, createRelayRequestId } from "./request-id";
 import type {
@@ -132,17 +133,17 @@ export function createKuruRelayClient(config: KuruRelayClientConfig) {
     request: AnyRelayRequest,
     options: RelaySubmitOptions = {}
   ): Promise<RelayBroadcastResponse> {
-    assertRelayRequestId(request.requestId);
+    const validatedRequest = validateRelayRequest(request);
     const token = await resolveAccessToken(
       options.accessToken ?? retainedToken,
       config.tokenProvider,
-      request.wallet,
+      validatedRequest.wallet,
       now
     );
     const result = await requestJson(
       fetchImplementation,
       `${baseUrl}/relay`,
-      request,
+      validatedRequest,
       token,
       options,
       timeoutMs
@@ -150,6 +151,7 @@ export function createKuruRelayClient(config: KuruRelayClientConfig) {
     if (!result.response.ok) {
       const rejection = parseServerResponse(() => parseFailureResponse(result.body));
       if (rejection) {
+        assertResponseRequestId(rejection.requestId, validatedRequest.requestId);
         throw new KuruRelayError("RELAY_REJECTION", "The relay rejected the request.", {
           code: rejection.code,
           httpStatus: result.response.status,
@@ -163,13 +165,16 @@ export function createKuruRelayClient(config: KuruRelayClientConfig) {
     }
     const rejection = parseServerResponse(() => parseFailureResponse(result.body));
     if (rejection) {
+      assertResponseRequestId(rejection.requestId, validatedRequest.requestId);
       throw new KuruRelayError("RELAY_REJECTION", "The relay rejected the request.", {
         code: rejection.code,
         httpStatus: result.response.status,
         response: rejection
       });
     }
-    return parseServerResponse(() => parseBroadcastResponse(result.body));
+    const broadcast = parseServerResponse(() => parseBroadcastResponse(result.body));
+    assertResponseRequestId(broadcast.requestId, validatedRequest.requestId);
+    return broadcast;
   }
 
   function withRequestId<T extends { readonly requestId?: string }>(parameters: T) {
@@ -479,6 +484,12 @@ function parseFailureResponse(value: unknown): RelayFailureResponse | undefined 
         ? null
         : canonicalDecimal(requiredString(object, "sponsorNonce"), 64)
   };
+}
+
+function assertResponseRequestId(actual: string | null, expected: string): void {
+  if (actual !== null && actual !== expected) {
+    malformed("RESPONSE_REQUEST_ID_MISMATCH");
+  }
 }
 
 function authenticationFailure(status: number, value: unknown): KuruRelayError {

@@ -27,6 +27,7 @@ import {
 } from "../src/trading-wallet";
 
 const REQUEST_ID = "018f5ef2-88a1-7b41-a826-4b679010f87f";
+const OTHER_REQUEST_ID = "018f5ef2-88a1-7b41-a826-4b679010f880";
 const TX_HASH: Hex = `0x${"ab".repeat(32)}`;
 const CLIENT_ORDER_ID: Hex = `0x${"11".repeat(32)}`;
 const TRIGGER_ID: Hex = `0x${"22".repeat(32)}`;
@@ -294,9 +295,131 @@ describe("relay request serialization", () => {
       })
     ).toThrowError(/signer must equal/);
   });
+
+  it("revalidates JSON-restored envelopes for every public method", async () => {
+    const values = await fixtures();
+    const accountAuthorization = buildAuthorizeAccountSignerRelayRequest({
+      requestId: REQUEST_ID,
+      wallet: wallet.address,
+      authorization7702: values.authorization7702,
+      authorization: {
+        account: authorizer.address,
+        authorizer: authorizer.address,
+        signer: wallet.address,
+        permissions: 1,
+        expiry: 1_722_592_000n,
+        nonce: 0n,
+        deadline: 1_720_000_030n,
+        signature: values.accountAuthorizationSignature
+      }
+    });
+    const requests = [
+      buildExecuteReplaceBySlotRelayRequest({ requestId: REQUEST_ID, intent: values.replace }),
+      buildExecuteBatchRelayRequest({ requestId: REQUEST_ID, intent: values.batch }),
+      buildCreateReplaceTriggerRelayRequest({
+        requestId: REQUEST_ID,
+        intent: values.createReplace,
+        conditionSchema: 1,
+        condition: CONDITION
+      }),
+      buildCreateBatchTriggerRelayRequest({
+        requestId: REQUEST_ID,
+        intent: values.createBatch,
+        conditionSchema: 1,
+        condition: CONDITION
+      }),
+      buildCancelTriggerRelayRequest({ requestId: REQUEST_ID, intent: values.cancel }),
+      accountAuthorization
+    ];
+    const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(broadcast()))) as typeof fetch;
+    const client = createKuruRelayClient({
+      baseUrl: "https://api.relay.testnet.kuru.io",
+      fetch: fetchMock,
+      accessToken: "token"
+    });
+
+    for (const request of requests) {
+      await expect(client.submit(JSON.parse(JSON.stringify(request)))).resolves.toMatchObject({
+        requestId: REQUEST_ID,
+        status: "BROADCAST"
+      });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(requests.length);
+  });
 });
 
 describe("relay authentication and submission", () => {
+  it("rejects malformed raw envelopes before transport", async () => {
+    const values = await fixtures();
+    const request = buildExecuteReplaceBySlotRelayRequest({
+      requestId: REQUEST_ID,
+      intent: values.replace
+    });
+    const fetchMock = vi.fn() as unknown as typeof fetch;
+    const client = createKuruRelayClient({
+      baseUrl: "https://api.relay.testnet.kuru.io",
+      fetch: fetchMock,
+      accessToken: "token"
+    });
+
+    const submitMalformed = (value: unknown) =>
+      client.submit(value as Parameters<typeof client.submit>[0]);
+    await expect(
+      submitMalformed({ ...request, method: "not.a.relay.method" })
+    ).rejects.toMatchObject({ kind: "INPUT", code: "INVALID_RELAY_METHOD" });
+    await expect(submitMalformed({ ...request, wallet: "not-an-address" })).rejects.toMatchObject({
+      kind: "INPUT"
+    });
+    await expect(submitMalformed({ ...request, payload: {} })).rejects.toMatchObject({
+      kind: "INPUT"
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects broadcast and failure responses correlated to another request", async () => {
+    const values = await fixtures();
+    const request = buildExecuteReplaceBySlotRelayRequest({
+      requestId: REQUEST_ID,
+      intent: values.replace
+    });
+    const broadcastClient = createKuruRelayClient({
+      baseUrl: "https://api.relay.testnet.kuru.io",
+      fetch: vi.fn(() => Promise.resolve(jsonResponse(broadcast(OTHER_REQUEST_ID)))),
+      accessToken: "token"
+    });
+    await expect(broadcastClient.submit(request)).rejects.toMatchObject({
+      kind: "MALFORMED_RESPONSE",
+      code: "RESPONSE_REQUEST_ID_MISMATCH"
+    });
+
+    const failureClient = createKuruRelayClient({
+      baseUrl: "https://api.relay.testnet.kuru.io",
+      fetch: vi.fn(() =>
+        Promise.resolve(
+          jsonResponse(
+            {
+              requestId: OTHER_REQUEST_ID,
+              status: "UNKNOWN",
+              code: "BROADCAST_RESULT_UNKNOWN",
+              message: "broadcast result is unknown",
+              retryable: false,
+              retryAfterMs: null,
+              candidateTxHash: TX_HASH,
+              sponsorAddress: SPONSOR,
+              sponsorNonce: "81"
+            },
+            503
+          )
+        )
+      ),
+      accessToken: "token"
+    });
+    await expect(failureClient.submit(request)).rejects.toMatchObject({
+      kind: "MALFORMED_RESPONSE",
+      code: "RESPONSE_REQUEST_ID_MISMATCH"
+    });
+  });
+
   it("signs the exact challenge, exchanges only ID/signature, and retains the relay JWT", async () => {
     const values = await fixtures();
     const calls: Array<{ url: string; init: RequestInit }> = [];
@@ -604,9 +727,9 @@ describe("relay request IDs", () => {
   });
 });
 
-function broadcast() {
+function broadcast(requestId = REQUEST_ID) {
   return {
-    requestId: REQUEST_ID,
+    requestId,
     status: "BROADCAST",
     txHash: TX_HASH,
     sponsorAddress: SPONSOR,

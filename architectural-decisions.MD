@@ -69,4 +69,8 @@ caller may inject a token provider explicitly. State-changing requests are never
 retried, including ambiguous broadcasts, because durable idempotency is not provided by the Relay.
 
 Request builders serialize every integer as a canonical decimal string and model only the six public
-typed methods. WebSocket support remains a separately tracked future module.
+typed methods. The public raw `submit` boundary revalidates and canonicalizes the complete envelope
+so JavaScript and JSON-restored queued requests cannot bypass builder validation. A broadcast or
+non-null failure response must carry the submitted request ID; mismatches fail closed as malformed
+responses before transaction metadata reaches the caller. WebSocket support remains a separately
+tracked future module.

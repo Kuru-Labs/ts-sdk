@@ -3,6 +3,7 @@ import { isAddressEqual, isHex, keccak256, size, type Address, type Hex } from "
 import { NativeExecInstruction, NativeSide, NativeTif, type NativeOrder } from "../spot";
 import type { SignedEip7702Authorization, WalletIntentHeader } from "../trading-wallet";
 import {
+  assertArraySize,
   normalizeAddress,
   normalizeAuthorizationSignature,
   normalizeBytes32,
@@ -23,6 +24,7 @@ import {
   type BuildCreateReplaceTriggerRelayRequest,
   type BuildExecuteBatchRelayRequest,
   type BuildExecuteReplaceBySlotRelayRequest,
+  type AnyRelayRequest,
   type RelayAuthorization7702Wire,
   type RelayAuthorizeAccountSignerPayload,
   type RelayCancelTriggerPayload,
@@ -34,6 +36,8 @@ import {
   type RelayNativeOrderWire,
   type RelayRequestEnvelope
 } from "./types";
+
+const relayMethods = new Set<string>(Object.values(RelayMethod));
 
 export function buildExecuteReplaceBySlotRelayRequest(
   parameters: BuildExecuteReplaceBySlotRelayRequest
@@ -200,6 +204,46 @@ export function buildAuthorizeAccountSignerRelayRequest(
       payload,
       parameters.authorization7702
     );
+  });
+}
+
+/** Revalidates and canonicalizes a relay envelope, including JSON-restored queued requests. */
+export function validateRelayRequest(request: AnyRelayRequest): AnyRelayRequest {
+  return buildSafely(() => {
+    const object = requireObject(request, "request");
+    assertExactKeys(object, ["requestId", "method", "wallet", "payload", "authorization7702"]);
+    const requestId = assertRelayRequestId(requireString(object.requestId, "requestId"));
+    const methodValue = requireString(object.method, "method");
+    if (!relayMethods.has(methodValue)) {
+      throw relayInputError("INVALID_RELAY_METHOD", "method is not a supported Relay method.");
+    }
+    const method = methodValue as RelayMethod;
+    const wallet = normalizeAddress(requireString(object.wallet, "wallet") as Address, "wallet");
+    const authorization7702 = validateAuthorization7702Wire(object.authorization7702, wallet);
+
+    let payload: RelayRequestEnvelope["payload"];
+    switch (method) {
+      case RelayMethod.EXECUTE_REPLACE_BY_SLOT_PACKED:
+        payload = validateReplacePayload(object.payload, false);
+        break;
+      case RelayMethod.EXECUTE_BATCH:
+        payload = validateBatchPayload(object.payload, false);
+        break;
+      case RelayMethod.CREATE_REPLACE_TRIGGER:
+        payload = validateReplacePayload(object.payload, true);
+        break;
+      case RelayMethod.CREATE_BATCH_TRIGGER:
+        payload = validateBatchPayload(object.payload, true);
+        break;
+      case RelayMethod.CANCEL_TRIGGER:
+        payload = validateCancelPayload(object.payload);
+        break;
+      case RelayMethod.AUTHORIZE_ACCOUNT_SIGNER:
+        payload = validateAccountAuthorizationPayload(object.payload, wallet);
+        break;
+    }
+
+    return { requestId, method, wallet, payload, authorization7702 } as AnyRelayRequest;
   });
 }
 
@@ -392,8 +436,12 @@ function serializeCondition(
       "conditionHash must equal keccak256(condition)."
     );
   }
+  const triggerExpiry = assertUint(expiryInput, 64, "triggerExpiry");
+  if (triggerExpiry === 0n) {
+    throw relayInputError("INVALID_TRIGGER_CONDITION", "triggerExpiry must not be zero.");
+  }
   return {
-    triggerExpiry: decimal(assertUint(expiryInput, 64, "triggerExpiry")),
+    triggerExpiry: decimal(triggerExpiry),
     conditionSchema: decimal(schema),
     condition,
     conditionHash
@@ -429,6 +477,369 @@ function normalizeOpaqueSignature(value: Hex): Hex {
 function requireIntentKind(actual: string, expected: string): void {
   if (actual !== expected) {
     throw relayInputError("INTENT_KIND_MISMATCH", `Expected a ${expected} signed wallet intent.`);
+  }
+}
+
+function validateAuthorization7702Wire(
+  value: unknown,
+  expectedWallet: Address
+): RelayAuthorization7702Wire | null {
+  if (value === null) return null;
+  const object = requireObject(value, "authorization7702");
+  assertExactKeys(object, ["authority", "chainId", "delegate", "nonce", "yParity", "r", "s"]);
+  const authority = normalizeAddress(
+    requireString(object.authority, "authorization7702.authority") as Address,
+    "authorization7702.authority"
+  );
+  if (!isAddressEqual(authority, expectedWallet)) {
+    throw relayInputError(
+      "AUTHORIZATION_AUTHORITY_MISMATCH",
+      "The EIP-7702 authority must equal the relay wallet."
+    );
+  }
+  const chainId = canonicalUint(object.chainId, 256, "authorization7702.chainId");
+  if (chainId === 0n) {
+    throw relayInputError("INVALID_7702_CHAIN", "authorization7702.chainId must not be zero.");
+  }
+  const nonce = canonicalUint(object.nonce, 64, "authorization7702.nonce");
+  if (nonce >= (1n << 64n) - 1n) {
+    throw relayInputError(
+      "INVALID_7702_NONCE",
+      "authorization7702.nonce must be below uint64.max."
+    );
+  }
+  const yParityText = requireString(object.yParity, "authorization7702.yParity");
+  if (yParityText !== "0" && yParityText !== "1") {
+    throw relayInputError("INVALID_SIGNATURE", "authorization7702.yParity must be 0 or 1.");
+  }
+  const signature = normalizeAuthorizationSignature({
+    r: requireString(object.r, "authorization7702.r") as Hex,
+    s: requireString(object.s, "authorization7702.s") as Hex,
+    yParity: Number(yParityText)
+  });
+  return {
+    authority,
+    chainId: decimal(chainId),
+    delegate: normalizeAddress(
+      requireString(object.delegate, "authorization7702.delegate") as Address,
+      "authorization7702.delegate"
+    ),
+    nonce: decimal(nonce),
+    yParity: yParityText,
+    r: signature.r,
+    s: signature.s
+  };
+}
+
+function validateReplacePayload(value: unknown, trigger: false): RelayExecuteReplaceBySlotPayload;
+function validateReplacePayload(value: unknown, trigger: true): RelayCreateReplaceTriggerPayload;
+function validateReplacePayload(
+  value: unknown,
+  trigger: boolean
+): RelayExecuteReplaceBySlotPayload | RelayCreateReplaceTriggerPayload {
+  const object = requireObject(value, "payload");
+  assertExactKeys(
+    object,
+    trigger
+      ? [
+          "header",
+          "triggerExpiry",
+          "conditionSchema",
+          "condition",
+          "conditionHash",
+          "packedOps",
+          "expectedOrderIds",
+          "signature"
+        ]
+      : ["header", "packedOps", "expectedOrderIds", "signature"]
+  );
+  const header = validateHeaderWire(object.header, !trigger);
+  const { packedOps, operationCount } = normalizePackedOperations(
+    requireString(object.packedOps, "payload.packedOps") as Hex
+  );
+  const expectedOrderIds = validateUintArray(
+    object.expectedOrderIds,
+    64,
+    "payload.expectedOrderIds"
+  );
+  if (expectedOrderIds.length !== operationCount) {
+    throw relayInputError(
+      "INVALID_ORDER_BINDINGS",
+      "expectedOrderIds length must equal the packed operation count."
+    );
+  }
+  const base: RelayExecuteReplaceBySlotPayload = {
+    header,
+    packedOps,
+    expectedOrderIds: expectedOrderIds.map(decimal),
+    signature: normalizeWalletSignature(requireString(object.signature, "payload.signature") as Hex)
+  };
+  if (!trigger) return base;
+  return {
+    ...base,
+    ...serializeCondition(
+      requireString(object.triggerExpiry, "payload.triggerExpiry"),
+      requireString(object.conditionSchema, "payload.conditionSchema"),
+      requireString(object.condition, "payload.condition") as Hex,
+      requireString(object.conditionHash, "payload.conditionHash") as Hex
+    )
+  };
+}
+
+function validateBatchPayload(value: unknown, trigger: false): RelayExecuteBatchPayload;
+function validateBatchPayload(value: unknown, trigger: true): RelayCreateBatchTriggerPayload;
+function validateBatchPayload(
+  value: unknown,
+  trigger: boolean
+): RelayExecuteBatchPayload | RelayCreateBatchTriggerPayload {
+  const object = requireObject(value, "payload");
+  assertExactKeys(
+    object,
+    trigger
+      ? [
+          "header",
+          "triggerExpiry",
+          "conditionSchema",
+          "condition",
+          "conditionHash",
+          "orders",
+          "cancelSlotIdxs",
+          "expectedOrderIds",
+          "signature"
+        ]
+      : ["header", "orders", "cancelSlotIdxs", "expectedOrderIds", "signature"]
+  );
+  const header = validateHeaderWire(object.header, !trigger);
+  const orderValues = requireArray(object.orders, "payload.orders");
+  assertArraySize(orderValues.length, "payload.orders");
+  const orders = orderValues.map((order, index) => validateOrderWire(order, index));
+  const cancelSlotIdxs = normalizeCancelSlotIndexes(
+    validateUintArray(object.cancelSlotIdxs, 8, "payload.cancelSlotIdxs")
+  );
+  if (orders.length + cancelSlotIdxs.length === 0) {
+    throw relayInputError("EMPTY_BATCH", "A batch must contain an order or cancellation.");
+  }
+  const expectedOrderIds = validateUintArray(
+    object.expectedOrderIds,
+    64,
+    "payload.expectedOrderIds"
+  );
+  if (expectedOrderIds.length !== cancelSlotIdxs.length) {
+    throw relayInputError(
+      "INVALID_ORDER_BINDINGS",
+      "expectedOrderIds length must equal cancelSlotIdxs length."
+    );
+  }
+  const base: RelayExecuteBatchPayload = {
+    header,
+    orders,
+    cancelSlotIdxs: cancelSlotIdxs.map(decimal),
+    expectedOrderIds: expectedOrderIds.map(decimal),
+    signature: normalizeWalletSignature(requireString(object.signature, "payload.signature") as Hex)
+  };
+  if (!trigger) return base;
+  return {
+    ...base,
+    ...serializeCondition(
+      requireString(object.triggerExpiry, "payload.triggerExpiry"),
+      requireString(object.conditionSchema, "payload.conditionSchema"),
+      requireString(object.condition, "payload.condition") as Hex,
+      requireString(object.conditionHash, "payload.conditionHash") as Hex
+    )
+  };
+}
+
+function validateCancelPayload(value: unknown): RelayCancelTriggerPayload {
+  const object = requireObject(value, "payload");
+  assertExactKeys(object, [
+    "accountId",
+    "authNonce",
+    "nonce",
+    "deadline",
+    "triggerId",
+    "signature"
+  ]);
+  const accountId = canonicalUint(object.accountId, 40, "payload.accountId");
+  if (accountId === 0n) {
+    throw relayInputError("INVALID_CANCEL_TRIGGER", "accountId must not be zero.");
+  }
+  const deadline = canonicalUint(object.deadline, 64, "payload.deadline");
+  if (deadline === 0n) {
+    throw relayInputError("INVALID_CANCEL_TRIGGER", "deadline must not be zero.");
+  }
+  return {
+    accountId: decimal(accountId),
+    authNonce: decimal(canonicalUint(object.authNonce, 256, "payload.authNonce")),
+    nonce: decimal(canonicalUint(object.nonce, 64, "payload.nonce")),
+    deadline: decimal(deadline),
+    triggerId: normalizeBytes32(
+      requireString(object.triggerId, "payload.triggerId") as Hex,
+      "payload.triggerId",
+      false
+    ),
+    signature: normalizeWalletSignature(requireString(object.signature, "payload.signature") as Hex)
+  };
+}
+
+function validateAccountAuthorizationPayload(
+  value: unknown,
+  wallet: Address
+): RelayAuthorizeAccountSignerPayload {
+  const object = requireObject(value, "payload");
+  assertExactKeys(object, [
+    "account",
+    "authorizer",
+    "signer",
+    "permissions",
+    "expiry",
+    "nonce",
+    "deadline",
+    "signature"
+  ]);
+  const signer = normalizeAddress(
+    requireString(object.signer, "payload.signer") as Address,
+    "payload.signer"
+  );
+  if (!isAddressEqual(wallet, signer)) {
+    throw relayInputError(
+      "WALLET_SIGNER_MISMATCH",
+      "The AccountCore authorization signer must equal the relay wallet."
+    );
+  }
+  const deadline = canonicalUint(object.deadline, 256, "payload.deadline");
+  if (deadline === 0n) {
+    throw relayInputError("INVALID_ACCOUNT_AUTHORIZATION", "deadline must not be zero.");
+  }
+  return {
+    account: normalizeAddress(
+      requireString(object.account, "payload.account") as Address,
+      "payload.account"
+    ),
+    authorizer: normalizeAddress(
+      requireString(object.authorizer, "payload.authorizer") as Address,
+      "payload.authorizer"
+    ),
+    signer,
+    permissions: decimal(canonicalUint(object.permissions, 32, "payload.permissions")),
+    expiry: decimal(canonicalUint(object.expiry, 64, "payload.expiry")),
+    nonce: decimal(canonicalUint(object.nonce, 256, "payload.nonce")),
+    deadline: decimal(deadline),
+    signature: normalizeOpaqueSignature(requireString(object.signature, "payload.signature") as Hex)
+  };
+}
+
+function validateHeaderWire(value: unknown, immediate: boolean): RelayIntentHeaderWire {
+  const object = requireObject(value, "payload.header");
+  assertExactKeys(object, [
+    "accountId",
+    "market",
+    "authNonce",
+    "nonce",
+    "deadline",
+    "clientOrderId",
+    "builder",
+    "builderFeePps"
+  ]);
+  const header = normalizeWalletIntentHeader({
+    accountId: canonicalUint(object.accountId, 40, "payload.header.accountId"),
+    market: requireString(object.market, "payload.header.market") as Address,
+    authNonce: canonicalUint(object.authNonce, 256, "payload.header.authNonce"),
+    nonce: canonicalUint(object.nonce, 64, "payload.header.nonce"),
+    deadline: canonicalUint(object.deadline, 64, "payload.header.deadline"),
+    clientOrderId: requireString(object.clientOrderId, "payload.header.clientOrderId") as Hex,
+    builder: requireString(object.builder, "payload.header.builder") as Address,
+    builderFeePps: canonicalUint(object.builderFeePps, 32, "payload.header.builderFeePps")
+  });
+  if (immediate && header.nonce === 0n) {
+    throw relayInputError("INVALID_WALLET_INTENT", "Immediate intent nonce must not be zero.");
+  }
+  return serializeHeader(header);
+}
+
+function validateOrderWire(value: unknown, index: number): RelayNativeOrderWire {
+  const object = requireObject(value, `payload.orders[${index}]`);
+  assertExactKeys(object, [
+    "side",
+    "quantity",
+    "price",
+    "tif",
+    "executionInstruction",
+    "minSizeAfterBlock"
+  ]);
+  const side = requireString(object.side, `payload.orders[${index}].side`);
+  const tif = requireString(object.tif, `payload.orders[${index}].tif`);
+  const executionInstruction = requireString(
+    object.executionInstruction,
+    `payload.orders[${index}].executionInstruction`
+  );
+  return serializeOrder({
+    side: side === "BUY" ? NativeSide.BUY : side === "SELL" ? NativeSide.SELL : -1,
+    quantity: canonicalUint(object.quantity, 96, `payload.orders[${index}].quantity`),
+    price: canonicalUint(object.price, 32, `payload.orders[${index}].price`),
+    tif:
+      tif === "GTC"
+        ? NativeTif.GTC
+        : tif === "IOC"
+          ? NativeTif.IOC
+          : tif === "FOK"
+            ? NativeTif.FOK
+            : -1,
+    executionInstruction:
+      executionInstruction === "NONE"
+        ? NativeExecInstruction.NONE
+        : executionInstruction === "POST_ONLY"
+          ? NativeExecInstruction.POST_ONLY
+          : -1,
+    minSizeAfterBlock: canonicalUint(
+      object.minSizeAfterBlock,
+      32,
+      `payload.orders[${index}].minSizeAfterBlock`
+    )
+  });
+}
+
+function validateUintArray(value: unknown, bits: number, field: string): bigint[] {
+  const values = requireArray(value, field);
+  assertArraySize(values.length, field);
+  return values.map((item, index) => canonicalUint(item, bits, `${field}[${index}]`));
+}
+
+function canonicalUint(value: unknown, bits: number, field: string): bigint {
+  const text = requireString(value, field);
+  if (!/^(0|[1-9][0-9]*)$/u.test(text)) {
+    throw relayInputError("INVALID_DECIMAL", `${field} must be a canonical decimal string.`);
+  }
+  return assertUint(text, bits, field);
+}
+
+function requireObject(value: unknown, field: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw relayInputError("INVALID_RELAY_REQUEST", `${field} must be an object.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function requireArray(value: unknown, field: string): readonly unknown[] {
+  if (!Array.isArray(value)) {
+    throw relayInputError("INVALID_RELAY_REQUEST", `${field} must be an array.`);
+  }
+  return value;
+}
+
+function requireString(value: unknown, field: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw relayInputError("INVALID_RELAY_REQUEST", `${field} must be a non-empty string.`);
+  }
+  return value;
+}
+
+function assertExactKeys(object: Record<string, unknown>, expected: readonly string[]): void {
+  const actual = Object.keys(object);
+  if (
+    actual.length !== expected.length ||
+    expected.some((key) => !Object.prototype.hasOwnProperty.call(object, key))
+  ) {
+    throw relayInputError("INVALID_RELAY_REQUEST", "Relay request fields are not canonical.");
   }
 }
 
