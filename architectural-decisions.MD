@@ -51,3 +51,20 @@ block tag.
 The wallet EIP-712 verifying contract is always the wallet EOA because delegated code runs in the
 EOA's address and storage context. It is never the KuruTradingWallet implementation address.
 AccountCore signer authorization remains a distinct EIP-712 domain and nonce lifecycle.
+
+## 2026-08-28: Keep Relay Authentication Explicit And Submission Replay-Free
+
+**Status:** accepted
+
+The SDK exposes `@kuru-labs/ts-sdk/relay` independently from the chain client and trading-wallet
+signing module. Relay authentication is an explicit challenge/sign/token exchange. The SDK signs the
+exact server challenge, while the Relay service verifies admission and issues the JWT; the SDK never
+mints or signs JWTs.
+
+The latency-sensitive submission path accepts a ready token and pre-signed payload. It performs one
+HTTP request, no chain RPC, no wallet signing, and no implicit authentication or token refresh. A
+caller may inject a token provider explicitly. State-changing requests are never automatically
+retried, including ambiguous broadcasts, because durable idempotency is not provided by the Relay.
+
+Request builders serialize every integer as a canonical decimal string and model only the six public
+typed methods. WebSocket support remains a separately tracked future module.

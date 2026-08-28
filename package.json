@@ -43,6 +43,11 @@
       "import": "./dist/trading-wallet/index.js",
       "require": "./dist/trading-wallet/index.cjs"
     },
+    "./relay": {
+      "types": "./dist/relay/index.d.ts",
+      "import": "./dist/relay/index.js",
+      "require": "./dist/relay/index.cjs"
+    },
     "./events": {
       "types": "./dist/events/index.d.ts",
       "import": "./dist/events/index.js",
@@ -65,7 +70,7 @@
   "scripts": {
     "build": "tsup",
     "clean": "rimraf dist coverage",
-    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/trading-wallet/index.ts src/events/index.ts",
+    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/trading-wallet/index.ts src/relay/index.ts src/events/index.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run",

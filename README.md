@@ -114,3 +114,27 @@ Injected, passkey, and embedded-wallet integrations can use
 offers EIP-7702 through its own API, adapt that method to the small `Eip7702AuthorizationSigner`
 interface. The interface receives the already-resolved chain, delegate, and nonce, so provider
 adapters never need to perform hidden state discovery in the order path.
+
+## Relay REST client
+
+`@kuru-labs/ts-sdk/relay` authenticates a trading wallet and submits the six typed public Relay REST
+methods. It deliberately consumes signed wallet/AccountCore payloads instead of duplicating their
+signing logic.
+
+```ts
+import { createKuruRelayClient, createLocalAccountRelaySigner } from "@kuru-labs/ts-sdk/relay";
+
+const relay = createKuruRelayClient({
+  baseUrl: "https://api.relay.testnet.kuru.io",
+  signer: createLocalAccountRelaySigner(wallet)
+});
+
+const session = await relay.authenticate(); // Relay issues and signs this JWT.
+const result = await relay.executeReplaceBySlot({ intent: signedIntent });
+```
+
+Authentication and 7702 onboarding stay outside the hot order path. With a supplied valid token and
+pre-signed intent, submission performs one REST call, no chain RPC, no hidden signing or refresh, and
+no automatic retry. `BROADCAST` is RPC acceptance, not execution success; follow the transaction
+receipt separately. See [the Relay client guide](docs/relay.md) for onboarding, browser adapters,
+errors, expiry, and cancellation.

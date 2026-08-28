@@ -5,12 +5,14 @@ import {
   buildDepositRequest,
   createLocalAccountWalletIntentSigner,
   createKuruClient,
+  createKuruRelayClient,
   encodePackedCancelOp,
   prepareReplaceBySlotIntent,
   signEip7702Authorization,
   signPreparedWalletIntent
 } from "../src";
 import type { Eip7702AuthorizationSigner } from "../src";
+import type { PreparedReplaceBySlotIntent, SignedWalletIntent } from "../src/trading-wallet";
 import type { LocalAccount } from "viem";
 import type { PublicClient, WalletClient } from "../src";
 
@@ -21,6 +23,7 @@ declare const market: Address;
 declare const user: Address;
 declare const localAccount: LocalAccount;
 declare const authorizationSigner: Eip7702AuthorizationSigner;
+declare const signedRelayIntent: SignedWalletIntent<PreparedReplaceBySlotIntent>;
 
 const client = createKuruClient({
   publicClient,
@@ -88,4 +91,14 @@ void signEip7702Authorization({
   delegate: accountCore,
   publicClient,
   signer: authorizationSigner
+});
+
+const relayClient = createKuruRelayClient({
+  baseUrl: "https://api.relay.testnet.kuru.io",
+  accessToken: "relay-issued-jwt"
+});
+
+void relayClient.executeReplaceBySlot({
+  requestId: "018f5ef2-88a1-7b41-a826-4b679010f87f",
+  intent: signedRelayIntent
 });
