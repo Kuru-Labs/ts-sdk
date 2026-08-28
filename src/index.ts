@@ -32,9 +32,11 @@ export * as events from "./events";
 export * as generated from "./generated";
 export * as products from "./products";
 export * as spot from "./spot";
+export * as tradingWallet from "./trading-wallet";
 export * as utils from "./utils";
 
 export * from "./account";
 export * from "./events";
 export * from "./spot";
+export * from "./trading-wallet";
 export * from "./utils";

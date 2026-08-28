@@ -1,6 +1,7 @@
 // Committed Kuru contract ABI exports used by the SDK runtime.
 export {
   accountCoreAbi,
+  kuruTradingWalletAbi,
   spotRouterAbi,
   orderBookAbi,
   spotOrderBookAbi,

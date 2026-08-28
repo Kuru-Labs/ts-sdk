@@ -38,6 +38,11 @@
       "import": "./dist/spot/index.js",
       "require": "./dist/spot/index.cjs"
     },
+    "./trading-wallet": {
+      "types": "./dist/trading-wallet/index.d.ts",
+      "import": "./dist/trading-wallet/index.js",
+      "require": "./dist/trading-wallet/index.cjs"
+    },
     "./events": {
       "types": "./dist/events/index.d.ts",
       "import": "./dist/events/index.js",
@@ -60,18 +65,20 @@
   "scripts": {
     "build": "tsup",
     "clean": "rimraf dist coverage",
-    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/events/index.ts",
+    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/trading-wallet/index.ts src/events/index.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-test.json --noEmit"
   },
   "dependencies": {
-    "viem": "^2.0.0"
+    "viem": "^2.51.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
     "rimraf": "^6.0.0",

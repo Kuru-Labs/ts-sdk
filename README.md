@@ -1,6 +1,6 @@
 # Kuru TypeScript SDK
 
-Viem-first TypeScript SDK for the current Kuru spot/account contracts.
+Viem-first TypeScript SDK for Kuru spot/account contracts and delegated trading wallets.
 
 This package is intentionally private while the public npm package name is finalized. The
 contract ABI surface is committed in `src/generated`.
@@ -36,7 +36,7 @@ const balance = await kuru.account.getBalance({
 The SDK is self-contained. Committed ABIs live in `src/generated/abis.ts` and are used by the
 runtime, tests, and build. A GitHub checkout does not need any sibling contracts repository.
 
-The committed ABI surface is pinned to `kuru-contracts-perps` main commit
+The committed ABI surface is pinned to `spot-contracts-v2` main commit
 `e37bc3961c23e0bdb0ce23477cffc2b2482a1b72`. The spot market artifact is now `OrderBook`;
 `spotOrderBookAbi` remains exported as a compatibility alias.
 
@@ -44,5 +44,73 @@ The committed ABI surface is pinned to `kuru-contracts-perps` main commit
 
 - Builder fees are expressed as PPS (`feePps`, `builderFeePps`), matching the contracts.
 - Spot `swap` and `estimateSwap` no longer take `limitPrice`.
-- Legacy intent executor helpers are not exposed. Account typed-data helpers cover current
-  signer-authorization flows only.
+- Legacy intent executor helpers are not exposed. EIP-7702 trading uses the dedicated
+  `@kuru-labs/ts-sdk/trading-wallet` module.
+
+## Delegated Trading Wallets
+
+The trading-wallet module is deliberately split from relay transport. It builds, hashes, and signs
+the five current `KuruTradingWallet` EIP-712 intents, and it can create the EIP-7702 authorization
+that delegates a wallet EOA to the configured implementation.
+
+```ts
+import { privateKeyToAccount } from "viem/accounts";
+import {
+  createLocalAccountWalletIntentSigner,
+  prepareReplaceBySlotIntent,
+  signPreparedWalletIntent
+} from "@kuru-labs/ts-sdk/trading-wallet";
+
+const wallet = privateKeyToAccount("0x...");
+const prepared = prepareReplaceBySlotIntent({
+  wallet: wallet.address,
+  chainId: 143,
+  header: {
+    accountId: 123n,
+    market: "0x...",
+    authNonce: 9n,
+    nonce: 1_720_000_000_123n,
+    deadline: 1_720_000_030n,
+    clientOrderId: "0x..."
+  },
+  packedOps: "0x...",
+  expectedOrderIds: [31n]
+});
+
+const signed = await signPreparedWalletIntent(
+  prepared,
+  createLocalAccountWalletIntentSigner(wallet)
+);
+```
+
+Preparing, hashing, and locally signing an order does not call an RPC. Every chain- and
+transaction-specific input is caller supplied.
+
+EIP-7702 onboarding accepts an optional authority nonce. Supplying it keeps authorization signing
+RPC-free. If it is omitted, pass a public client or nonce resolver; the SDK reads the pending
+authority nonce exactly once before signing.
+
+```ts
+import {
+  createLocalAccountAuthorizationSigner,
+  signEip7702Authorization
+} from "@kuru-labs/ts-sdk/trading-wallet";
+
+const authorization = await signEip7702Authorization({
+  authority: wallet.address,
+  chainId: 143,
+  delegate: "0x...",
+  publicClient,
+  signer: createLocalAccountAuthorizationSigner(wallet)
+});
+```
+
+Do not use an authorization mode that treats the wallet as the outer transaction executor. The
+relay sponsor submits the EIP-7702 transaction. AccountCore trading-rights authorization is a
+separate signature and nonce domain exposed by `@kuru-labs/ts-sdk/account`.
+
+Injected, passkey, and embedded-wallet integrations can use
+`createWalletClientIntentSigner(walletClient, walletAddress)` for EIP-712 intents. If a provider
+offers EIP-7702 through its own API, adapt that method to the small `Eip7702AuthorizationSigner`
+interface. The interface receives the already-resolved chain, delegate, and nonce, so provider
+adapters never need to perform hidden state discovery in the order path.

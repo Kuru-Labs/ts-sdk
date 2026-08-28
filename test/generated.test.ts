@@ -11,6 +11,7 @@ describe("generated contract surface", () => {
     expect(Object.keys(contractAbis).sort()).toEqual([
       "AccountCore",
       "IERC20Metadata",
+      "KuruTradingWallet",
       "OrderBook",
       "SpotOrderBook",
       "SpotPeriphery",
@@ -26,9 +27,26 @@ describe("generated contract surface", () => {
     expect(Object.keys(contractMetadata.artifacts).sort()).toEqual([
       "AccountCore",
       "IERC20Metadata",
+      "KuruTradingWallet",
       "OrderBook",
       "SpotPeriphery",
       "SpotRouter"
     ]);
+
+    const walletFunctions = contractAbis.KuruTradingWallet.filter(
+      (
+        item
+      ): item is Extract<(typeof contractAbis.KuruTradingWallet)[number], { type: "function" }> =>
+        item.type === "function"
+    ).map((item) => item.name);
+    expect(walletFunctions).toEqual(
+      expect.arrayContaining([
+        "cancelTrigger",
+        "createBatchTrigger",
+        "createReplaceTrigger",
+        "executeBatch",
+        "executeReplaceBySlotPacked"
+      ])
+    );
   });
 });

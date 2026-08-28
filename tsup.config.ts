@@ -7,6 +7,7 @@ export default defineConfig({
     "src/generated/index.ts",
     "src/account/index.ts",
     "src/spot/index.ts",
+    "src/trading-wallet/index.ts",
     "src/events/index.ts",
     "src/errors/index.ts",
     "src/utils/index.ts"

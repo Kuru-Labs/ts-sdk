@@ -25,7 +25,7 @@ executor helpers would invite frontends to integrate a path the protocol is reti
 
 ## 2026-08-27: Defer Trading Wallet SDK Module Until Requested
 
-**Status:** accepted
+**Status:** superseded by the 2026-08-28 decision below
 
 The latest contracts include `KuruTradingWallet`, but this sync does not expose it. The current goal
 is to bring account, spot, periphery, ABIs, and event decoders to latest main while avoiding a
@@ -33,3 +33,21 @@ partially designed Mera/relay API.
 
 The tradeoff is that the generated ABI allowlist intentionally omits a production contract. That
 omission is temporary and should be revisited when the EIP-7702/Mera SDK surface is implemented.
+
+## 2026-08-28: Isolate KuruTradingWallet Signing From Relay Transport
+
+**Status:** accepted
+
+The SDK exposes `@kuru-labs/ts-sdk/trading-wallet` as a pure module for KuruTradingWallet EIP-712
+intent preparation/signing and EIP-7702 authorization. Relay authentication and request submission
+remain a separate module.
+
+Order preparation, hashing, and local signing never query chain state. Callers supply all domain,
+nonce, deadline, account, market, and binding values. The only optional state lookup is the EOA
+transaction nonce needed during one-time EIP-7702 onboarding: when the authority nonce is absent,
+the caller must inject a public client or nonce resolver and the SDK reads it once using the pending
+block tag.
+
+The wallet EIP-712 verifying contract is always the wallet EOA because delegated code runs in the
+EOA's address and storage context. It is never the KuruTradingWallet implementation address.
+AccountCore signer authorization remains a distinct EIP-712 domain and nonce lifecycle.

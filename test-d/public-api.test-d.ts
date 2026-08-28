@@ -3,9 +3,15 @@ import {
   NATIVE_TOKEN_ADDRESS,
   buildBatchRequest,
   buildDepositRequest,
+  createLocalAccountWalletIntentSigner,
   createKuruClient,
-  encodePackedCancelOp
+  encodePackedCancelOp,
+  prepareReplaceBySlotIntent,
+  signEip7702Authorization,
+  signPreparedWalletIntent
 } from "../src";
+import type { Eip7702AuthorizationSigner } from "../src";
+import type { LocalAccount } from "viem";
 import type { PublicClient, WalletClient } from "../src";
 
 declare const publicClient: PublicClient;
@@ -13,6 +19,8 @@ declare const walletClient: WalletClient;
 declare const accountCore: Address;
 declare const market: Address;
 declare const user: Address;
+declare const localAccount: LocalAccount;
+declare const authorizationSigner: Eip7702AuthorizationSigner;
 
 const client = createKuruClient({
   publicClient,
@@ -55,4 +63,29 @@ void client.spot.replaceBySlotPacked({
   userId: 1n,
   packedOps,
   simulate: false
+});
+
+const walletIntent = prepareReplaceBySlotIntent({
+  wallet: localAccount.address,
+  chainId: 143,
+  header: {
+    accountId: 1n,
+    market,
+    authNonce: 0n,
+    nonce: 1n,
+    deadline: 2n,
+    clientOrderId: `0x${"11".repeat(32)}`
+  },
+  packedOps,
+  expectedOrderIds: [1n]
+});
+
+void signPreparedWalletIntent(walletIntent, createLocalAccountWalletIntentSigner(localAccount));
+
+void signEip7702Authorization({
+  authority: localAccount.address,
+  chainId: 143,
+  delegate: accountCore,
+  publicClient,
+  signer: authorizationSigner
 });
