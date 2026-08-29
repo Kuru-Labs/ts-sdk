@@ -95,6 +95,50 @@ The client also exposes `executeBatch`, `createReplaceTrigger`, `createBatchTrig
 `cancelTrigger`, and `authorizeAccountSigner`. Pure `build*RelayRequest` functions are available for
 queueing, inspection, and deterministic tests.
 
+## Complete runnable examples
+
+The [`examples/relay`](../examples/relay) directory contains one signing-and-submission file for
+each public Relay method. Every file creates the relevant signature first and passes the signed
+value to the corresponding typed client method; authentication also signs Relay's personal-message
+challenge. For example:
+
+```bash
+TRADING_WALLET_KEY=0x... \
+KURU_CHAIN_ID=10143 \
+KURU_MARKET=0x... \
+pnpm dlx tsx examples/relay/execute-batch.ts
+```
+
+The example files are:
+
+- [`authorize-account-signer.ts`](../examples/relay/authorize-account-signer.ts)
+- [`execute-replace-by-slot.ts`](../examples/relay/execute-replace-by-slot.ts)
+- [`execute-batch.ts`](../examples/relay/execute-batch.ts)
+- [`create-replace-trigger.ts`](../examples/relay/create-replace-trigger.ts)
+- [`create-batch-trigger.ts`](../examples/relay/create-batch-trigger.ts)
+- [`cancel-trigger.ts`](../examples/relay/cancel-trigger.ts)
+
+Every example needs `TRADING_WALLET_KEY` and an explicit `KURU_CHAIN_ID`. The four order-creation
+examples also need `KURU_MARKET`. `KURU_RELAY_URL` defaults to the testnet Relay URL, while
+`KURU_ACCOUNT_ID`, `KURU_AUTH_NONCE`, `KURU_ORDER_PRICE`, and `KURU_ORDER_QUANTITY` have illustrative
+defaults. Replace those defaults with current values for the target account and market before
+broadcasting.
+
+Method-specific inputs are:
+
+| Example                       | Additional inputs                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `authorize-account-signer.ts` | `ACCOUNT_OWNER_KEY`, `KURU_ACCOUNT_CORE`, `KURU_TRADING_WALLET_DELEGATE`, `KURU_ACCOUNT_AUTHORIZATION_NONCE`, `KURU_AUTHORITY_NONCE` |
+| `execute-replace-by-slot.ts`  | Optional `KURU_SLOT_INDEX` and `KURU_EXPECTED_ORDER_ID`; the expected order defaults to `uint64.max`, meaning the slot must be empty |
+| `execute-batch.ts`            | No additional inputs                                                                                                                 |
+| `create-replace-trigger.ts`   | `KURU_TRIGGER_CONDITION`; optional `KURU_TRIGGER_EXPIRY`, `KURU_SLOT_INDEX`, and `KURU_EXPECTED_ORDER_ID`                            |
+| `create-batch-trigger.ts`     | `KURU_TRIGGER_CONDITION`; optional `KURU_TRIGGER_EXPIRY`                                                                             |
+| `cancel-trigger.ts`           | `KURU_TRIGGER_ID`                                                                                                                    |
+
+`KURU_TRIGGER_CONDITION` is the protocol-defined encoded condition, including its four-byte schema
+prefix. The example derives `conditionSchema` from that prefix and signs its `keccak256` hash so the
+signed trading-wallet intent and Relay payload cannot diverge.
+
 ## Atomic 7702 and AccountCore onboarding
 
 Pass the signed EIP-7702 authorization to the AccountCore request. The two signatures and nonces are

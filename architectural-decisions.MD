@@ -74,3 +74,16 @@ so JavaScript and JSON-restored queued requests cannot bypass builder validation
 non-null failure response must carry the submitted request ID; mismatches fail closed as malformed
 responses before transaction metadata reaches the caller. WebSocket support remains a separately
 tracked future module.
+
+## 2026-08-29: Require The Target Chain In Runnable Relay Examples
+
+**Status:** accepted
+
+Runnable Relay examples require an explicit `KURU_CHAIN_ID` instead of coupling a testnet Relay URL
+to a hardcoded chain. The chain ID is part of both trading-wallet EIP-712 domains and EIP-7702
+authorizations, so an incorrect default creates signatures that are invalid for the intended
+deployment.
+
+The testnet command documents `10143`, while callers targeting other deployments supply their own
+chain ID. The Relay URL retains its testnet convenience default; callers remain responsible for
+pointing it at a Relay serving the explicitly selected chain.
