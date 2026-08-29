@@ -16,6 +16,14 @@
     "sourceMap": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.mjs", "vitest.config.ts", "tsup.config.ts", "eslint.config.mjs"],
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "examples/relay/**/*.ts",
+    "scripts/**/*.mjs",
+    "vitest.config.ts",
+    "tsup.config.ts",
+    "eslint.config.mjs"
+  ],
   "exclude": ["dist", "coverage", "node_modules"]
 }
