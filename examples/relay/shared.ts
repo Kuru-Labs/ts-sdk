@@ -4,7 +4,10 @@ import { privateKeyToAccount } from "viem/accounts";
 import { createKuruRelayClient, createLocalAccountRelaySigner } from "../../src/relay";
 import { createLocalAccountWalletIntentSigner } from "../../src/trading-wallet";
 
-export const chainId = Number(process.env.KURU_CHAIN_ID ?? "143");
+export const chainId = Number(requireBigInt("KURU_CHAIN_ID"));
+if (!Number.isSafeInteger(chainId) || chainId <= 0) {
+  throw new Error("KURU_CHAIN_ID must be a positive safe integer.");
+}
 export const tradingWallet = privateKeyToAccount(requireHex("TRADING_WALLET_KEY", 32));
 export const intentSigner = createLocalAccountWalletIntentSigner(tradingWallet);
 export const relay = createKuruRelayClient({

@@ -104,6 +104,7 @@ challenge. For example:
 
 ```bash
 TRADING_WALLET_KEY=0x... \
+KURU_CHAIN_ID=10143 \
 KURU_MARKET=0x... \
 pnpm dlx tsx examples/relay/execute-batch.ts
 ```
@@ -117,11 +118,11 @@ The example files are:
 - [`create-batch-trigger.ts`](../examples/relay/create-batch-trigger.ts)
 - [`cancel-trigger.ts`](../examples/relay/cancel-trigger.ts)
 
-Every example needs `TRADING_WALLET_KEY`. The four order-creation examples also need `KURU_MARKET`.
-`KURU_RELAY_URL` defaults to the testnet Relay URL, `KURU_CHAIN_ID` defaults to `143`, and
-`KURU_ACCOUNT_ID`, `KURU_AUTH_NONCE`, `KURU_ORDER_PRICE`, and `KURU_ORDER_QUANTITY` have
-illustrative defaults. Replace those defaults with current values for the target account and market
-before broadcasting.
+Every example needs `TRADING_WALLET_KEY` and an explicit `KURU_CHAIN_ID`. The four order-creation
+examples also need `KURU_MARKET`. `KURU_RELAY_URL` defaults to the testnet Relay URL, while
+`KURU_ACCOUNT_ID`, `KURU_AUTH_NONCE`, `KURU_ORDER_PRICE`, and `KURU_ORDER_QUANTITY` have illustrative
+defaults. Replace those defaults with current values for the target account and market before
+broadcasting.
 
 Method-specific inputs are:
 
