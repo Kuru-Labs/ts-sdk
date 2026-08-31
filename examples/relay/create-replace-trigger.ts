@@ -1,16 +1,20 @@
 import { encodePackedReplaceOp } from "../../src/spot";
+import { buildCreateReplaceTriggerRelayRequest } from "../../src/relay";
 import { signCreateReplaceTriggerIntent } from "../../src/trading-wallet";
 import {
   chainId,
   commonHeader,
   envBigInt,
   intentSigner,
+  orderArguments,
   relay,
+  submitAndPrint,
   tradingWallet,
   triggerCondition
 } from "./shared";
 
 const condition = triggerCondition();
+const { price, size, side } = orderArguments();
 const intent = await signCreateReplaceTriggerIntent(
   {
     wallet: tradingWallet.address,
@@ -18,9 +22,9 @@ const intent = await signCreateReplaceTriggerIntent(
     header: commonHeader("create-replace-trigger"),
     packedOps: encodePackedReplaceOp({
       slotIdx: Number(envBigInt("KURU_SLOT_INDEX", 0n)),
-      side: "buy",
-      price: envBigInt("KURU_ORDER_PRICE", 123_400n),
-      size: envBigInt("KURU_ORDER_QUANTITY", 1_000_000n)
+      side,
+      price,
+      size
     }),
     expectedOrderIds: [envBigInt("KURU_EXPECTED_ORDER_ID", (1n << 64n) - 1n)],
     triggerExpiry: condition.triggerExpiry,
@@ -30,9 +34,10 @@ const intent = await signCreateReplaceTriggerIntent(
 );
 
 await relay.authenticate();
-const broadcast = await relay.createReplaceTrigger({
+const request = buildCreateReplaceTriggerRelayRequest({
+  requestId: relay.createRequestId(),
   intent,
   conditionSchema: condition.conditionSchema,
   condition: condition.condition
 });
-console.log(broadcast.txHash, broadcast.transactionType);
+await submitAndPrint(intent.signature, request);

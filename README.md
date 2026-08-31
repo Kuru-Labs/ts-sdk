@@ -64,7 +64,7 @@ import {
 const wallet = privateKeyToAccount("0x...");
 const prepared = prepareReplaceBySlotIntent({
   wallet: wallet.address,
-  chainId: 143,
+  chainId: 10143,
   header: {
     accountId: 123n,
     market: "0x...",
@@ -98,7 +98,7 @@ import {
 
 const authorization = await signEip7702Authorization({
   authority: wallet.address,
-  chainId: 143,
+  chainId: 10143,
   delegate: "0x...",
   publicClient,
   signer: createLocalAccountAuthorizationSigner(wallet)
@@ -125,7 +125,7 @@ signing logic.
 import { createKuruRelayClient, createLocalAccountRelaySigner } from "@kuru-labs/ts-sdk/relay";
 
 const relay = createKuruRelayClient({
-  baseUrl: "https://api.relay.testnet.kuru.io",
+  baseUrl: "https://relay.testnet.kuru.io",
   signer: createLocalAccountRelaySigner(wallet)
 });
 

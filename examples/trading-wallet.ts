@@ -20,7 +20,7 @@ const publicClient = createPublicClient({ transport: http(rpcUrl) });
 // Onboarding may resolve the authority nonce once. Pass `nonce` explicitly to avoid this RPC.
 export const authorization = await signEip7702Authorization({
   authority: wallet.address,
-  chainId: 143,
+  chainId: 10143,
   delegate,
   publicClient,
   signer: createLocalAccountAuthorizationSigner(wallet)
@@ -29,7 +29,7 @@ export const authorization = await signEip7702Authorization({
 // The order path below performs no chain RPC.
 const prepared = prepareReplaceBySlotIntent({
   wallet: wallet.address,
-  chainId: 143,
+  chainId: 10143,
   header: {
     accountId: 1n,
     market: "0x1111111111111111111111111111111111111111",

@@ -1,5 +1,14 @@
+import { buildExecuteBatchRelayRequest } from "../../src/relay";
 import { signBatchIntent } from "../../src/trading-wallet";
-import { chainId, commonHeader, intentSigner, nativeOrder, relay, tradingWallet } from "./shared";
+import {
+  chainId,
+  commonHeader,
+  intentSigner,
+  nativeOrder,
+  relay,
+  submitAndPrint,
+  tradingWallet
+} from "./shared";
 
 const intent = await signBatchIntent(
   {
@@ -14,5 +23,5 @@ const intent = await signBatchIntent(
 );
 
 await relay.authenticate();
-const broadcast = await relay.executeBatch({ intent });
-console.log(broadcast.txHash, broadcast.transactionType);
+const request = buildExecuteBatchRelayRequest({ requestId: relay.createRequestId(), intent });
+await submitAndPrint(intent.signature, request);

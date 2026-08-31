@@ -1,3 +1,4 @@
+import { buildCreateBatchTriggerRelayRequest } from "../../src/relay";
 import { signCreateBatchTriggerIntent } from "../../src/trading-wallet";
 import {
   chainId,
@@ -5,6 +6,7 @@ import {
   intentSigner,
   nativeOrder,
   relay,
+  submitAndPrint,
   tradingWallet,
   triggerCondition
 } from "./shared";
@@ -25,9 +27,10 @@ const intent = await signCreateBatchTriggerIntent(
 );
 
 await relay.authenticate();
-const broadcast = await relay.createBatchTrigger({
+const request = buildCreateBatchTriggerRelayRequest({
+  requestId: relay.createRequestId(),
   intent,
   conditionSchema: condition.conditionSchema,
   condition: condition.condition
 });
-console.log(broadcast.txHash, broadcast.transactionType);
+await submitAndPrint(intent.signature, request);

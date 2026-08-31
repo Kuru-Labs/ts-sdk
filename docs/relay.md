@@ -31,7 +31,7 @@ import { createKuruRelayClient, createLocalAccountRelaySigner } from "@kuru-labs
 
 const wallet = privateKeyToAccount(process.env.TRADING_WALLET_KEY as `0x${string}`);
 const relay = createKuruRelayClient({
-  baseUrl: "https://api.relay.testnet.kuru.io",
+  baseUrl: "https://relay.testnet.kuru.io",
   signer: createLocalAccountRelaySigner(wallet),
   timeoutMs: 5_000
 });
@@ -48,7 +48,7 @@ For an embedded or passkey wallet, adapt a Viem wallet client without adding cha
 import { createWalletClientRelaySigner } from "@kuru-labs/ts-sdk/relay";
 
 const relay = createKuruRelayClient({
-  baseUrl: "https://api.relay.testnet.kuru.io",
+  baseUrl: "https://relay.testnet.kuru.io",
   signer: createWalletClientRelaySigner(walletClient, tradingWalletAddress)
 });
 ```
@@ -68,7 +68,7 @@ import {
 const intent = await signReplaceBySlotIntent(
   {
     wallet: wallet.address,
-    chainId: 143,
+    chainId: 10143,
     header: {
       accountId: 123n,
       market,
@@ -99,18 +99,21 @@ queueing, inspection, and deterministic tests.
 
 The [`examples/relay`](../examples/relay) directory contains one signing-and-submission file for
 each public Relay method. Every file creates the relevant signature first and passes the signed
-value to the corresponding typed client method; authentication also signs Relay's personal-message
-challenge. For example:
+value into a printed Relay request before submission. Each script prints the signature, request,
+and response. Authentication also signs Relay's personal-message challenge. For a specific-market
+batch order, set `KURU_MARKET`:
 
 ```bash
 TRADING_WALLET_KEY=0x... \
-KURU_CHAIN_ID=10143 \
+KURU_ACCOUNT_ID=18 \
+KURU_AUTH_NONCE=0 \
 KURU_MARKET=0x... \
-pnpm dlx tsx examples/relay/execute-batch.ts
+pnpm dlx tsx examples/relay/execute-batch.ts --side buy --price 2020 --size 1
 ```
 
 The example files are:
 
+- [`authenticate.ts`](../examples/relay/authenticate.ts) — prints a JWT for `RELAY_SIGNER_PRIVATE_KEY`.
 - [`authorize-account-signer.ts`](../examples/relay/authorize-account-signer.ts)
 - [`execute-replace-by-slot.ts`](../examples/relay/execute-replace-by-slot.ts)
 - [`execute-batch.ts`](../examples/relay/execute-batch.ts)
@@ -118,22 +121,59 @@ The example files are:
 - [`create-batch-trigger.ts`](../examples/relay/create-batch-trigger.ts)
 - [`cancel-trigger.ts`](../examples/relay/cancel-trigger.ts)
 
-Every example needs `TRADING_WALLET_KEY` and an explicit `KURU_CHAIN_ID`. The four order-creation
-examples also need `KURU_MARKET`. `KURU_RELAY_URL` defaults to the testnet Relay URL, while
-`KURU_ACCOUNT_ID`, `KURU_AUTH_NONCE`, `KURU_ORDER_PRICE`, and `KURU_ORDER_QUANTITY` have illustrative
-defaults. Replace those defaults with current values for the target account and market before
-broadcasting.
+To print a Relay JWT without placing an order:
+
+```bash
+RELAY_SIGNER_PRIVATE_KEY=0x... \
+pnpm dlx tsx examples/relay/authenticate.ts
+```
+
+Treat this output as a secret. The JWT is bound to the signing wallet and expires at the time
+reported by Relay.
+
+Every signed trading-wallet example needs `TRADING_WALLET_KEY`, `KURU_ACCOUNT_ID`, and
+`KURU_AUTH_NONCE`. The four order-creation examples also need `KURU_MARKET`. Supply `--price` and
+`--size` to every order-producing example. Both are raw positive integers: `--price` uses the
+market's `pricePrecision` and `--size` uses its `sizePrecision`; the examples do not fetch or
+convert market precisions.
+
+### CLI flags and environment variables
+
+| Input                              | Required for                   | Meaning                                                                                                         |
+| ---------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `RELAY_SIGNER_PRIVATE_KEY`         | `authenticate.ts`              | EOA private key used only to sign Relay's authentication challenge. The script prints the resulting JWT.        |
+| `TRADING_WALLET_KEY`               | Signed trading-wallet examples | Delegated trading EOA private key. It signs intents and Relay authentication challenges.                        |
+| `KURU_CHAIN_ID`                    | Optional                       | EIP-712 chain ID. Defaults to Monad testnet `10143`; set only when intentionally targeting another deployment.  |
+| `KURU_RELAY_URL`                   | Optional                       | Relay base URL. Defaults to `https://relay.testnet.kuru.io`.                                                    |
+| `KURU_ACCOUNT_ID`                  | Signed trading-wallet examples | Target AccountCore account ID, such as `18`. The trading wallet needs live `TRADE` permission for this account. |
+| `KURU_AUTH_NONCE`                  | Signed trading-wallet examples | Current AccountCore authorization epoch for `KURU_ACCOUNT_ID`; `0` is valid only when it is the current epoch.  |
+| `KURU_MARKET`                      | Order-producing examples       | OrderBook address for the target market.                                                                        |
+| `--side buy\|sell`                 | Order-producing examples       | Order direction. Defaults to `buy` when omitted.                                                                |
+| `--price VALUE`                    | Order-producing examples       | Positive raw price in the market's `pricePrecision`.                                                            |
+| `--size VALUE`                     | Order-producing examples       | Positive raw base size in the market's `sizePrecision`.                                                         |
+| `KURU_SLOT_INDEX`                  | Packed replacement examples    | Target maker slot; defaults to `0`.                                                                             |
+| `KURU_EXPECTED_ORDER_ID`           | Packed replacement examples    | Current expected order ID for the target slot; defaults to `uint64.max`, requiring an empty slot.               |
+| `KURU_TRIGGER_ID`                  | `cancel-trigger.ts`            | 32-byte trigger ID to cancel. This does not cancel an active maker order.                                       |
+| `KURU_TRIGGER_CONDITION`           | Trigger-creation examples      | Protocol-encoded condition beginning with its four-byte schema. Its hash is signed and sent with the trigger.   |
+| `KURU_TRIGGER_EXPIRY`              | Optional trigger creation      | Unix-second expiry. Defaults to one hour after the example starts.                                              |
+| `ACCOUNT_OWNER_KEY`                | Signer authorization           | Account owner or live administrator private key; it signs the AccountCore permission grant.                     |
+| `KURU_ACCOUNT_CORE`                | Signer authorization           | AccountCore address used as the AccountCore EIP-712 verifying contract.                                         |
+| `KURU_TRADING_WALLET_DELEGATE`     | Signer authorization           | KuruTradingWallet implementation address used in the EIP-7702 authorization.                                    |
+| `KURU_ACCOUNT_AUTHORIZATION_NONCE` | Signer authorization           | Current AccountCore signer-authorization nonce, distinct from `KURU_AUTH_NONCE`.                                |
+| `KURU_AUTHORITY_NONCE`             | Signer authorization           | Current EIP-7702 authority nonce for `TRADING_WALLET_KEY`.                                                      |
+| `KURU_SIGNER_PERMISSIONS`          | Optional signer authorization  | AccountCore permission bitmap; defaults to `1` (`TRADE`).                                                       |
+| `KURU_SIGNER_EXPIRY`               | Optional signer authorization  | Unix-second permission expiry; defaults to 30 days after the example starts.                                    |
 
 Method-specific inputs are:
 
-| Example                       | Additional inputs                                                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `authorize-account-signer.ts` | `ACCOUNT_OWNER_KEY`, `KURU_ACCOUNT_CORE`, `KURU_TRADING_WALLET_DELEGATE`, `KURU_ACCOUNT_AUTHORIZATION_NONCE`, `KURU_AUTHORITY_NONCE` |
-| `execute-replace-by-slot.ts`  | Optional `KURU_SLOT_INDEX` and `KURU_EXPECTED_ORDER_ID`; the expected order defaults to `uint64.max`, meaning the slot must be empty |
-| `execute-batch.ts`            | No additional inputs                                                                                                                 |
-| `create-replace-trigger.ts`   | `KURU_TRIGGER_CONDITION`; optional `KURU_TRIGGER_EXPIRY`, `KURU_SLOT_INDEX`, and `KURU_EXPECTED_ORDER_ID`                            |
-| `create-batch-trigger.ts`     | `KURU_TRIGGER_CONDITION`; optional `KURU_TRIGGER_EXPIRY`                                                                             |
-| `cancel-trigger.ts`           | `KURU_TRIGGER_ID`                                                                                                                    |
+| Example                       | Additional inputs                                                                                                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authorize-account-signer.ts` | `ACCOUNT_OWNER_KEY`, `KURU_ACCOUNT_CORE`, `KURU_TRADING_WALLET_DELEGATE`, `KURU_ACCOUNT_AUTHORIZATION_NONCE`, `KURU_AUTHORITY_NONCE`                                 |
+| `execute-replace-by-slot.ts`  | `--price`, `--size`; optional `--side`, `KURU_SLOT_INDEX`, and `KURU_EXPECTED_ORDER_ID`; the expected order defaults to `uint64.max`, meaning the slot must be empty |
+| `execute-batch.ts`            | `--price`, `--size`; optional `--side`                                                                                                                               |
+| `create-replace-trigger.ts`   | `--price`, `--size`, `KURU_TRIGGER_CONDITION`; optional `--side`, `KURU_TRIGGER_EXPIRY`, `KURU_SLOT_INDEX`, and `KURU_EXPECTED_ORDER_ID`                             |
+| `create-batch-trigger.ts`     | `--price`, `--size`, `KURU_TRIGGER_CONDITION`; optional `--side`, `KURU_TRIGGER_EXPIRY`                                                                              |
+| `cancel-trigger.ts`           | `KURU_TRIGGER_ID`                                                                                                                                                    |
 
 `KURU_TRIGGER_CONDITION` is the protocol-defined encoded condition, including its four-byte schema
 prefix. The example derives `conditionSchema` from that prefix and signs its `keccak256` hash so the
@@ -147,7 +187,7 @@ independent.
 ```ts
 const authorization7702 = await signEip7702Authorization({
   authority: tradingWallet.address,
-  chainId: 143,
+  chainId: 10143,
   delegate: kuruTradingWalletImplementation,
   nonce: authorityNonce,
   signer: createLocalAccountAuthorizationSigner(tradingWallet)
