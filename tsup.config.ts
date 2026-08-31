@@ -10,6 +10,7 @@ export default defineConfig({
     "src/trading-wallet/index.ts",
     "src/relay/index.ts",
     "src/events/index.ts",
+    "src/exchange-ws/index.ts",
     "src/errors/index.ts",
     "src/utils/index.ts"
   ],

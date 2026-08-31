@@ -10,11 +10,13 @@ export type KuruSdkErrorCode =
   | "INVALID_SIGNATURE"
   | "INVALID_UINT"
   | "INVALID_WALLET_INTENT"
+  | "INVALID_EXCHANGE_WS_FRAME"
   | "MISSING_WALLET_CLIENT"
   | "MISSING_NONCE_RESOLVER"
   | "NONCE_RESOLUTION_FAILED"
   | "SIGNER_MISMATCH"
   | "UNSUPPORTED_SIGNER"
+  | "UNSUPPORTED_EXCHANGE_WS_VERSION"
   | "CONTRACT_ERROR_DECODE_FAILED";
 
 export class KuruSdkError extends Error {
@@ -42,8 +44,12 @@ export function decodeKuruContractError(data: Hex, abi: Abi = kuruErrorAbi): Dec
       args: decoded.args ?? []
     };
   } catch (cause) {
-    throw new KuruSdkError("CONTRACT_ERROR_DECODE_FAILED", "Unable to decode contract error data.", {
-      cause
-    });
+    throw new KuruSdkError(
+      "CONTRACT_ERROR_DECODE_FAILED",
+      "Unable to decode contract error data.",
+      {
+        cause
+      }
+    );
   }
 }

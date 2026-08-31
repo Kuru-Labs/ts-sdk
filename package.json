@@ -53,6 +53,11 @@
       "import": "./dist/events/index.js",
       "require": "./dist/events/index.cjs"
     },
+    "./exchange-ws": {
+      "types": "./dist/exchange-ws/index.d.ts",
+      "import": "./dist/exchange-ws/index.js",
+      "require": "./dist/exchange-ws/index.cjs"
+    },
     "./errors": {
       "types": "./dist/errors/index.d.ts",
       "import": "./dist/errors/index.js",
@@ -70,7 +75,7 @@
   "scripts": {
     "build": "tsup",
     "clean": "rimraf dist coverage",
-    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/trading-wallet/index.ts src/relay/index.ts src/events/index.ts",
+    "docs": "typedoc --entryPointStrategy expand --excludeExternals --out docs/api src/types.ts src/utils/index.ts src/account/index.ts src/spot/index.ts src/trading-wallet/index.ts src/relay/index.ts src/events/index.ts src/exchange-ws/index.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run",

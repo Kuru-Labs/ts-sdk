@@ -29,6 +29,7 @@ export type {
 export * as abi from "./abi";
 export * as account from "./account";
 export * as events from "./events";
+export * as exchangeWs from "./exchange-ws";
 export * as generated from "./generated";
 export * as products from "./products";
 export * as relay from "./relay";
@@ -38,6 +39,7 @@ export * as utils from "./utils";
 
 export * from "./account";
 export * from "./events";
+export * from "./exchange-ws";
 export * from "./spot";
 export * from "./trading-wallet";
 export * from "./relay";
