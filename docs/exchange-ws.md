@@ -25,7 +25,10 @@ socket.onmessage = async (message) => {
     case "userOrders":
       if (frame.snapshot) {
         // Replace local order state at this authoritative same-view stream cut.
-        console.log(frame.globalUserSeq, frame.upserts);
+        console.log(frame.globalUserSeq, frame.orders);
+      } else {
+        // Apply causal created/trade/cancelled/RAB-reduced events in array order.
+        console.log(frame.globalUserSeq, frame.events);
       }
       break;
   }
@@ -63,19 +66,23 @@ of comparing the two epochs' sequence numbers.
 Market and user trade frames both expose `recordIndex`. The stable identity of a market fill is
 `(marketAddress, tradeId, recordIndex)`; do not substitute its array position inside a batch.
 
-## User-order slots
+## User-order events
 
-User-order snapshots and delta upserts expose the physical order-book slot as `slotIdx`. Delta
-removals carry the same field, so clients can remove an order using its exact
-`(marketAddress, orderId, slotIdx)` identity without recovering the slot from prior local state.
+User-order snapshots expose complete open orders through `orders`. Delta frames expose causal,
+discriminated `events`: `created`, `trade`, `cancelled`, and `rab-reduced`. Every event retains its
+canonical source tuple (`txHash`, `txIdx`, `logIdx`, `recordIdx`), and every affected order
+retains its physical `slotIdx`.
 
 ```ts
 if (frame.kind === "userOrders") {
-  for (const order of frame.upserts) {
-    console.log(order.marketAddress, order.orderId, order.slotIdx);
-  }
-  for (const removal of frame.removals) {
-    console.log(removal.marketAddress, removal.orderId, removal.slotIdx);
+  if (frame.snapshot) {
+    for (const order of frame.orders) {
+      console.log(order.marketAddress, order.orderId, order.slotIdx);
+    }
+  } else {
+    for (const event of frame.events) {
+      console.log(event.kind, event.source, event.marketAddress, event.orderId, event.slotIdx);
+    }
   }
 }
 ```

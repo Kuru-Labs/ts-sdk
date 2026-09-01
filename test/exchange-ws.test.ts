@@ -19,6 +19,7 @@ const BLOCK = `0x${"44".repeat(32)}`;
 const PARENT = `0x${"55".repeat(32)}`;
 const REPLACEMENT = `0x${"66".repeat(32)}`;
 const CLIENT_ORDER_ID = `0x${"77".repeat(32)}`;
+const TX_HASH = `0x${"aa".repeat(32)}`;
 const FEED_EPOCH = (1n << 60n) + 7n;
 
 class FixtureWriter {
@@ -109,6 +110,10 @@ function blockContext(writer: FixtureWriter) {
 
 function userContext(writer: FixtureWriter) {
   writer.u64(7n).u64(8n).u64(10n).u64(6n);
+}
+
+function userOrderSource(writer: FixtureWriter) {
+  writer.hex(TX_HASH).u32(2).u32(3).u16(4);
 }
 
 function lifecycleBody(
@@ -258,7 +263,7 @@ describe("Exchange WebSocket binary decoder", () => {
     });
   });
 
-  it("decodes user-order snapshots and deltas without losing optional fields", () => {
+  it("decodes user-order snapshots and causal deltas without losing identity", () => {
     const snapshot = frame(7, 3, 1, (writer) => {
       writer.u64(7n).u64(0n).u64(0n).u64(0n).u8(0).u64(0n).zeros(32).u32(1);
       writer
@@ -285,7 +290,7 @@ describe("Exchange WebSocket binary decoder", () => {
       previousGlobalUserSeq: null,
       snapshot: true,
       stateHead: null,
-      upserts: [
+      orders: [
         {
           marketAddress: MARKET_A,
           orderId: 11n,
@@ -296,20 +301,63 @@ describe("Exchange WebSocket binary decoder", () => {
           minSizeAfterBlock: 44n,
           clientOrderId: CLIENT_ORDER_ID
         }
-      ],
-      removals: []
+      ]
     });
 
     const delta = frame(7, 1, 0, (writer) => {
       userContext(writer);
       blockContext(writer);
-      writer.u32(0).u32(1).hex(MARKET_B).u64(12n).u8(7);
+      writer.u32(1).u8(3);
+      userOrderSource(writer);
+      writer.u64(7n).hex(MARKET_B).u64(12n).u8(7);
     });
-    expect(decodeUserOrdersFrame(delta)).toMatchObject({
+    expect(decodeUserOrdersFrame(delta)).toEqual({
+      wireVersion: 1,
+      feedEpoch: FEED_EPOCH,
+      kind: "userOrders",
+      view: "proposed",
+      userId: 7n,
+      globalUserSeq: 8n,
+      globalSeq: 10n,
+      previousGlobalUserSeq: 6n,
       snapshot: false,
       sourceBlock: { blockNumber: 12n, blockId: BLOCK },
-      removals: [{ marketAddress: MARKET_B, orderId: 12n, slotIdx: 7 }]
+      events: [
+        {
+          kind: "cancelled",
+          source: {
+            txHash: TX_HASH,
+            txIdx: 2,
+            logIdx: 3,
+            recordIdx: 4
+          },
+          makerId: 7n,
+          marketAddress: MARKET_B,
+          orderId: 12n,
+          slotIdx: 7
+        }
+      ]
     });
+  });
+
+  it("rejects unknown and truncated user-order event tuples", () => {
+    const unknown = frame(7, 3, 0, (writer) => {
+      userContext(writer);
+      blockContext(writer);
+      writer.u32(1).u8(5);
+      userOrderSource(writer);
+      writer.u64(7n).hex(MARKET_A).u64(11n).u8(2);
+    });
+    expect(() => decodeUserOrdersFrame(unknown)).toThrow(/Unknown user-order event code 5/);
+
+    const truncated = frame(7, 3, 0, (writer) => {
+      userContext(writer);
+      blockContext(writer);
+      writer.u32(1).u8(2);
+      userOrderSource(writer);
+      writer.u64(7n).u64(8n).hex(MARKET_A).u8(0);
+    });
+    expect(() => decodeUserOrdersFrame(truncated)).toThrow(/truncated/);
   });
 
   it("decodes user balances from left-padded token addresses", () => {

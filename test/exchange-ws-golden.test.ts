@@ -23,6 +23,9 @@ const FIXTURES = [
   ["all-mids.bin", "allMids"],
   ["user-orders-snapshot.bin", "userOrders"],
   ["user-orders-delta.bin", "userOrders"],
+  ["user-orders-trade.bin", "userOrders"],
+  ["user-orders-cancelled.bin", "userOrders"],
+  ["user-orders-rab-reduced.bin", "userOrders"],
   ["user-balances-snapshot.bin", "userBalances"],
   ["user-balances-delta.bin", "userBalances"],
   ["user-trades.bin", "userTrades"],
@@ -31,6 +34,12 @@ const FIXTURES = [
 
 function fixture(name: string): Uint8Array {
   return readFileSync(new URL(`fixtures/exchange-ws-v1/${name}`, import.meta.url));
+}
+
+function userOrderEvents(name: string) {
+  const frame = decodeUserOrdersFrame(fixture(name));
+  if (frame.snapshot) throw new Error(`${name} must be a user-order delta fixture`);
+  return frame.events;
 }
 
 describe("Exchange WebSocket Rust golden frames", () => {
@@ -85,19 +94,97 @@ describe("Exchange WebSocket Rust golden frames", () => {
     ]);
   });
 
-  it("retains slotIdx on authoritative user-order upserts and removals", () => {
+  it("decodes authoritative user-order snapshots as complete orders", () => {
     const snapshot = decodeUserOrdersFrame(fixture("user-orders-snapshot.bin"));
-    expect(snapshot.upserts[0]?.slotIdx).toBe(2);
-
-    const delta = decodeUserOrdersFrame(fixture("user-orders-delta.bin"));
-    expect(delta.upserts[0]?.slotIdx).toBe(2);
-    expect(delta.removals).toEqual([
+    expect(snapshot.snapshot).toBe(true);
+    if (!snapshot.snapshot) throw new Error("expected a user-order snapshot fixture");
+    expect(snapshot.stateHead).toEqual({
+      blockNumber: 12n,
+      blockId: `0x${"44".repeat(32)}`
+    });
+    expect(snapshot.orders).toEqual([
       {
+        marketAddress: `0x${"11".repeat(20)}`,
+        orderId: 11n,
+        slotIdx: 2,
+        side: "buy",
+        priceTick: 42n,
+        remainingBase: 43n,
+        minSizeAfterBlock: 44n,
+        clientOrderId: `0x${"77".repeat(32)}`
+      }
+    ]);
+  });
+
+  it("decodes all four authoritative causal user-order event variants", () => {
+    const source = {
+      txHash: `0x${"aa".repeat(32)}`,
+      txIdx: 2,
+      logIdx: 3,
+      recordIdx: 4
+    };
+
+    expect(userOrderEvents("user-orders-delta.bin")).toEqual([
+      {
+        kind: "created",
+        source,
+        makerId: 7n,
+        marketAddress: `0x${"11".repeat(20)}`,
+        orderId: 11n,
+        slotIdx: 2,
+        side: "buy",
+        priceTick: 42n,
+        remainingBase: 43n,
+        minSizeAfterBlock: 44n,
+        clientOrderId: `0x${"77".repeat(32)}`
+      }
+    ]);
+    expect(userOrderEvents("user-orders-trade.bin")).toEqual([
+      {
+        kind: "trade",
+        source,
+        takerId: 8n,
+        makerId: 7n,
+        marketAddress: `0x${"11".repeat(20)}`,
+        orderId: 11n,
+        tradeId: 12n,
+        slotIdx: 2,
+        filledSize: 13n,
+        updatedSize: 30n
+      }
+    ]);
+    expect(userOrderEvents("user-orders-cancelled.bin")).toEqual([
+      {
+        kind: "cancelled",
+        source,
+        makerId: 7n,
         marketAddress: `0x${"22".repeat(20)}`,
         orderId: 12n,
         slotIdx: 7
       }
     ]);
+    expect(userOrderEvents("user-orders-rab-reduced.bin")).toEqual([
+      {
+        kind: "rab-reduced",
+        source,
+        makerId: 7n,
+        marketAddress: `0x${"11".repeat(20)}`,
+        orderId: 11n,
+        slotIdx: 2,
+        updatedSize: 14n
+      }
+    ]);
+  });
+
+  it("rejects malformed and unknown authoritative user-order event codes", () => {
+    for (const code of [0, 5]) {
+      const bytes = fixture("user-orders-delta.bin").slice();
+      bytes[92] = code;
+      expect(() => decodeUserOrdersFrame(bytes)).toThrow(`Unknown user-order event code ${code}.`);
+    }
+
+    const truncatedSource = fixture("user-orders-delta.bin").subarray(0, 134);
+    expect(() => decodeUserOrdersFrame(truncatedSource)).toThrow();
   });
 
   it("keeps authoritative user-trade batches scoped to one source record and market", () => {

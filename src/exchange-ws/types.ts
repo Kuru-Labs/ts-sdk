@@ -133,26 +133,71 @@ export interface ExchangeWsUserOrder {
   clientOrderId: Hex | null;
 }
 
-export interface ExchangeWsUserOrderRemoval {
-  marketAddress: Address;
-  orderId: bigint;
-  slotIdx: number;
-}
-
 interface ExchangeWsUserOrdersFrameBase extends ExchangeWsFrameHeader, ExchangeWsUserContext {
   kind: "userOrders";
-  upserts: ExchangeWsUserOrder[];
-  removals: ExchangeWsUserOrderRemoval[];
 }
 
 export interface ExchangeWsUserOrdersSnapshotFrame extends ExchangeWsUserOrdersFrameBase {
   snapshot: true;
   stateHead: ExchangeWsBlockContext | null;
+  orders: ExchangeWsUserOrder[];
 }
+
+export interface ExchangeWsUserOrderSource {
+  txHash: Hex;
+  txIdx: number;
+  logIdx: number;
+  recordIdx: number;
+}
+
+export interface ExchangeWsUserOrderCreatedEvent extends ExchangeWsUserOrder {
+  kind: "created";
+  source: ExchangeWsUserOrderSource;
+  makerId: bigint;
+}
+
+export interface ExchangeWsUserOrderTradeEvent {
+  kind: "trade";
+  source: ExchangeWsUserOrderSource;
+  takerId: bigint;
+  makerId: bigint;
+  marketAddress: Address;
+  orderId: bigint;
+  tradeId: bigint;
+  slotIdx: number;
+  filledSize: bigint;
+  updatedSize: bigint;
+}
+
+export interface ExchangeWsUserOrderCancelledEvent {
+  kind: "cancelled";
+  source: ExchangeWsUserOrderSource;
+  makerId: bigint;
+  marketAddress: Address;
+  orderId: bigint;
+  slotIdx: number;
+}
+
+export interface ExchangeWsUserOrderRabReducedEvent {
+  kind: "rab-reduced";
+  source: ExchangeWsUserOrderSource;
+  makerId: bigint;
+  marketAddress: Address;
+  orderId: bigint;
+  slotIdx: number;
+  updatedSize: bigint;
+}
+
+export type ExchangeWsUserOrderEvent =
+  | ExchangeWsUserOrderCreatedEvent
+  | ExchangeWsUserOrderTradeEvent
+  | ExchangeWsUserOrderCancelledEvent
+  | ExchangeWsUserOrderRabReducedEvent;
 
 export interface ExchangeWsUserOrdersDeltaFrame extends ExchangeWsUserOrdersFrameBase {
   snapshot: false;
   sourceBlock: ExchangeWsBlockContext;
+  events: ExchangeWsUserOrderEvent[];
 }
 
 export type ExchangeWsUserOrdersFrame =

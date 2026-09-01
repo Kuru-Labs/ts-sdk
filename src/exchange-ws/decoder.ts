@@ -28,7 +28,8 @@ import type {
   ExchangeWsUserBalancesFrame,
   ExchangeWsUserContext,
   ExchangeWsUserOrder,
-  ExchangeWsUserOrderRemoval,
+  ExchangeWsUserOrderEvent,
+  ExchangeWsUserOrderSource,
   ExchangeWsUserOrdersFrame,
   ExchangeWsUserTrade,
   ExchangeWsUserTradeLiquidity,
@@ -622,6 +623,69 @@ function decodeUserOrder(reader: ByteReader, index: number): ExchangeWsUserOrder
   };
 }
 
+function decodeUserOrderSource(reader: ByteReader, index: number): ExchangeWsUserOrderSource {
+  const prefix = `user-order event ${index} source`;
+  return {
+    txHash: reader.readHex(32, `${prefix} transaction hash`),
+    txIdx: reader.readU32(`${prefix} transaction index`),
+    logIdx: reader.readU32(`${prefix} log index`),
+    recordIdx: reader.readU16(`${prefix} record index`)
+  };
+}
+
+function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUserOrderEvent {
+  const code = reader.readU8(`user-order event ${index} code`);
+  if (code < 1 || code > 4) {
+    invalidFrame(`Unknown user-order event code ${code}.`);
+  }
+  const source = decodeUserOrderSource(reader, index);
+  if (code === 1) {
+    const makerId = reader.readU64(`user-order event ${index} maker user ID`);
+    return {
+      kind: "created",
+      source,
+      makerId,
+      ...decodeUserOrder(reader, index)
+    };
+  }
+  if (code === 2) {
+    return {
+      kind: "trade",
+      source,
+      takerId: reader.readU64(`user-order event ${index} taker user ID`),
+      makerId: reader.readU64(`user-order event ${index} maker user ID`),
+      marketAddress: reader.readAddress(`user-order event ${index} market address`),
+      orderId: reader.readU64(`user-order event ${index} order ID`),
+      tradeId: reader.readU64(`user-order event ${index} trade ID`),
+      slotIdx: reader.readU8(`user-order event ${index} slot index`),
+      filledSize: reader.readU128(`user-order event ${index} filled size`),
+      updatedSize: reader.readU128(`user-order event ${index} updated size`)
+    };
+  }
+  if (code === 3) {
+    return {
+      kind: "cancelled",
+      source,
+      makerId: reader.readU64(`user-order event ${index} maker user ID`),
+      marketAddress: reader.readAddress(`user-order event ${index} market address`),
+      orderId: reader.readU64(`user-order event ${index} order ID`),
+      slotIdx: reader.readU8(`user-order event ${index} slot index`)
+    };
+  }
+  if (code === 4) {
+    return {
+      kind: "rab-reduced",
+      source,
+      makerId: reader.readU64(`user-order event ${index} maker user ID`),
+      marketAddress: reader.readAddress(`user-order event ${index} market address`),
+      orderId: reader.readU64(`user-order event ${index} order ID`),
+      slotIdx: reader.readU8(`user-order event ${index} slot index`),
+      updatedSize: reader.readU128(`user-order event ${index} updated size`)
+    };
+  }
+  return invalidFrame(`Unknown user-order event code ${code}.`);
+}
+
 function decodeUserOrders(reader: ByteReader, header: DecodedHeader): ExchangeWsUserOrdersFrame {
   if (header.flags !== 0 && header.flags !== 1) {
     invalidFrame(`User-orders flags must be delta (0) or snapshot (1), received ${header.flags}.`);
@@ -631,35 +695,42 @@ function decodeUserOrders(reader: ByteReader, header: DecodedHeader): ExchangeWs
   const block = snapshot
     ? decodeOptionalBlockContext(reader, "state head")
     : decodeBlockContext(reader, "source");
-  const upsertCount = reader.readU32("user-order upsert count");
-  assertCountFits(reader, upsertCount, 96, "user-order upsert count");
-  const upserts: ExchangeWsUserOrder[] = [];
-  for (let index = 0; index < upsertCount; index++) {
-    upserts.push(decodeUserOrder(reader, index));
-  }
-  const removalCount = reader.readU32("user-order removal count");
-  assertCountFits(reader, removalCount, 29, "user-order removal count");
-  const removals: ExchangeWsUserOrderRemoval[] = [];
-  for (let index = 0; index < removalCount; index++) {
-    removals.push({
-      marketAddress: reader.readAddress(`user-order removal ${index} market address`),
-      orderId: reader.readU64(`user-order removal ${index} order ID`),
-      slotIdx: reader.readU8(`user-order removal ${index} slot index`)
-    });
-  }
 
   const common = {
     wireVersion: 1 as const,
     feedEpoch: header.feedEpoch,
     kind: "userOrders" as const,
     view: header.view,
-    ...user,
-    upserts,
-    removals
+    ...user
   };
-  return snapshot
-    ? { ...common, snapshot: true, stateHead: block }
-    : { ...common, snapshot: false, sourceBlock: block as ExchangeWsBlockContext };
+  if (snapshot) {
+    const count = reader.readU32("user-order snapshot count");
+    assertCountFits(reader, count, 96, "user-order snapshot count");
+    const orders: ExchangeWsUserOrder[] = [];
+    for (let index = 0; index < count; index++) {
+      orders.push(decodeUserOrder(reader, index));
+    }
+    const reservedRemovalCount = reader.readU32("reserved user-order removal count");
+    if (reservedRemovalCount !== 0) {
+      invalidFrame(
+        `Reserved user-order snapshot removal count must be zero, received ${reservedRemovalCount}.`
+      );
+    }
+    return { ...common, snapshot: true, stateHead: block, orders };
+  }
+
+  const count = reader.readU32("user-order event count");
+  assertCountFits(reader, count, 80, "user-order event count");
+  const events: ExchangeWsUserOrderEvent[] = [];
+  for (let index = 0; index < count; index++) {
+    events.push(decodeUserOrderEvent(reader, index));
+  }
+  return {
+    ...common,
+    snapshot: false,
+    sourceBlock: block as ExchangeWsBlockContext,
+    events
+  };
 }
 
 function decodeTokenAddress(reader: ByteReader, field: string): Address {

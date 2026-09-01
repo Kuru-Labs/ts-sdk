@@ -111,6 +111,13 @@ if (exchangeFrame.kind === "l2Book" && exchangeFrame.levelFormat === "extended")
 }
 if (exchangeFrame.kind === "userOrders" && exchangeFrame.snapshot) {
   exchangeFrame.stateHead?.blockNumber satisfies bigint | undefined;
-  exchangeFrame.upserts[0]?.slotIdx satisfies number | undefined;
-  exchangeFrame.removals[0]?.slotIdx satisfies number | undefined;
+  exchangeFrame.orders[0]?.slotIdx satisfies number | undefined;
+}
+if (exchangeFrame.kind === "userOrders" && !exchangeFrame.snapshot) {
+  const event = exchangeFrame.events[0];
+  event?.source.recordIdx satisfies number | undefined;
+  if (event?.kind === "trade") {
+    event.filledSize satisfies bigint;
+    event.updatedSize satisfies bigint;
+  }
 }
