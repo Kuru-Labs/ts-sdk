@@ -139,3 +139,27 @@ pre-signed intent, submission performs one REST call, no chain RPC, no hidden si
 no automatic retry. `BROADCAST` is RPC acceptance, not execution success; follow the transaction
 receipt separately. See [the Relay client guide](docs/relay.md) for onboarding, browser adapters,
 errors, expiry, and cancellation.
+
+## Exchange WebSocket data
+
+`@kuru-labs/ts-sdk/exchange-ws` strictly decodes the Exchange Gateway's `KXMD` binary data frames
+into typed `bigint`-safe objects. It supports L2 books and deltas, trades, BBO, all mids, lifecycle
+controls, and all user order, balance, and trade frames. Every wire-version-1 result includes the
+`feedEpoch` that namespaces its market or user sequence cursor.
+User-order snapshots expose complete `orders`; deltas expose causal `created`, `trade`,
+`cancelled`, and `rab-reduced` events with source positions and physical `slotIdx` values.
+
+```ts
+import { decodeExchangeWsMessage } from "@kuru-labs/ts-sdk/exchange-ws";
+
+socket.binaryType = "arraybuffer";
+socket.onmessage = async ({ data }) => {
+  if (typeof data !== "string") {
+    const frame = await decodeExchangeWsMessage(data);
+    console.log(frame.kind, frame.view);
+  }
+};
+```
+
+See [the Exchange WebSocket decoder guide](docs/exchange-ws.md) for numeric units, topic-specific
+helpers, lifecycle handling, and validation behavior.

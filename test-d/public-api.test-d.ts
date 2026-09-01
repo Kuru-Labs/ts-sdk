@@ -6,6 +6,7 @@ import {
   createLocalAccountWalletIntentSigner,
   createKuruClient,
   createKuruRelayClient,
+  decodeExchangeWsFrame,
   encodePackedCancelOp,
   prepareReplaceBySlotIntent,
   signEip7702Authorization,
@@ -102,3 +103,21 @@ void relayClient.executeReplaceBySlot({
   requestId: "018f5ef2-88a1-7b41-a826-4b679010f87f",
   intent: signedRelayIntent
 });
+
+const exchangeFrame = decodeExchangeWsFrame(new Uint8Array());
+exchangeFrame.feedEpoch satisfies bigint;
+if (exchangeFrame.kind === "l2Book" && exchangeFrame.levelFormat === "extended") {
+  exchangeFrame.bids[0]?.activeBaseX18 satisfies bigint | undefined;
+}
+if (exchangeFrame.kind === "userOrders" && exchangeFrame.snapshot) {
+  exchangeFrame.stateHead?.blockNumber satisfies bigint | undefined;
+  exchangeFrame.orders[0]?.slotIdx satisfies number | undefined;
+}
+if (exchangeFrame.kind === "userOrders" && !exchangeFrame.snapshot) {
+  const event = exchangeFrame.events[0];
+  event?.source.recordIdx satisfies number | undefined;
+  if (event?.kind === "trade") {
+    event.filledSize satisfies bigint;
+    event.updatedSize satisfies bigint;
+  }
+}
