@@ -7,6 +7,7 @@ import {
   type AnyRelayRequest
 } from "../../src/relay";
 import { createLocalAccountWalletIntentSigner } from "../../src/trading-wallet";
+import { stringifyForInspection } from "./inspect";
 
 export const chainId = Number(envBigInt("KURU_CHAIN_ID", 10143n));
 if (!Number.isSafeInteger(chainId) || chainId <= 0) {
@@ -151,9 +152,9 @@ function optionalCliSide(): "buy" | "sell" {
 
 /** Logs the signed value, exact wire request, and Relay response for inspection. */
 export async function submitAndPrint(signature: unknown, request: AnyRelayRequest) {
-  console.log("signature:", JSON.stringify(signature, null, 2));
-  console.log("request:", JSON.stringify(request, null, 2));
+  console.log("signature:", stringifyForInspection(signature));
+  console.log("request:", stringifyForInspection(request));
   const response = await relay.submit(request);
-  console.log("response:", JSON.stringify(response, null, 2));
+  console.log("response:", stringifyForInspection(response));
   return response;
 }
