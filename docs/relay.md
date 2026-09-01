@@ -1,8 +1,8 @@
 # Kuru Relay REST client
 
-`@kuru-labs/ts-sdk/relay` authenticates a wallet with Kuru Relay and submits the six typed REST
+`@toxicflow-labs/ts-sdk/relay` authenticates a wallet with Kuru Relay and submits the six typed REST
 methods supported by the service. It does not build or sign trading intents; use
-`@kuru-labs/ts-sdk/trading-wallet` first, then pass the signed result to the relay client.
+`@toxicflow-labs/ts-sdk/trading-wallet` first, then pass the signed result to the relay client.
 
 WebSocket support is intentionally outside this module.
 
@@ -27,7 +27,7 @@ The SDK never creates or signs a JWT. JWT signing keys belong to the Relay deplo
 
 ```ts
 import { privateKeyToAccount } from "viem/accounts";
-import { createKuruRelayClient, createLocalAccountRelaySigner } from "@kuru-labs/ts-sdk/relay";
+import { createKuruRelayClient, createLocalAccountRelaySigner } from "@toxicflow-labs/ts-sdk/relay";
 
 const wallet = privateKeyToAccount(process.env.TRADING_WALLET_KEY as `0x${string}`);
 const relay = createKuruRelayClient({
@@ -45,7 +45,7 @@ console.log(session.wallet, session.expiresAt);
 For an embedded or passkey wallet, adapt a Viem wallet client without adding chain-state reads:
 
 ```ts
-import { createWalletClientRelaySigner } from "@kuru-labs/ts-sdk/relay";
+import { createWalletClientRelaySigner } from "@toxicflow-labs/ts-sdk/relay";
 
 const relay = createKuruRelayClient({
   baseUrl: "https://api.relay.testnet.kuru.io",
@@ -59,11 +59,11 @@ server decision; the SDK does not infer it from configuration.
 ## Submit a signed intent
 
 ```ts
-import { encodePackedCancelOp } from "@kuru-labs/ts-sdk/spot";
+import { encodePackedCancelOp } from "@toxicflow-labs/ts-sdk/spot";
 import {
   createLocalAccountWalletIntentSigner,
   signReplaceBySlotIntent
-} from "@kuru-labs/ts-sdk/trading-wallet";
+} from "@toxicflow-labs/ts-sdk/trading-wallet";
 
 const intent = await signReplaceBySlotIntent(
   {
