@@ -333,7 +333,7 @@ describe("relay request serialization", () => {
     ];
     const fetchMock = vi.fn(() => Promise.resolve(jsonResponse(broadcast()))) as typeof fetch;
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       accessToken: "token"
     });
@@ -357,7 +357,7 @@ describe("relay authentication and submission", () => {
     });
     const fetchMock = vi.fn() as unknown as typeof fetch;
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       accessToken: "token"
     });
@@ -383,7 +383,7 @@ describe("relay authentication and submission", () => {
       intent: values.replace
     });
     const broadcastClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: vi.fn(() => Promise.resolve(jsonResponse(broadcast(OTHER_REQUEST_ID)))),
       accessToken: "token"
     });
@@ -393,7 +393,7 @@ describe("relay authentication and submission", () => {
     });
 
     const failureClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: vi.fn(() =>
         Promise.resolve(
           jsonResponse(
@@ -423,7 +423,7 @@ describe("relay authentication and submission", () => {
   it("signs the exact challenge, exchanges only ID/signature, and retains the relay JWT", async () => {
     const values = await fixtures();
     const calls: Array<{ url: string; init: RequestInit }> = [];
-    const challengeMessage = "api.relay.testnet.kuru.io wants you to sign in\nexact bytes";
+    const challengeMessage = "relay.testnet.kuru.io wants you to sign in\nexact bytes";
     const challengeSignature = await wallet.signMessage({ message: challengeMessage });
     const fetchMock = vi.fn((url: string | URL | Request, init?: RequestInit) => {
       const requestedUrl = typeof url === "string" ? url : url instanceof URL ? url.href : url.url;
@@ -457,7 +457,7 @@ describe("relay authentication and submission", () => {
       })
     };
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io/",
+      baseUrl: "https://relay.testnet.kuru.io/",
       fetch: fetchMock,
       signer,
       now: () => new Date("2026-08-28T10:00:00.000Z")
@@ -493,7 +493,7 @@ describe("relay authentication and submission", () => {
     const requestIdSource = vi.fn(() => REQUEST_ID);
     const signMessage = vi.fn();
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       tokenProvider,
       requestIdSource,
@@ -521,7 +521,7 @@ describe("relay authentication and submission", () => {
       )
     ) as typeof fetch;
     const staleClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: staleFetch,
       signer: createLocalAccountRelaySigner(wallet),
       now: () => new Date("2026-08-28T10:00:00.000Z")
@@ -542,7 +542,7 @@ describe("relay authentication and submission", () => {
       )
     ) as typeof fetch;
     const invalidClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: invalidFetch,
       signer: { address: wallet.address, signMessage: () => Promise.resolve("0x12") },
       now: () => new Date("2026-08-28T10:00:00.000Z")
@@ -575,7 +575,7 @@ describe("relay authentication and submission", () => {
       );
     }) as typeof fetch;
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       signer: createLocalAccountRelaySigner(wallet),
       now: () => new Date("2026-08-28T10:00:00.000Z")
@@ -610,7 +610,7 @@ describe("relay authentication and submission", () => {
       )
     ) as typeof fetch;
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       accessToken: "secret-token"
     });
@@ -632,7 +632,7 @@ describe("relay authentication and submission", () => {
     const values = await fixtures();
     const fetchMock = vi.fn() as unknown as typeof fetch;
     const client = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: fetchMock,
       accessToken: {
         accessToken: "secret-token",
@@ -658,7 +658,7 @@ describe("relay authentication and submission", () => {
         })
     ) as typeof fetch;
     const timeoutClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: pendingFetch,
       accessToken: "token",
       timeoutMs: 5
@@ -679,7 +679,7 @@ describe("relay authentication and submission", () => {
     });
 
     const malformedClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: vi.fn(() => Promise.resolve(jsonResponse({ status: "BROADCAST" }))),
       accessToken: "token"
     });
@@ -688,7 +688,7 @@ describe("relay authentication and submission", () => {
     });
 
     const httpClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: vi.fn(() => Promise.resolve(new Response("bad gateway", { status: 502 }))),
       accessToken: "token"
     });
@@ -699,7 +699,7 @@ describe("relay authentication and submission", () => {
     });
 
     const transportClient = createKuruRelayClient({
-      baseUrl: "https://api.relay.testnet.kuru.io",
+      baseUrl: "https://relay.testnet.kuru.io",
       fetch: vi.fn(() => Promise.reject(new Error("secret-token and signed-payload"))),
       accessToken: "secret-token"
     });

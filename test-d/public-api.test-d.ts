@@ -94,7 +94,7 @@ void signEip7702Authorization({
 });
 
 const relayClient = createKuruRelayClient({
-  baseUrl: "https://api.relay.testnet.kuru.io",
+  baseUrl: "https://relay.testnet.kuru.io",
   accessToken: "relay-issued-jwt"
 });
 

@@ -1,7 +1,18 @@
 import { encodePackedReplaceOp } from "../../src/spot";
+import { buildExecuteReplaceBySlotRelayRequest } from "../../src/relay";
 import { signReplaceBySlotIntent } from "../../src/trading-wallet";
-import { chainId, commonHeader, envBigInt, intentSigner, relay, tradingWallet } from "./shared";
+import {
+  chainId,
+  commonHeader,
+  envBigInt,
+  intentSigner,
+  orderArguments,
+  relay,
+  submitAndPrint,
+  tradingWallet
+} from "./shared";
 
+const { price, size, side } = orderArguments();
 const intent = await signReplaceBySlotIntent(
   {
     wallet: tradingWallet.address,
@@ -9,9 +20,9 @@ const intent = await signReplaceBySlotIntent(
     header: commonHeader("execute-replace-by-slot"),
     packedOps: encodePackedReplaceOp({
       slotIdx: Number(envBigInt("KURU_SLOT_INDEX", 0n)),
-      side: "buy",
-      price: envBigInt("KURU_ORDER_PRICE", 123_400n),
-      size: envBigInt("KURU_ORDER_QUANTITY", 1_000_000n),
+      side,
+      price,
+      size,
       postOnly: true
     }),
     // uint64.max asserts that the target slot is currently empty.
@@ -20,7 +31,9 @@ const intent = await signReplaceBySlotIntent(
   intentSigner
 );
 
-// Authentication signs Relay's personal-message challenge and retains the token.
 await relay.authenticate();
-const broadcast = await relay.executeReplaceBySlot({ intent });
-console.log(broadcast.txHash, broadcast.transactionType);
+const request = buildExecuteReplaceBySlotRelayRequest({
+  requestId: relay.createRequestId(),
+  intent
+});
+await submitAndPrint(intent.signature, request);

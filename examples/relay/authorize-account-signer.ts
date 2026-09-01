@@ -1,6 +1,7 @@
 import { privateKeyToAccount } from "viem/accounts";
 
 import { buildAuthorizeAccountSignerTypedData } from "../../src/account";
+import { buildAuthorizeAccountSignerRelayRequest } from "../../src/relay";
 import {
   createLocalAccountAuthorizationSigner,
   signEip7702Authorization
@@ -12,6 +13,7 @@ import {
   requireAddress,
   requireBigInt,
   requireHex,
+  submitAndPrint,
   tradingWallet
 } from "./shared";
 
@@ -43,9 +45,10 @@ const authorization7702 = await signEip7702Authorization({
 });
 
 await relay.authenticate();
-const broadcast = await relay.authorizeAccountSigner({
+const request = buildAuthorizeAccountSignerRelayRequest({
+  requestId: relay.createRequestId(),
   wallet: tradingWallet.address,
   authorization: { ...authorization, signature },
   authorization7702
 });
-console.log(broadcast.txHash, broadcast.transactionType);
+await submitAndPrint({ accountAuthorization: signature, authorization7702 }, request);
