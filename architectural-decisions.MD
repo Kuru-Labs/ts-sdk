@@ -40,7 +40,7 @@ its trust, nonce, and transport boundaries were specified.
 
 **Status:** accepted
 
-The SDK exposes `@kuru-labs/ts-sdk/trading-wallet` as a pure module for KuruTradingWallet EIP-712
+The SDK exposes `@toxicflow-labs/ts-sdk/trading-wallet` as a pure module for KuruTradingWallet EIP-712
 intent preparation/signing and EIP-7702 authorization. Relay authentication and request submission
 remain a separate module.
 
@@ -58,7 +58,7 @@ AccountCore signer authorization remains a distinct EIP-712 domain and nonce lif
 
 **Status:** accepted
 
-The SDK exposes `@kuru-labs/ts-sdk/relay` independently from the chain client and trading-wallet
+The SDK exposes `@toxicflow-labs/ts-sdk/relay` independently from the chain client and trading-wallet
 signing module. Relay authentication is an explicit challenge/sign/token exchange. The SDK signs the
 exact server challenge, while the Relay service verifies admission and issues the JWT; the SDK never
 mints or signs JWTs.

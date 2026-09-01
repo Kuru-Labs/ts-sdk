@@ -2,8 +2,9 @@
 
 Viem-first TypeScript SDK for Kuru spot/account contracts and delegated trading wallets.
 
-This package is intentionally private while the public npm package name is finalized. The
-contract ABI surface is committed in `src/generated`.
+Releases are published to npm as
+[`@toxicflow-labs/ts-sdk`](https://www.npmjs.com/package/@toxicflow-labs/ts-sdk). The contract ABI surface is
+committed in `src/generated`.
 
 ## Quick Start
 
@@ -15,7 +16,7 @@ pnpm build
 ```
 
 ```ts
-import { createKuruClient, NATIVE_TOKEN_ADDRESS } from "@kuru-labs/ts-sdk";
+import { createKuruClient, NATIVE_TOKEN_ADDRESS } from "@toxicflow-labs/ts-sdk";
 
 const kuru = createKuruClient({
   publicClient,
@@ -45,7 +46,7 @@ The committed ABI surface is pinned to `spot-contracts-v2` main commit
 - Builder fees are expressed as PPS (`feePps`, `builderFeePps`), matching the contracts.
 - Spot `swap` and `estimateSwap` no longer take `limitPrice`.
 - Legacy intent executor helpers are not exposed. EIP-7702 trading uses the dedicated
-  `@kuru-labs/ts-sdk/trading-wallet` module.
+  `@toxicflow-labs/ts-sdk/trading-wallet` module.
 
 ## Delegated Trading Wallets
 
@@ -59,7 +60,7 @@ import {
   createLocalAccountWalletIntentSigner,
   prepareReplaceBySlotIntent,
   signPreparedWalletIntent
-} from "@kuru-labs/ts-sdk/trading-wallet";
+} from "@toxicflow-labs/ts-sdk/trading-wallet";
 
 const wallet = privateKeyToAccount("0x...");
 const prepared = prepareReplaceBySlotIntent({
@@ -94,7 +95,7 @@ authority nonce exactly once before signing.
 import {
   createLocalAccountAuthorizationSigner,
   signEip7702Authorization
-} from "@kuru-labs/ts-sdk/trading-wallet";
+} from "@toxicflow-labs/ts-sdk/trading-wallet";
 
 const authorization = await signEip7702Authorization({
   authority: wallet.address,
@@ -107,7 +108,7 @@ const authorization = await signEip7702Authorization({
 
 Do not use an authorization mode that treats the wallet as the outer transaction executor. The
 relay sponsor submits the EIP-7702 transaction. AccountCore trading-rights authorization is a
-separate signature and nonce domain exposed by `@kuru-labs/ts-sdk/account`.
+separate signature and nonce domain exposed by `@toxicflow-labs/ts-sdk/account`.
 
 Injected, passkey, and embedded-wallet integrations can use
 `createWalletClientIntentSigner(walletClient, walletAddress)` for EIP-712 intents. If a provider
@@ -117,12 +118,12 @@ adapters never need to perform hidden state discovery in the order path.
 
 ## Relay REST client
 
-`@kuru-labs/ts-sdk/relay` authenticates a trading wallet and submits the six typed public Relay REST
+`@toxicflow-labs/ts-sdk/relay` authenticates a trading wallet and submits the six typed public Relay REST
 methods. It deliberately consumes signed wallet/AccountCore payloads instead of duplicating their
 signing logic.
 
 ```ts
-import { createKuruRelayClient, createLocalAccountRelaySigner } from "@kuru-labs/ts-sdk/relay";
+import { createKuruRelayClient, createLocalAccountRelaySigner } from "@toxicflow-labs/ts-sdk/relay";
 
 const relay = createKuruRelayClient({
   baseUrl: "https://api.relay.testnet.kuru.io",
