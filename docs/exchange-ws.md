@@ -65,6 +65,8 @@ of comparing the two epochs' sequence numbers.
 
 Market and user trade frames both expose `recordIndex`. The stable identity of a market fill is
 `(marketAddress, tradeId, recordIndex)`; do not substitute its array position inside a batch.
+Each user trade also exposes `users` as `[takerUserId, makerUserId]`. Passive-band fills use `0n`
+for the maker because they have no individual maker; self-fills repeat the same user ID.
 
 ## User-order events
 

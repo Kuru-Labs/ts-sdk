@@ -808,13 +808,17 @@ function decodeUserTrades(reader: ByteReader, header: DecodedHeader): ExchangeWs
   const user = decodeUserContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("user-trade count");
-  assertCountFits(reader, count, 80, "user-trade count");
+  assertCountFits(reader, count, 96, "user-trade count");
   const trades: ExchangeWsUserTrade[] = [];
   for (let index = 0; index < count; index++) {
     trades.push({
       marketAddress: reader.readAddress(`user trade ${index} market address`),
       tradeId: reader.readU64(`user trade ${index} ID`),
       recordIndex: reader.readU16(`user trade ${index} record index`),
+      users: [
+        reader.readU64(`user trade ${index} taker user ID`),
+        reader.readU64(`user trade ${index} maker user ID`)
+      ],
       takerSide: decodeSide(reader.readU8(`user trade ${index} taker side`), "user trade taker"),
       priceTick: reader.readI64(`user trade ${index} price tick`),
       baseFilled: reader.readU128(`user trade ${index} base filled`),

@@ -381,6 +381,8 @@ describe("Exchange WebSocket binary decoder", () => {
         .hex(MARKET_A)
         .u64(1n)
         .u16(2)
+        .u64(7n)
+        .u64(8n)
         .u8(1)
         .i64(3n)
         .u128(4n)
@@ -392,6 +394,8 @@ describe("Exchange WebSocket binary decoder", () => {
         .hex(MARKET_B)
         .u64(8n)
         .u16(9)
+        .u64(7n)
+        .u64(0n)
         .u8(2)
         .i64(10n)
         .u128(11n)
@@ -405,6 +409,7 @@ describe("Exchange WebSocket binary decoder", () => {
         marketAddress: MARKET_A,
         tradeId: 1n,
         recordIndex: 2,
+        users: [7n, 8n],
         takerSide: "buy",
         priceTick: 3n,
         baseFilled: 4n,
@@ -420,6 +425,7 @@ describe("Exchange WebSocket binary decoder", () => {
         marketAddress: MARKET_B,
         tradeId: 8n,
         recordIndex: 9,
+        users: [7n, 0n],
         takerSide: "sell",
         priceTick: 10n,
         baseFilled: 11n,

@@ -29,6 +29,9 @@ const FIXTURES = [
   ["user-balances-snapshot.bin", "userBalances"],
   ["user-balances-delta.bin", "userBalances"],
   ["user-trades.bin", "userTrades"],
+  ["user-trades-maker.bin", "userTrades"],
+  ["user-trades-mixed-maker.bin", "userTrades"],
+  ["user-trades-self-fill.bin", "userTrades"],
   ["user-trades-passive.bin", "userTrades"]
 ] as const;
 
@@ -194,6 +197,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         marketAddress: `0x${"11".repeat(20)}`,
         tradeId: 1n,
         recordIndex: 2,
+        users: [7n, 8n],
         takerSide: "buy",
         priceTick: 3n,
         baseFilled: 4n,
@@ -207,12 +211,29 @@ describe("Exchange WebSocket Rust golden frames", () => {
       }
     ]);
 
+    const maker = decodeUserTradesFrame(fixture("user-trades-maker.bin"));
+    expect(maker.userId).toBe(8n);
+    expect(maker.trades).toHaveLength(1);
+    expect(maker.trades[0]?.users).toEqual([7n, 8n]);
+
+    const mixedMaker = decodeUserTradesFrame(fixture("user-trades-mixed-maker.bin"));
+    expect(mixedMaker.userId).toBe(7n);
+    expect(mixedMaker.trades.map((trade) => trade.users)).toEqual([
+      [7n, 8n],
+      [7n, 9n]
+    ]);
+
+    const selfFill = decodeUserTradesFrame(fixture("user-trades-self-fill.bin"));
+    expect(selfFill.trades).toHaveLength(1);
+    expect(selfFill.trades[0]?.users).toEqual([7n, 7n]);
+
     const passive = decodeUserTradesFrame(fixture("user-trades-passive.bin"));
     expect(passive.trades).toEqual([
       {
         marketAddress: `0x${"22".repeat(20)}`,
         tradeId: 8n,
         recordIndex: 9,
+        users: [7n, 0n],
         takerSide: "sell",
         priceTick: 10n,
         baseFilled: 11n,

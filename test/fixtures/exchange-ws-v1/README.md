@@ -9,8 +9,9 @@ constructed in TypeScript; local writers remain useful only for malformed-frame 
 tests.
 
 `trades.bin` models a lifecycle-promoted market frame containing multiple records from one
-packed match. User-trade outputs remain scoped to one source record and market, so active and
-passive liquidity are represented by separate `user-trades*.bin` fixtures.
+packed match. The `user-trades*.bin` fixtures cover taker, active-maker, mixed-maker, self-fill,
+and passive-liquidity routing. Their `users` tuple is always ordered as taker then maker, with
+zero as the passive-maker sentinel.
 
 User-order snapshots contain complete open-order state. `user-orders-delta.bin` contains a
 `created` event, while `user-orders-trade.bin`, `user-orders-cancelled.bin`, and

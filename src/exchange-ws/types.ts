@@ -251,6 +251,8 @@ export interface ExchangeWsUserTrade {
   marketAddress: Address;
   tradeId: bigint;
   recordIndex: number;
+  /** Ordered as [takerUserId, makerUserId]. Passive liquidity uses maker user ID 0. */
+  users: [bigint, bigint];
   takerSide: ExchangeWsSide;
   priceTick: bigint;
   baseFilled: bigint;
