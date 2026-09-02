@@ -116,6 +116,31 @@ offers EIP-7702 through its own API, adapt that method to the small `Eip7702Auth
 interface. The interface receives the already-resolved chain, delegate, and nonce, so provider
 adapters never need to perform hidden state discovery in the order path.
 
+## Spot post-fill hooks
+
+Post-fill hooks are configured per maker and market. Governance must first grant protocol-wide
+access on AccountCore; the maker can then register or clear its hook on each Spot order book.
+
+```ts
+import { zeroAddress } from "viem";
+import { packPostFillQuote, packPostFillRequotePair } from "@toxicflow-labs/ts-sdk/spot";
+
+await kuru.account.setPostFillHookAccess({ accountId: 18n, allowed: true }); // governance only
+await kuru.spot.setPostFillHook({ market, userId: 18n, hook });
+
+const configuredHook = await kuru.spot.getPostFillHook({ market, userId: 18n });
+const header = packPostFillRequotePair(1, expectedOrderId);
+const replenishWord = packPostFillQuote(price, size, minSizeAfterBlock);
+
+// A maker clears its market hook by setting the zero address.
+await kuru.spot.setPostFillHook({ market, userId: 18n, hook: zeroAddress });
+```
+
+`getPostFillHookGasLimit` and `getPostFillHookMinQuoteNotional` expose the per-market execution
+bounds. Their corresponding setters, and `account.setPostFillHookAccess`, are governance-only. The
+Spot module also exports `postFillHookAbi` plus helpers for `NOOP`, `REQUOTE_PAIR`,
+`REPLENISH_ONLY`, and `REPLACE_ONLY` response plans.
+
 ## Relay REST client
 
 `@toxicflow-labs/ts-sdk/relay` authenticates a trading wallet and submits the six typed public Relay REST

@@ -11,6 +11,9 @@ import type {
   EstimateSwapParams,
   MintPassiveLiquidityParams,
   ReplaceBySlotPackedParams,
+  SetPostFillHookGasLimitParams,
+  SetPostFillHookMinQuoteNotionalParams,
+  SetPostFillHookParams,
   SwapParams,
   UserMarketParams
 } from "./types";
@@ -291,4 +294,22 @@ export function buildClaimPassiveFeesRequest(
   params: ClaimPassiveFeesParams
 ): KuruContractRequest<typeof spotOrderBookAbi> {
   return spotRequest(params.market, "claimPassiveFees", [params.userId, params.positionId]);
+}
+
+export function buildSetPostFillHookRequest(
+  params: SetPostFillHookParams
+): KuruContractRequest<typeof spotOrderBookAbi> {
+  return spotRequest(params.market, "setPostFillHook", [params.userId, params.hook]);
+}
+
+export function buildSetPostFillHookGasLimitRequest(
+  params: SetPostFillHookGasLimitParams
+): KuruContractRequest<typeof spotOrderBookAbi> {
+  return spotRequest(params.market, "setPostFillHookGasLimit", [params.gasLimit]);
+}
+
+export function buildSetPostFillHookMinQuoteNotionalRequest(
+  params: SetPostFillHookMinQuoteNotionalParams
+): KuruContractRequest<typeof spotOrderBookAbi> {
+  return spotRequest(params.market, "setPostFillHookMinQuoteNotional", [params.minQuoteNotional]);
 }

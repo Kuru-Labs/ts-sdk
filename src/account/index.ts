@@ -10,6 +10,7 @@ export {
   buildRevokeAccountSignerBySigRequest,
   buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
+  buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
   buildWithdrawFromAccountRequest,
   buildWithdrawRequest,
@@ -38,6 +39,7 @@ export type {
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
+  SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams

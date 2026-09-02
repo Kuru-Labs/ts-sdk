@@ -8,6 +8,7 @@ import {
   buildAuthorizeAccountSignerBySigRequest,
   buildDepositRequest,
   buildRevokeAccountSignerBySigRequest,
+  buildSetPostFillHookAccessRequest,
   clientOrderIdFromString,
   createKuruClient,
   deadlineSeconds
@@ -85,6 +86,17 @@ describe("account helpers", () => {
     });
 
     expect(request.args).toEqual(["0x00000000000000000000000000000000000000dd", 500, 789n]);
+    expect(() => encodeFunctionData(request as any)).not.toThrow();
+  });
+
+  it("builds governance post-fill-hook access calldata", () => {
+    const request = buildSetPostFillHookAccessRequest({
+      accountCore,
+      accountId: 18n,
+      allowed: true
+    });
+
+    expect(request.args).toEqual([18n, true]);
     expect(() => encodeFunctionData(request as any)).not.toThrow();
   });
 

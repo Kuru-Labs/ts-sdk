@@ -8,6 +8,7 @@ import {
   createKuruRelayClient,
   decodeExchangeWsFrame,
   encodePackedCancelOp,
+  packPostFillQuote,
   prepareReplaceBySlotIntent,
   signEip7702Authorization,
   signPreparedWalletIntent
@@ -68,6 +69,16 @@ void client.spot.replaceBySlotPacked({
   packedOps,
   simulate: false
 });
+
+void client.spot.getPostFillHook({ market, userId: 1n });
+void client.spot.setPostFillHook({ market, userId: 1n, hook: user });
+void client.spot.getPostFillHookGasLimit({ market });
+void client.spot.setPostFillHookGasLimit({ market, gasLimit: 500_000n });
+void client.spot.getPostFillHookMinQuoteNotional({ market });
+void client.spot.setPostFillHookMinQuoteNotional({ market, minQuoteNotional: 60_000_000n });
+void client.account.getPostFillHookAccess({ accountId: 1n });
+void client.account.setPostFillHookAccess({ accountId: 1n, allowed: true });
+packPostFillQuote(50_000n, 1_000_000n) satisfies bigint;
 
 const walletIntent = prepareReplaceBySlotIntent({
   wallet: localAccount.address,
