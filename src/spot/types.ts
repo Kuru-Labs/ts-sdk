@@ -118,3 +118,18 @@ export interface BurnPassiveLiquidityParams extends UserMarketParams, WriteOverr
 export interface ClaimPassiveFeesParams extends UserMarketParams, WriteOverrides {
   positionId: bigint;
 }
+
+/** Sets or clears the maker's hook for one Spot market. */
+export interface SetPostFillHookParams extends UserMarketParams, WriteOverrides {
+  hook: Address;
+}
+
+/** Governance-controlled per-market gas stipend for post-fill-hook calls. */
+export interface SetPostFillHookGasLimitParams extends MarketAddressParam, WriteOverrides {
+  gasLimit: bigint;
+}
+
+/** Governance-controlled minimum quote notional for hook-created orders. */
+export interface SetPostFillHookMinQuoteNotionalParams extends MarketAddressParam, WriteOverrides {
+  minQuoteNotional: bigint;
+}

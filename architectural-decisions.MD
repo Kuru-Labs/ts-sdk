@@ -87,3 +87,17 @@ deployment.
 The testnet command documents `10143`, while callers targeting other deployments supply their own
 chain ID. The Relay URL retains its testnet convenience default; callers remain responsible for
 pointing it at a Relay serving the explicitly selected chain.
+
+## 2026-09-02: Keep Post-Fill Hooks In The Spot Surface And Preserve Governance Boundaries
+
+**Status:** accepted
+
+Maker hook registration, hook reads, the `IPostFillHook` ABI, and response-word codecs live in the
+Spot module because they are market-local behavior. AccountCore exposes the separate protocol-wide
+access read and governance setter. Market gas and minimum-notional controls remain callable through
+the Spot client but are documented as governance-only rather than ordinary maker configuration.
+
+The deployed AccountCore and OrderBook selectors continue to come from the generated ABIs pinned in
+contract metadata. `postFillHookAbi` is maintained beside the Spot helpers because it describes an
+implementation interface, not another deployed protocol artifact. Its tuple and codec layout must
+stay aligned with the same pinned contracts revision.

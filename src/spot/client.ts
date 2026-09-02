@@ -12,6 +12,9 @@ import {
   buildMintPassiveLiquidityRequest,
   buildProtocolCancelBySlotsRequest,
   buildReplaceBySlotPackedRequest,
+  buildSetPostFillHookGasLimitRequest,
+  buildSetPostFillHookMinQuoteNotionalRequest,
+  buildSetPostFillHookRequest,
   buildSwapRequest
 } from "./requests";
 import type {
@@ -22,6 +25,9 @@ import type {
   EstimateSwapParams,
   MintPassiveLiquidityParams,
   ReplaceBySlotPackedParams,
+  SetPostFillHookGasLimitParams,
+  SetPostFillHookMinQuoteNotionalParams,
+  SetPostFillHookParams,
   SwapParams,
   UserMarketParams
 } from "./types";
@@ -31,6 +37,9 @@ export function createSpotClient(config: KuruClientConfig) {
     buildBatchRequest,
     buildCancelBySlotsRequest,
     buildReplaceBySlotPackedRequest,
+    buildSetPostFillHookRequest,
+    buildSetPostFillHookGasLimitRequest,
+    buildSetPostFillHookMinQuoteNotionalRequest,
     buildSwapRequest,
 
     getMarketParams: (params: { market: `0x${string}` }) =>
@@ -67,6 +76,27 @@ export function createSpotClient(config: KuruClientConfig) {
         abi: spotOrderBookAbi,
         functionName: "getOrderMinSizeAfterBlock",
         args: [params.userId, params.slotIdx]
+      }),
+    getPostFillHook: (params: UserMarketParams) =>
+      readContract<`0x${string}`>(config, {
+        address: params.market,
+        abi: spotOrderBookAbi,
+        functionName: "getPostFillHook",
+        args: [params.userId]
+      }),
+    getPostFillHookGasLimit: (params: { market: `0x${string}` }) =>
+      readContract<bigint>(config, {
+        address: params.market,
+        abi: spotOrderBookAbi,
+        functionName: "postFillHookGasLimit",
+        args: []
+      }),
+    getPostFillHookMinQuoteNotional: (params: { market: `0x${string}` }) =>
+      readContract<bigint>(config, {
+        address: params.market,
+        abi: spotOrderBookAbi,
+        functionName: "postFillHookMinQuoteNotional",
+        args: []
       }),
     getPassiveBand: (params: { market: `0x${string}`; lowPrice: bigint }) =>
       readContract(config, {
@@ -155,6 +185,24 @@ export function createSpotClient(config: KuruClientConfig) {
       executeWrite({
         config,
         request: buildClaimPassiveFeesRequest(params),
+        overrides: params
+      }),
+    setPostFillHook: (params: SetPostFillHookParams) =>
+      executeWrite({
+        config,
+        request: buildSetPostFillHookRequest(params),
+        overrides: params
+      }),
+    setPostFillHookGasLimit: (params: SetPostFillHookGasLimitParams) =>
+      executeWrite({
+        config,
+        request: buildSetPostFillHookGasLimitRequest(params),
+        overrides: params
+      }),
+    setPostFillHookMinQuoteNotional: (params: SetPostFillHookMinQuoteNotionalParams) =>
+      executeWrite({
+        config,
+        request: buildSetPostFillHookMinQuoteNotionalRequest(params),
         overrides: params
       })
   };

@@ -10,3 +10,4 @@ export {
   spotRouterAbi
 } from "../generated";
 export type { ContractName } from "../generated";
+export { postFillHookAbi } from "../spot/post-fill-hook";

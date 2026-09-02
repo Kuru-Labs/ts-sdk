@@ -10,6 +10,16 @@ export {
   normalizeNativeTif
 } from "./orders";
 export {
+  PostFillHookAction,
+  packPostFillNoop,
+  packPostFillQuote,
+  packPostFillReplenishOnly,
+  packPostFillReplaceOnly,
+  packPostFillRequotePair,
+  postFillHookAbi,
+  type PostFillHookContext
+} from "./post-fill-hook";
+export {
   buildBatchMintPassiveLiquidityRequest,
   buildBatchRequest,
   buildBurnPassiveLiquidityRequest,
@@ -20,6 +30,9 @@ export {
   buildMintPassiveLiquidityRequest,
   buildProtocolCancelBySlotsRequest,
   buildReplaceBySlotPackedRequest,
+  buildSetPostFillHookGasLimitRequest,
+  buildSetPostFillHookMinQuoteNotionalRequest,
+  buildSetPostFillHookRequest,
   buildSwapRequest
 } from "./requests";
 export {
@@ -44,6 +57,9 @@ export {
   type PackedReplaceOpInput,
   type PassiveMintInput,
   type ReplaceBySlotPackedParams,
+  type SetPostFillHookGasLimitParams,
+  type SetPostFillHookMinQuoteNotionalParams,
+  type SetPostFillHookParams,
   type SwapParams,
   type UserMarketParams
 } from "./types";

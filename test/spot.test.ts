@@ -12,10 +12,19 @@ import {
   buildClaimPassiveFeesRequest,
   buildMintPassiveLiquidityRequest,
   buildReplaceBySlotPackedRequest,
+  buildSetPostFillHookGasLimitRequest,
+  buildSetPostFillHookMinQuoteNotionalRequest,
+  buildSetPostFillHookRequest,
   encodePackedCancelOp,
   encodePackedReplaceOp,
   encodePackedReplaceOps,
-  normalizeNativeOrder
+  normalizeNativeOrder,
+  packPostFillNoop,
+  packPostFillQuote,
+  packPostFillReplenishOnly,
+  packPostFillReplaceOnly,
+  packPostFillRequotePair,
+  postFillHookAbi
 } from "../src/spot";
 
 describe("spot order helpers", () => {
@@ -186,5 +195,71 @@ describe("spot order helpers", () => {
     });
     expect(claim.args).toHaveLength(2);
     expect(() => encodeFunctionData(claim as any)).not.toThrow();
+  });
+
+  it("builds maker and governance post-fill-hook calldata", () => {
+    const market = "0x0000000000000000000000000000000000000001";
+    const hook = "0x0000000000000000000000000000000000000002";
+    const requests = [
+      buildSetPostFillHookRequest({ market, userId: 4n, hook }),
+      buildSetPostFillHookGasLimitRequest({ market, gasLimit: 500_000n }),
+      buildSetPostFillHookMinQuoteNotionalRequest({ market, minQuoteNotional: 60_000_000n })
+    ];
+
+    expect(requests.map((request) => request.args)).toEqual([
+      [4n, hook],
+      [500_000n],
+      [60_000_000n]
+    ]);
+    for (const request of requests) {
+      expect(() => encodeFunctionData(request as any)).not.toThrow();
+    }
+  });
+
+  it("matches the Solidity post-fill-hook codec layout", () => {
+    const slotIdx = 7n;
+    const orderId = 42n;
+    const price = 50_000n;
+    const size = 3_000_000n;
+    const minSizeAfterBlock = 123n;
+
+    expect(packPostFillNoop()).toBe(0n);
+    expect(packPostFillReplenishOnly()).toBe(2n);
+    expect(packPostFillRequotePair(slotIdx, orderId)).toBe(1n | (slotIdx << 8n) | (orderId << 16n));
+    expect(packPostFillReplaceOnly(slotIdx, orderId)).toBe(3n | (slotIdx << 8n) | (orderId << 16n));
+    expect(packPostFillQuote(price, size, minSizeAfterBlock)).toBe(
+      price | (size << 32n) | (minSizeAfterBlock << 128n)
+    );
+  });
+
+  it("rejects post-fill-hook codec values outside contract widths", () => {
+    expect(() => packPostFillRequotePair(256, 1n)).toThrow(KuruSdkError);
+    expect(() => packPostFillReplaceOnly(0, 1n << 64n)).toThrow(KuruSdkError);
+    expect(() => packPostFillQuote(1n << 32n, 1n)).toThrow(KuruSdkError);
+    expect(() => packPostFillQuote(1n, 1n << 96n)).toThrow(KuruSdkError);
+    expect(() => packPostFillQuote(1n, 1n, 1n << 32n)).toThrow(KuruSdkError);
+  });
+
+  it("exports the pinned IPostFillHook call ABI", () => {
+    expect(() =>
+      encodeFunctionData({
+        abi: postFillHookAbi,
+        functionName: "postFill",
+        args: [
+          {
+            userId: 4,
+            filledSlotIdx: 0,
+            filledOrderId: 9n,
+            takerId: 5,
+            fillPrice: 50_000,
+            filledSize: 1_000_000n,
+            remainingBaseSize: 2_000_000n,
+            bestBid: 49_900,
+            bestAsk: 50_100,
+            filledOrderIsBuy: true
+          }
+        ]
+      })
+    ).not.toThrow();
   });
 });

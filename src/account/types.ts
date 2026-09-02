@@ -76,6 +76,12 @@ export interface ClaimBuilderFeesParams extends AccountCoreOverride, WriteOverri
   asset: Address;
 }
 
+/** Governance-controlled protocol-wide post-fill-hook access for an account. */
+export interface SetPostFillHookAccessParams extends AccountCoreOverride, WriteOverrides {
+  accountId: bigint;
+  allowed: boolean;
+}
+
 export interface Erc20AddressParams extends WriteOverrides {
   token: Address;
   spender: Address;

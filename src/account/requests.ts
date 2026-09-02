@@ -14,6 +14,7 @@ import type {
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
+  SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams
@@ -156,6 +157,15 @@ export function buildClaimBuilderFeesRequest(
   params: ClaimBuilderFeesParams & { accountCore: Address }
 ): KuruContractRequest<typeof accountCoreAbi> {
   return accountCoreRequest(params.accountCore, "claimBuilderFees", [params.asset]);
+}
+
+export function buildSetPostFillHookAccessRequest(
+  params: SetPostFillHookAccessParams & { accountCore: Address }
+): KuruContractRequest<typeof accountCoreAbi> {
+  return accountCoreRequest(params.accountCore, "setPostFillHookAccess", [
+    params.accountId,
+    params.allowed
+  ]);
 }
 
 export function buildApproveErc20Request(

@@ -14,6 +14,7 @@ import {
   buildRevokeAccountSignerBySigRequest,
   buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
+  buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
   buildWithdrawFromAccountRequest,
   buildWithdrawRequest
@@ -31,6 +32,7 @@ import type {
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
+  SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
   WithdrawFromAccountParams,
   WithdrawParams
@@ -67,6 +69,11 @@ export function createAccountClient(config: KuruClientConfig) {
         accountCore: resolveAccountCore(config, params.accountCore)
       }),
     buildApproveErc20Request,
+    buildSetPostFillHookAccessRequest: (params: SetPostFillHookAccessParams) =>
+      buildSetPostFillHookAccessRequest({
+        ...params,
+        accountCore: resolveAccountCore(config, params.accountCore)
+      }),
 
     getBalance: (params: AccountReadParams) =>
       readContract<bigint>(config, {
@@ -134,6 +141,13 @@ export function createAccountClient(config: KuruClientConfig) {
         abi: accountCoreAbi,
         functionName: "getClaimableBuilderFees",
         args: [params.builder, params.asset]
+      }),
+    getPostFillHookAccess: (params: AccountCoreOverride & { accountId: bigint }) =>
+      readContract<boolean>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "postFillHookAccess",
+        args: [params.accountId]
       }),
     allowance: (params: { token: Address; owner: Address; spender: Address }) =>
       readContract<bigint>(config, {
@@ -246,6 +260,15 @@ export function createAccountClient(config: KuruClientConfig) {
       executeWrite({
         config,
         request: buildClaimBuilderFeesRequest({
+          ...params,
+          accountCore: resolveAccountCore(config, params.accountCore)
+        }),
+        overrides: params
+      }),
+    setPostFillHookAccess: (params: SetPostFillHookAccessParams) =>
+      executeWrite({
+        config,
+        request: buildSetPostFillHookAccessRequest({
           ...params,
           accountCore: resolveAccountCore(config, params.accountCore)
         }),
