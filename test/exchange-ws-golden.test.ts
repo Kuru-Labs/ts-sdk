@@ -79,6 +79,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
   it("retains the stable market-fill identity emitted by Rust", () => {
     const frame = decodeMarketTradesFrame(fixture("trades.bin"));
 
+    expect(frame.previousMarketSeq).toBe(4n);
     expect(frame.trades).toEqual([
       {
         tradeId: 99n,
@@ -248,6 +249,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
 
   it("represents lifecycle parents according to the bytes Rust actually carries", () => {
     const market = decodeLifecycleFrame(fixture("lifecycle-market.bin"));
+    expect(market).toMatchObject({ scope: "market", previousMarketSeq: 2n });
     expect(market.event).toEqual({
       action: "branchDropped",
       blockNumber: 12n,
@@ -265,6 +267,18 @@ describe("Exchange WebSocket Rust golden frames", () => {
       parentBlockId: null,
       dropReason: null,
       replacementBlockId: null
+    });
+  });
+
+  it("retains non-adjacent market-stream predecessors emitted by Rust", () => {
+    expect(decodeExchangeWsFrame(fixture("l2-delta.bin"))).toMatchObject({
+      kind: "l2Delta",
+      marketSeq: 9n,
+      previousMarketSeq: 3n
+    });
+    expect(decodeMarketTradesFrame(fixture("trades.bin"))).toMatchObject({
+      marketSeq: 9n,
+      previousMarketSeq: 4n
     });
   });
 });

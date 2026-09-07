@@ -57,6 +57,18 @@ Persist replay cursors as `(feedEpoch, marketSeq)` or `(feedEpoch, globalUserSeq
 `feedEpoch` differs from the installed store epoch, discard the old state and resynchronize instead
 of comparing the two epochs' sequence numbers.
 
+Replayable market frames (`l2Delta`, market `trades`, and market-scoped lifecycle frames) expose
+`previousMarketSeq`. A zero wire value decodes to `null`; otherwise it identifies the previous
+publication in that exact `(market, view, topic)` stream. For an explicit replay cut `R`, accept the
+first frame only when `marketSeq > R` and `previousMarketSeq === null || previousMarketSeq <= R`.
+After that bridge, require every frame's `previousMarketSeq` to equal the last accepted
+`marketSeq`. The predecessor may be much lower than `marketSeq`; never derive it as
+`marketSeq - 1n`.
+
+User orders, balances, and trades use the same sparse-cut rule with `previousGlobalUserSeq` and
+`globalUserSeq`. Their binary layouts are unchanged. After accepting the first replay frame, require
+exact predecessor equality for every subsequent frame.
+
 - L2 book, BBO, and all-mids fields named `priceX18`, `totalBaseX18`, or `midpointX18` are already
   x18 fixed-point values on the wire.
 - L2 deltas, market trades, user orders, and user trades expose native `priceTick` and base-quantity
@@ -95,6 +107,8 @@ Lifecycle kind `4` is an internal stream-control frame, not a subscribable topic
 decoder still returns it so stream coordinators can advance their cursors and apply replay logic.
 The `scope` discriminator identifies its market or user prefix. Most UI code should consume a
 higher-level stream coordinator rather than render lifecycle frames.
+Market-scoped lifecycle frames carry `previousMarketSeq`; user-scoped lifecycle frames retain
+`previousGlobalUserSeq`.
 `parentBlockId` is `null` for `blockVoted` and `blockFinalized`, whose fixed-width parent slot is
 zero-filled by Exchange Core.
 

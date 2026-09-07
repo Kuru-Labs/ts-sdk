@@ -26,6 +26,10 @@ interface ExchangeWsMarketFrame extends ExchangeWsFrameHeader {
   globalSeq: bigint;
 }
 
+interface ExchangeWsReplayableMarketFrame extends ExchangeWsMarketFrame {
+  previousMarketSeq: bigint | null;
+}
+
 export type ExchangeWsL2Grouping =
   | { kind: "none" }
   | { kind: "nativeTick"; tickSize: bigint }
@@ -73,7 +77,7 @@ export interface ExchangeWsL2DeltaUpdate {
   activeOrderCountAfter: number;
 }
 
-export interface ExchangeWsL2DeltaFrame extends ExchangeWsMarketFrame {
+export interface ExchangeWsL2DeltaFrame extends ExchangeWsReplayableMarketFrame {
   kind: "l2Delta";
   sourceBlock: ExchangeWsBlockContext;
   updates: ExchangeWsL2DeltaUpdate[];
@@ -87,7 +91,7 @@ export interface ExchangeWsMarketTrade {
   baseFilled: bigint;
 }
 
-export interface ExchangeWsMarketTradesFrame extends ExchangeWsMarketFrame {
+export interface ExchangeWsMarketTradesFrame extends ExchangeWsReplayableMarketFrame {
   kind: "trades";
   sourceBlock: ExchangeWsBlockContext;
   trades: ExchangeWsMarketTrade[];
@@ -287,7 +291,7 @@ export interface ExchangeWsLifecycleEvent {
   replacementBlockId: Hex | null;
 }
 
-export interface ExchangeWsMarketLifecycleFrame extends ExchangeWsMarketFrame {
+export interface ExchangeWsMarketLifecycleFrame extends ExchangeWsReplayableMarketFrame {
   kind: "lifecycle";
   scope: "market";
   event: ExchangeWsLifecycleEvent;

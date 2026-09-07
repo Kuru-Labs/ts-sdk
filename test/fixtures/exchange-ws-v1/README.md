@@ -13,6 +13,10 @@ packed match. The `user-trades*.bin` fixtures cover taker, active-maker, mixed-m
 and passive-liquidity routing. Their `users` tuple is always ordered as taker then maker, with
 zero as the passive-maker sentinel.
 
+`l2-delta.bin`, `trades.bin`, and `lifecycle-market.bin` carry deliberately non-adjacent
+`previousMarketSeq` values. They pin that replay linkage is scoped to the exact
+`(market, view, topic)` stream and must not be inferred as `marketSeq - 1`.
+
 User-order snapshots contain complete open-order state. `user-orders-delta.bin` contains a
 `created` event, while `user-orders-trade.bin`, `user-orders-cancelled.bin`, and
 `user-orders-rab-reduced.bin` each pin one causal event variant and its exact source tuple.
