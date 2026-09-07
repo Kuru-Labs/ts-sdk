@@ -104,6 +104,10 @@ function marketContext(writer: FixtureWriter) {
   writer.hex(MARKET_A).u64(9n).u64(10n);
 }
 
+function replayableMarketContext(writer: FixtureWriter, previousMarketSeq: bigint) {
+  writer.hex(MARKET_A).u64(9n).u64(previousMarketSeq).u64(10n);
+}
+
 function blockContext(writer: FixtureWriter) {
   writer.u64(12n).hex(BLOCK);
 }
@@ -212,13 +216,15 @@ describe("Exchange WebSocket binary decoder", () => {
 
   it("decodes L2 deltas, market trades, BBO, and all mids", () => {
     const delta = frame(2, 1, 0, (writer) => {
-      marketContext(writer);
+      replayableMarketContext(writer, 3n);
       blockContext(writer);
       writer.u32(1).u8(2).i64(-10n).u128(0n).u128(2n).u128(3n).u32(4);
     });
     expect(decodeExchangeWsFrame(delta)).toMatchObject({
       kind: "l2Delta",
       view: "proposed",
+      marketSeq: 9n,
+      previousMarketSeq: 3n,
       sourceBlock: { blockNumber: 12n, blockId: BLOCK },
       updates: [
         {
@@ -233,11 +239,13 @@ describe("Exchange WebSocket binary decoder", () => {
     });
 
     const trades = frame(3, 2, 0, (writer) => {
-      marketContext(writer);
+      replayableMarketContext(writer, 4n);
       blockContext(writer);
       writer.u32(1).u64(99n).u16(7).u8(1).i64(123n).u128(456n);
     });
-    expect(decodeMarketTradesFrame(trades).trades).toEqual([
+    const decodedTrades = decodeMarketTradesFrame(trades);
+    expect(decodedTrades.previousMarketSeq).toBe(4n);
+    expect(decodedTrades.trades).toEqual([
       { tradeId: 99n, recordIndex: 7, takerSide: "buy", priceTick: 123n, baseFilled: 456n }
     ]);
 
@@ -440,12 +448,13 @@ describe("Exchange WebSocket binary decoder", () => {
 
   it("distinguishes market and user lifecycle prefixes", () => {
     const marketLifecycle = frame(4, 2, 0, (writer) => {
-      marketContext(writer);
+      replayableMarketContext(writer, 2n);
       lifecycleBody(writer, 5, true);
     });
     expect(decodeExchangeWsFrame(marketLifecycle)).toMatchObject({
       kind: "lifecycle",
       scope: "market",
+      previousMarketSeq: 2n,
       event: {
         action: "branchDropped",
         dropReason: "competingBlock",
@@ -467,6 +476,19 @@ describe("Exchange WebSocket binary decoder", () => {
         dropReason: null,
         replacementBlockId: null
       }
+    });
+  });
+
+  it("decodes a zero previous market sequence as an absent predecessor", () => {
+    const delta = frame(2, 3, 0, (writer) => {
+      replayableMarketContext(writer, 0n);
+      blockContext(writer);
+      writer.u32(0);
+    });
+
+    expect(decodeExchangeWsFrame(delta)).toMatchObject({
+      kind: "l2Delta",
+      previousMarketSeq: null
     });
   });
 

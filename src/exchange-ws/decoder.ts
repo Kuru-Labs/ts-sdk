@@ -277,6 +277,15 @@ function decodeMarketContext(reader: ByteReader) {
   };
 }
 
+function decodeReplayableMarketContext(reader: ByteReader) {
+  return {
+    marketAddress: reader.readAddress("market address"),
+    marketSeq: reader.readU64("market sequence"),
+    previousMarketSeq: optionalSequence(reader.readU64("previous market sequence")),
+    globalSeq: reader.readU64("global sequence")
+  };
+}
+
 function decodeUserContext(reader: ByteReader): ExchangeWsUserContext {
   return {
     userId: reader.readU64("user ID"),
@@ -396,7 +405,7 @@ function decodeL2Book(reader: ByteReader, header: DecodedHeader): ExchangeWsL2Bo
 
 function decodeL2Delta(reader: ByteReader, header: DecodedHeader): ExchangeWsL2DeltaFrame {
   assertFlags(header.flags, 0, "L2 delta");
-  const market = decodeMarketContext(reader);
+  const market = decodeReplayableMarketContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("L2 update count");
   assertCountFits(reader, count, 61, "L2 update count");
@@ -427,7 +436,7 @@ function decodeMarketTrades(
   header: DecodedHeader
 ): ExchangeWsMarketTradesFrame {
   assertFlags(header.flags, 0, "market trades");
-  const market = decodeMarketContext(reader);
+  const market = decodeReplayableMarketContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("trade count");
   assertCountFits(reader, count, 35, "trade count");
@@ -563,8 +572,8 @@ function decodeLifecycleEvent(reader: ByteReader): ExchangeWsLifecycleEvent {
 
 function decodeLifecycle(reader: ByteReader, header: DecodedHeader): ExchangeWsLifecycleFrame {
   assertFlags(header.flags, 0, "lifecycle");
-  if (reader.remaining === 148) {
-    const market = decodeMarketContext(reader);
+  if (reader.remaining === 156) {
+    const market = decodeReplayableMarketContext(reader);
     return {
       wireVersion: 1,
       feedEpoch: header.feedEpoch,
@@ -588,7 +597,7 @@ function decodeLifecycle(reader: ByteReader, header: DecodedHeader): ExchangeWsL
     };
   }
   return invalidFrame(
-    `Lifecycle frame payload must be 144 user bytes or 148 market bytes, received ${reader.remaining}.`
+    `Lifecycle frame payload must be 144 user bytes or 156 market bytes, received ${reader.remaining}.`
   );
 }
 
