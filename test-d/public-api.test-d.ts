@@ -118,7 +118,7 @@ void relayClient.executeReplaceBySlot({
 const exchangeFrame = decodeExchangeWsFrame(new Uint8Array());
 exchangeFrame.feedEpoch satisfies bigint;
 if (exchangeFrame.kind === "l2Book" && exchangeFrame.levelFormat === "extended") {
-  exchangeFrame.bids[0]?.activeBaseX18 satisfies bigint | undefined;
+  exchangeFrame.bids[0]?.activeBase satisfies bigint | undefined;
 }
 if (exchangeFrame.kind === "userOrders" && exchangeFrame.snapshot) {
   exchangeFrame.stateHead?.blockNumber satisfies bigint | undefined;

@@ -66,13 +66,18 @@ After that bridge, require every frame's `previousMarketSeq` to equal the last a
 `marketSeq - 1n`.
 
 User orders, balances, and trades use the same sparse-cut rule with `previousGlobalUserSeq` and
-`globalUserSeq`. Their binary layouts are unchanged. After accepting the first replay frame, require
+`globalUserSeq`. Their sequence and predecessor fields are unchanged. After accepting the first replay frame, require
 exact predecessor equality for every subsequent frame.
 
-- L2 book, BBO, and all-mids fields named `priceX18`, `totalBaseX18`, or `midpointX18` are already
-  x18 fixed-point values on the wire.
-- L2 deltas, market trades, user orders, and user trades expose native `priceTick` and base-quantity
-  values. Converting those fields requires the market's price and size precision metadata.
+- Every public price (`price`, `lowPrice`, `midpoint`) is in native market price precision (pp). Do not scale it again.
+- Every market/order/trade base quantity remains a native integer in market size precision, not
+  token decimals or x18. Snapshot and BBO fields are `totalBase`, `activeBase`, and `passiveBase`.
+- Native grouping `tickSize` is still a protocol tick count.
+- Wire version remains 1 for a coordinated testnet rollout. Native event prices use i64;
+  formatted L2/BBO/mid prices use i128. L2 delta tuples are 61 bytes, market trades 35,
+  snapshot orders 96, and active/passive user trades 98/96. The intermediate x18
+  event-price widening is removed. Older snapshot consumers assuming x18 units must
+  also update, even where widths are unchanged. Deploy server and SDK together.
 - User balances remain in each token's native decimal domain.
 
 Market and user trade frames both expose `recordIndex`. The stable identity of a market fill is
