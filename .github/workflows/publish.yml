@@ -9,12 +9,14 @@ on:
         default: patch
         type: choice
         options:
+          - current
           - patch
           - minor
           - major
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: npm-publish
@@ -39,9 +41,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
+
+      - name: Verify trusted publishing prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NODE_VERSION="$(node --version)"
+          NPM_VERSION="$(npm --version)"
+          echo "::notice title=INFO::Using Node.js $NODE_VERSION and npm $NPM_VERSION for trusted publishing"
+
+          node -e "const [major, minor, patch] = process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) { console.error('::error title=ERROR::Trusted publishing requires npm 11.5.1 or newer'); process.exit(1); }" "$NPM_VERSION"
+
+          if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" || -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]]; then
+            echo "::error title=ERROR::GitHub did not provide an OIDC ID-token endpoint"
+            exit 1
+          fi
+
+          echo "::notice title=INFO::GitHub OIDC environment is available"
 
       - name: Configure Git
         run: |
@@ -73,6 +93,31 @@ jobs:
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
           case "$VERSION_TYPE" in
+            current)
+              NEW_VERSION="$CURRENT_VERSION"
+              set +e
+              NPM_VIEW_OUTPUT="$(npm view "@toxicflow-labs/ts-sdk@$NEW_VERSION" version 2>&1)"
+              NPM_VIEW_STATUS=$?
+              set -e
+
+              if [[ $NPM_VIEW_STATUS -eq 0 ]]; then
+                echo "::error title=ERROR::@toxicflow-labs/ts-sdk@$NEW_VERSION is already published"
+                exit 1
+              fi
+
+              if [[ "$NPM_VIEW_OUTPUT" != *"E404"* ]]; then
+                echo "::error title=ERROR::Could not verify whether @toxicflow-labs/ts-sdk@$NEW_VERSION is unpublished"
+                echo "$NPM_VIEW_OUTPUT"
+                exit 1
+              fi
+
+              if ! git rev-parse --verify --quiet "refs/tags/v$NEW_VERSION" >/dev/null; then
+                echo "::error title=ERROR::Recovery tag v$NEW_VERSION does not exist"
+                exit 1
+              fi
+
+              echo "::notice title=WARN::Retrying unpublished version $NEW_VERSION without creating a commit or tag"
+              ;;
             major)
               NEW_VERSION="$((MAJOR + 1)).0.0"
               ;;
@@ -88,11 +133,13 @@ jobs:
               ;;
           esac
 
-          node -e "const fs = require('node:fs'); const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')"
+          if [[ "$VERSION_TYPE" != "current" ]]; then
+            node -e "const fs = require('node:fs'); const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n')"
 
-          git add package.json
-          git commit -m "Bump version to $NEW_VERSION"
-          git tag "v$NEW_VERSION"
+            git add package.json
+            git commit -m "Bump version to $NEW_VERSION"
+            git tag "v$NEW_VERSION"
+          fi
 
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice title=INFO::Updated @toxicflow-labs/ts-sdk from $CURRENT_VERSION to $NEW_VERSION"
@@ -105,17 +152,16 @@ jobs:
       - name: Verify package contents
         run: |
           echo "::notice title=INFO::Checking the npm package contents before publishing"
-          pnpm publish --dry-run --access public --no-git-checks
+          npm publish --dry-run --access public
 
       - name: Push version commit and tag
+        if: github.event.inputs.version_type != 'current'
         run: |
           echo "::notice title=INFO::Pushing version commit and v${{ steps.version.outputs.version }} tag"
           git push
           git push --tags
 
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "::notice title=INFO::Publishing @toxicflow-labs/ts-sdk@${{ steps.version.outputs.version }} to npm"
-          pnpm publish --access public --no-git-checks
+          echo "::notice title=INFO::Publishing @toxicflow-labs/ts-sdk@${{ steps.version.outputs.version }} to npm with GitHub OIDC"
+          npm publish --access public

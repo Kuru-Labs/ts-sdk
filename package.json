@@ -2,6 +2,10 @@
   "name": "@toxicflow-labs/ts-sdk",
   "version": "0.0.4",
   "description": "Viem-first TypeScript SDK for Kuru contracts.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kuru-Labs/ts-sdk.git"
+  },
   "license": "UNLICENSED",
   "type": "module",
   "publishConfig": {
