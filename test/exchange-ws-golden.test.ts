@@ -13,6 +13,7 @@ import {
 
 const FEED_EPOCH = (1n << 60n) + 7n;
 const FIXTURES = [
+  ["l2-book-native-units.bin", "l2Book"],
   ["l2-book-compact.bin", "l2Book"],
   ["l2-book-extended.bin", "l2Book"],
   ["l2-delta.bin", "l2Delta"],
@@ -46,6 +47,15 @@ function userOrderEvents(name: string) {
 }
 
 describe("Exchange WebSocket Rust golden frames", () => {
+  it("preserves native pp/sp from the authoritative formatter with nontrivial precisions", () => {
+    const frame = decodeExchangeWsFrame(fixture("l2-book-native-units.bin"));
+    expect(frame).toMatchObject({
+      kind: "l2Book",
+      levelFormat: "compact",
+      bids: [],
+      asks: [{ price: 12345n, totalBase: 2500n }]
+    });
+  });
   it("decodes every authoritative frame kind and variant", () => {
     for (const [name, kind] of FIXTURES) {
       const frame = decodeExchangeWsFrame(fixture(name));
@@ -85,14 +95,14 @@ describe("Exchange WebSocket Rust golden frames", () => {
         tradeId: 99n,
         recordIndex: 0,
         takerSide: "buy",
-        priceTick: 123n,
+        price: 123n,
         baseFilled: 456n
       },
       {
         tradeId: 99n,
         recordIndex: 1,
         takerSide: "buy",
-        priceTick: 124n,
+        price: 124n,
         baseFilled: 457n
       }
     ]);
@@ -112,7 +122,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         orderId: 11n,
         slotIdx: 2,
         side: "buy",
-        priceTick: 42n,
+        price: 42n,
         remainingBase: 43n,
         minSizeAfterBlock: 44n,
         clientOrderId: `0x${"77".repeat(32)}`
@@ -137,7 +147,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         orderId: 11n,
         slotIdx: 2,
         side: "buy",
-        priceTick: 42n,
+        price: 42n,
         remainingBase: 43n,
         minSizeAfterBlock: 44n,
         clientOrderId: `0x${"77".repeat(32)}`
@@ -200,7 +210,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         recordIndex: 2,
         users: [7n, 8n],
         takerSide: "buy",
-        priceTick: 3n,
+        price: 3n,
         baseFilled: 4n,
         liquidity: {
           kind: "activeFifo",
@@ -236,11 +246,11 @@ describe("Exchange WebSocket Rust golden frames", () => {
         recordIndex: 9,
         users: [7n, 0n],
         takerSide: "sell",
-        priceTick: 10n,
+        price: 10n,
         baseFilled: 11n,
         liquidity: {
           kind: "passiveBand",
-          lowPriceTick: -12n,
+          lowPrice: -12n,
           passiveSideRemainingAfter: 13n
         }
       }

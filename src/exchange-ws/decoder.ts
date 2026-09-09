@@ -329,16 +329,16 @@ function decodeGrouping(reader: ByteReader): ExchangeWsL2Grouping {
 
 function decodeCompactLevel(reader: ByteReader, field: string): ExchangeWsCompactL2Level {
   return {
-    priceX18: reader.readI128(`${field} price x18`),
-    totalBaseX18: reader.readU128(`${field} total base x18`)
+    price: reader.readI128(`${field} price pp`),
+    totalBase: reader.readU128(`${field} total base sp`)
   };
 }
 
 function decodeExtendedLevel(reader: ByteReader, field: string): ExchangeWsExtendedL2Level {
   return {
     ...decodeCompactLevel(reader, field),
-    activeBaseX18: reader.readU128(`${field} active base x18`),
-    passiveBaseX18: reader.readU128(`${field} passive base x18`),
+    activeBase: reader.readU128(`${field} active base sp`),
+    passiveBase: reader.readU128(`${field} passive base sp`),
     activeOrderCount: reader.readU32(`${field} active order count`)
   };
 }
@@ -413,7 +413,7 @@ function decodeL2Delta(reader: ByteReader, header: DecodedHeader): ExchangeWsL2D
   for (let index = 0; index < count; index++) {
     updates.push({
       side: decodeSide(reader.readU8(`L2 update ${index} side`), "L2 update"),
-      priceTick: reader.readI64(`L2 update ${index} price tick`),
+      price: reader.readI64(`L2 update ${index} price pp`),
       totalBaseAfter: reader.readU128(`L2 update ${index} total base after`),
       activeBaseAfter: reader.readU128(`L2 update ${index} active base after`),
       passiveBaseAfter: reader.readU128(`L2 update ${index} passive base after`),
@@ -446,7 +446,7 @@ function decodeMarketTrades(
       tradeId: reader.readU64(`trade ${index} ID`),
       recordIndex: reader.readU16(`trade ${index} record index`),
       takerSide: decodeSide(reader.readU8(`trade ${index} taker side`), "trade taker"),
-      priceTick: reader.readI64(`trade ${index} price tick`),
+      price: reader.readI64(`trade ${index} price pp`),
       baseFilled: reader.readU128(`trade ${index} base filled`)
     });
   }
@@ -463,15 +463,15 @@ function decodeMarketTrades(
 
 function decodeOptionalBboLevel(reader: ByteReader, field: string): ExchangeWsBboLevel | null {
   const present = reader.readBoolean(`${field} present`);
-  const priceX18 = reader.readI128(`${field} price x18`);
-  const totalBaseX18 = reader.readU128(`${field} total base x18`);
+  const price = reader.readI128(`${field} price pp`);
+  const totalBase = reader.readU128(`${field} total base sp`);
   if (!present) {
-    if (priceX18 !== 0n || totalBaseX18 !== 0n) {
+    if (price !== 0n || totalBase !== 0n) {
       invalidFrame(`Absent ${field} must have zero-filled price and size fields.`);
     }
     return null;
   }
-  return { priceX18, totalBaseX18 };
+  return { price, totalBase };
 }
 
 function decodeBbo(reader: ByteReader, header: DecodedHeader): ExchangeWsBboFrame {
@@ -497,7 +497,7 @@ function decodeAllMids(reader: ByteReader, header: DecodedHeader): ExchangeWsAll
   for (let index = 0; index < count; index++) {
     mids.push({
       marketAddress: reader.readAddress(`mid ${index} market address`),
-      midpointX18: reader.readI128(`mid ${index} midpoint x18`)
+      midpoint: reader.readI128(`mid ${index} midpoint pp`)
     });
   }
   return {
@@ -607,7 +607,7 @@ function decodeUserOrder(reader: ByteReader, index: number): ExchangeWsUserOrder
   const orderId = reader.readU64(`${prefix} ID`);
   const slotIdx = reader.readU8(`${prefix} slot index`);
   const side = decodeSide(reader.readU8(`${prefix} side`), "user order");
-  const priceTick = reader.readI64(`${prefix} price tick`);
+  const price = reader.readI64(`${prefix} price pp`);
   const remainingBase = reader.readU128(`${prefix} remaining base`);
   const minSizePresent = reader.readBoolean(`${prefix} min-size-after-block present`);
   const minSizeValue = reader.readU64(`${prefix} min-size-after-block`);
@@ -625,7 +625,7 @@ function decodeUserOrder(reader: ByteReader, index: number): ExchangeWsUserOrder
     orderId,
     slotIdx,
     side,
-    priceTick,
+    price,
     remainingBase,
     minSizeAfterBlock: minSizePresent ? minSizeValue : null,
     clientOrderId: clientOrderIdPresent ? clientOrderIdValue : null
@@ -803,7 +803,7 @@ function decodeUserTradeLiquidity(reader: ByteReader, index: number): ExchangeWs
   if (code === 2) {
     return {
       kind: "passiveBand",
-      lowPriceTick: reader.readI64(`user trade ${index} low price tick`),
+      lowPrice: reader.readI64(`user trade ${index} low price pp`),
       passiveSideRemainingAfter: reader.readU128(
         `user trade ${index} passive-side remaining base after`
       )
@@ -829,7 +829,7 @@ function decodeUserTrades(reader: ByteReader, header: DecodedHeader): ExchangeWs
         reader.readU64(`user trade ${index} maker user ID`)
       ],
       takerSide: decodeSide(reader.readU8(`user trade ${index} taker side`), "user trade taker"),
-      priceTick: reader.readI64(`user trade ${index} price tick`),
+      price: reader.readI64(`user trade ${index} price pp`),
       baseFilled: reader.readU128(`user trade ${index} base filled`),
       liquidity: decodeUserTradeLiquidity(reader, index)
     });

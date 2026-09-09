@@ -36,13 +36,13 @@ export type ExchangeWsL2Grouping =
   | { kind: "significantFigures"; figures: number; mantissa: number | null };
 
 export interface ExchangeWsCompactL2Level {
-  priceX18: bigint;
-  totalBaseX18: bigint;
+  price: bigint;
+  totalBase: bigint;
 }
 
 export interface ExchangeWsExtendedL2Level extends ExchangeWsCompactL2Level {
-  activeBaseX18: bigint;
-  passiveBaseX18: bigint;
+  activeBase: bigint;
+  passiveBase: bigint;
   activeOrderCount: number;
 }
 
@@ -70,7 +70,7 @@ export type ExchangeWsL2BookFrame = ExchangeWsCompactL2BookFrame | ExchangeWsExt
 
 export interface ExchangeWsL2DeltaUpdate {
   side: ExchangeWsSide;
-  priceTick: bigint;
+  price: bigint;
   totalBaseAfter: bigint;
   activeBaseAfter: bigint;
   passiveBaseAfter: bigint;
@@ -87,7 +87,7 @@ export interface ExchangeWsMarketTrade {
   tradeId: bigint;
   recordIndex: number;
   takerSide: ExchangeWsSide;
-  priceTick: bigint;
+  price: bigint;
   baseFilled: bigint;
 }
 
@@ -98,8 +98,8 @@ export interface ExchangeWsMarketTradesFrame extends ExchangeWsReplayableMarketF
 }
 
 export interface ExchangeWsBboLevel {
-  priceX18: bigint;
-  totalBaseX18: bigint;
+  price: bigint;
+  totalBase: bigint;
 }
 
 export interface ExchangeWsBboFrame extends ExchangeWsMarketFrame {
@@ -111,7 +111,7 @@ export interface ExchangeWsBboFrame extends ExchangeWsMarketFrame {
 
 export interface ExchangeWsMidpoint {
   marketAddress: Address;
-  midpointX18: bigint;
+  midpoint: bigint;
 }
 
 export interface ExchangeWsAllMidsFrame extends ExchangeWsFrameHeader {
@@ -131,7 +131,7 @@ export interface ExchangeWsUserOrder {
   orderId: bigint;
   slotIdx: number;
   side: ExchangeWsSide;
-  priceTick: bigint;
+  price: bigint;
   remainingBase: bigint;
   minSizeAfterBlock: bigint | null;
   clientOrderId: Hex | null;
@@ -243,7 +243,7 @@ export interface ExchangeWsActiveFifoLiquidity {
 
 export interface ExchangeWsPassiveBandLiquidity {
   kind: "passiveBand";
-  lowPriceTick: bigint;
+  lowPrice: bigint;
   passiveSideRemainingAfter: bigint;
 }
 
@@ -258,7 +258,7 @@ export interface ExchangeWsUserTrade {
   /** Ordered as [takerUserId, makerUserId]. Passive liquidity uses maker user ID 0. */
   users: [bigint, bigint];
   takerSide: ExchangeWsSide;
-  priceTick: bigint;
+  price: bigint;
   baseFilled: bigint;
   liquidity: ExchangeWsUserTradeLiquidity;
 }

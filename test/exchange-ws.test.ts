@@ -140,7 +140,7 @@ function lifecycleBody(
 }
 
 describe("Exchange WebSocket binary decoder", () => {
-  it("decodes compact and extended L2 book frames with signed x18 prices", () => {
+  it("decodes compact and extended L2 book frames with signed pp prices", () => {
     const compact = frame(1, 3, 1, (writer) => {
       marketContext(writer);
       blockContext(writer);
@@ -173,8 +173,8 @@ describe("Exchange WebSocket binary decoder", () => {
       maxDepthPerSide: 50,
       grouping: { kind: "none" },
       levelFormat: "compact",
-      bids: [{ priceX18: -5n, totalBaseX18: (1n << 100n) + 7n }],
-      asks: [{ priceX18: 6n, totalBaseX18: 8n }]
+      bids: [{ price: -5n, totalBase: (1n << 100n) + 7n }],
+      asks: [{ price: 6n, totalBase: 8n }]
     });
 
     const extended = frame(1, 1, 2, (writer) => {
@@ -205,10 +205,10 @@ describe("Exchange WebSocket binary decoder", () => {
         mantissa: 5
       });
       expect(decoded.bids[0]).toEqual({
-        priceX18: 100n,
-        totalBaseX18: 40n,
-        activeBaseX18: 30n,
-        passiveBaseX18: 10n,
+        price: 100n,
+        totalBase: 40n,
+        activeBase: 30n,
+        passiveBase: 10n,
         activeOrderCount: 3
       });
     }
@@ -229,7 +229,7 @@ describe("Exchange WebSocket binary decoder", () => {
       updates: [
         {
           side: "sell",
-          priceTick: -10n,
+          price: -10n,
           totalBaseAfter: 0n,
           activeBaseAfter: 2n,
           passiveBaseAfter: 3n,
@@ -246,7 +246,7 @@ describe("Exchange WebSocket binary decoder", () => {
     const decodedTrades = decodeMarketTradesFrame(trades);
     expect(decodedTrades.previousMarketSeq).toBe(4n);
     expect(decodedTrades.trades).toEqual([
-      { tradeId: 99n, recordIndex: 7, takerSide: "buy", priceTick: 123n, baseFilled: 456n }
+      { tradeId: 99n, recordIndex: 7, takerSide: "buy", price: 123n, baseFilled: 456n }
     ]);
 
     const bbo = frame(5, 3, 0, (writer) => {
@@ -255,7 +255,7 @@ describe("Exchange WebSocket binary decoder", () => {
       writer.u8(1).i128(100n).u128(20n).u8(0).i128(0n).u128(0n);
     });
     expect(decodeBboFrame(bbo)).toMatchObject({
-      bid: { priceX18: 100n, totalBaseX18: 20n },
+      bid: { price: 100n, totalBase: 20n },
       ask: null
     });
 
@@ -265,8 +265,8 @@ describe("Exchange WebSocket binary decoder", () => {
     expect(decodeExchangeWsFrame(mids)).toMatchObject({
       kind: "allMids",
       mids: [
-        { marketAddress: MARKET_A, midpointX18: -1n },
-        { marketAddress: MARKET_B, midpointX18: 2n }
+        { marketAddress: MARKET_A, midpoint: -1n },
+        { marketAddress: MARKET_B, midpoint: 2n }
       ]
     });
   });
@@ -304,7 +304,7 @@ describe("Exchange WebSocket binary decoder", () => {
           orderId: 11n,
           slotIdx: 2,
           side: "buy",
-          priceTick: 42n,
+          price: 42n,
           remainingBase: 43n,
           minSizeAfterBlock: 44n,
           clientOrderId: CLIENT_ORDER_ID
@@ -419,7 +419,7 @@ describe("Exchange WebSocket binary decoder", () => {
         recordIndex: 2,
         users: [7n, 8n],
         takerSide: "buy",
-        priceTick: 3n,
+        price: 3n,
         baseFilled: 4n,
         liquidity: {
           kind: "activeFifo",
@@ -435,11 +435,11 @@ describe("Exchange WebSocket binary decoder", () => {
         recordIndex: 9,
         users: [7n, 0n],
         takerSide: "sell",
-        priceTick: 10n,
+        price: 10n,
         baseFilled: 11n,
         liquidity: {
           kind: "passiveBand",
-          lowPriceTick: -12n,
+          lowPrice: -12n,
           passiveSideRemainingAfter: 13n
         }
       }
