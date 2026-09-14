@@ -20,3 +20,12 @@ zero as the passive-maker sentinel.
 User-order snapshots contain complete open-order state. `user-orders-delta.bin` contains a
 `created` event, while `user-orders-trade.bin`, `user-orders-cancelled.bin`, and
 `user-orders-rab-reduced.bin` each pin one causal event variant and its exact source tuple.
+
+The five user-trades fixtures were refreshed from Exchange Core KUR-1717 commit
+`abe3014`. Active rows are 151 bytes and passive rows are 145 bytes. They pin
+historical fees, match termination, and distinct source hashes/indices across
+variants; transaction hashes differ from the frame's block ID.
+
+KUR-1719 refreshes `trades.bin`, all five user-trade fixtures and all four user-order
+delta fixtures with per-event Unix-seconds timestamps (1,700,000,000). These are
+copied from the authoritative Rust encoder; other fixtures are unchanged.

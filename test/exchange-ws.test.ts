@@ -241,12 +241,19 @@ describe("Exchange WebSocket binary decoder", () => {
     const trades = frame(3, 2, 0, (writer) => {
       replayableMarketContext(writer, 4n);
       blockContext(writer);
-      writer.u32(1).u64(99n).u16(7).u8(1).i64(123n).u128(456n);
+      writer.u32(1).u64(99n).u16(7).u8(1).i64(123n).u128(456n).u64(1_700_000_000n);
     });
     const decodedTrades = decodeMarketTradesFrame(trades);
     expect(decodedTrades.previousMarketSeq).toBe(4n);
     expect(decodedTrades.trades).toEqual([
-      { tradeId: 99n, recordIndex: 7, takerSide: "buy", price: 123n, baseFilled: 456n }
+      {
+        tradeId: 99n,
+        recordIndex: 7,
+        takerSide: "buy",
+        price: 123n,
+        baseFilled: 456n,
+        blockTimestamp: 1_700_000_000n
+      }
     ]);
 
     const bbo = frame(5, 3, 0, (writer) => {
@@ -317,7 +324,7 @@ describe("Exchange WebSocket binary decoder", () => {
       blockContext(writer);
       writer.u32(1).u8(3);
       userOrderSource(writer);
-      writer.u64(7n).hex(MARKET_B).u64(12n).u8(7);
+      writer.u64(7n).hex(MARKET_B).u64(12n).u8(7).u64(1_700_000_000n);
     });
     expect(decodeUserOrdersFrame(delta)).toEqual({
       wireVersion: 1,
@@ -333,6 +340,7 @@ describe("Exchange WebSocket binary decoder", () => {
       events: [
         {
           kind: "cancelled",
+          blockTimestamp: 1_700_000_000n,
           source: {
             txHash: TX_HASH,
             txIdx: 2,
@@ -354,7 +362,7 @@ describe("Exchange WebSocket binary decoder", () => {
       blockContext(writer);
       writer.u32(1).u8(5);
       userOrderSource(writer);
-      writer.u64(7n).hex(MARKET_A).u64(11n).u8(2);
+      writer.u64(7n).hex(MARKET_A).u64(11n).u8(2).u64(1_700_000_000n);
     });
     expect(() => decodeUserOrdersFrame(unknown)).toThrow(/Unknown user-order event code 5/);
 
@@ -363,7 +371,7 @@ describe("Exchange WebSocket binary decoder", () => {
       blockContext(writer);
       writer.u32(1).u8(2);
       userOrderSource(writer);
-      writer.u64(7n).u64(8n).hex(MARKET_A).u8(0);
+      writer.u64(7n).u64(8n).hex(MARKET_A).u8(0).zeros(8);
     });
     expect(() => decodeUserOrdersFrame(truncated)).toThrow(/truncated/);
   });
@@ -399,6 +407,14 @@ describe("Exchange WebSocket binary decoder", () => {
         .u64(6n)
         .u8(2)
         .u128(7n)
+        .u32(25)
+        .hex(`0x${"66".repeat(32)}`)
+        .u32(12)
+        .u32(34)
+        .u32(100)
+        .u32(50)
+        .u8(0)
+        .u64(1_700_000_000n)
         .hex(MARKET_B)
         .u64(8n)
         .u16(9)
@@ -409,7 +425,14 @@ describe("Exchange WebSocket binary decoder", () => {
         .u128(11n)
         .u8(2)
         .i64(-12n)
-        .u128(13n);
+        .u128(13n)
+        .hex(`0x${"77".repeat(32)}`)
+        .u32(56)
+        .u32(78)
+        .u32(123)
+        .u32(456)
+        .u8(1)
+        .u64(1_700_000_000n);
     });
 
     expect(decodeUserTradesFrame(trades).trades).toEqual([
@@ -421,13 +444,21 @@ describe("Exchange WebSocket binary decoder", () => {
         takerSide: "buy",
         price: 3n,
         baseFilled: 4n,
+        blockTimestamp: 1_700_000_000n,
         liquidity: {
           kind: "activeFifo",
           slotIndex: 5,
           orderId: 6n,
           makerSide: "sell",
-          remainingBaseAfter: 7n
-        }
+          remainingBaseAfter: 7n,
+          makerFeePps: 25
+        },
+        txHash: `0x${"66".repeat(32)}`,
+        txIdx: 12,
+        logIdx: 34,
+        effectiveTakerFeePps: 100,
+        builderFeePps: 50,
+        matchEnd: false
       },
       {
         marketAddress: MARKET_B,
@@ -437,11 +468,18 @@ describe("Exchange WebSocket binary decoder", () => {
         takerSide: "sell",
         price: 10n,
         baseFilled: 11n,
+        blockTimestamp: 1_700_000_000n,
         liquidity: {
           kind: "passiveBand",
           lowPrice: -12n,
           passiveSideRemainingAfter: 13n
-        }
+        },
+        txHash: `0x${"77".repeat(32)}`,
+        txIdx: 56,
+        logIdx: 78,
+        effectiveTakerFeePps: 123,
+        builderFeePps: 456,
+        matchEnd: true
       }
     ]);
   });
