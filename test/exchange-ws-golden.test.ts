@@ -96,14 +96,16 @@ describe("Exchange WebSocket Rust golden frames", () => {
         recordIndex: 0,
         takerSide: "buy",
         price: 123n,
-        baseFilled: 456n
+        baseFilled: 456n,
+        blockTimestamp: 1_700_000_000n
       },
       {
         tradeId: 99n,
         recordIndex: 1,
         takerSide: "buy",
         price: 124n,
-        baseFilled: 457n
+        baseFilled: 457n,
+        blockTimestamp: 1_700_000_000n
       }
     ]);
   });
@@ -141,6 +143,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
     expect(userOrderEvents("user-orders-delta.bin")).toEqual([
       {
         kind: "created",
+        blockTimestamp: 1_700_000_000n,
         source,
         makerId: 7n,
         marketAddress: `0x${"11".repeat(20)}`,
@@ -156,6 +159,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
     expect(userOrderEvents("user-orders-trade.bin")).toEqual([
       {
         kind: "trade",
+        blockTimestamp: 1_700_000_000n,
         source,
         takerId: 8n,
         makerId: 7n,
@@ -170,6 +174,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
     expect(userOrderEvents("user-orders-cancelled.bin")).toEqual([
       {
         kind: "cancelled",
+        blockTimestamp: 1_700_000_000n,
         source,
         makerId: 7n,
         marketAddress: `0x${"22".repeat(20)}`,
@@ -180,6 +185,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
     expect(userOrderEvents("user-orders-rab-reduced.bin")).toEqual([
       {
         kind: "rab-reduced",
+        blockTimestamp: 1_700_000_000n,
         source,
         makerId: 7n,
         marketAddress: `0x${"11".repeat(20)}`,
@@ -212,13 +218,21 @@ describe("Exchange WebSocket Rust golden frames", () => {
         takerSide: "buy",
         price: 3n,
         baseFilled: 4n,
+        blockTimestamp: 1_700_000_000n,
         liquidity: {
           kind: "activeFifo",
           slotIndex: 5,
           orderId: 6n,
           makerSide: "sell",
-          remainingBaseAfter: 7n
-        }
+          remainingBaseAfter: 7n,
+          makerFeePps: 25
+        },
+        txHash: `0x${"66".repeat(32)}`,
+        txIdx: 12,
+        logIdx: 34,
+        effectiveTakerFeePps: 100,
+        builderFeePps: 50,
+        matchEnd: false
       }
     ]);
 
@@ -248,13 +262,37 @@ describe("Exchange WebSocket Rust golden frames", () => {
         takerSide: "sell",
         price: 10n,
         baseFilled: 11n,
+        blockTimestamp: 1_700_000_000n,
         liquidity: {
           kind: "passiveBand",
           lowPrice: -12n,
           passiveSideRemainingAfter: 13n
-        }
+        },
+        txHash: `0x${"77".repeat(32)}`,
+        txIdx: 56,
+        logIdx: 78,
+        effectiveTakerFeePps: 123,
+        builderFeePps: 456,
+        matchEnd: true
       }
     ]);
+  });
+
+  it("rejects invalid match flags and truncated fee/source tails", () => {
+    for (const name of ["user-trades.bin", "user-trades-passive.bin"]) {
+      const bytes = Buffer.from(fixture(name));
+      bytes[bytes.length - 9] = 2;
+      expect(() => decodeUserTradesFrame(bytes)).toThrow(/match end/);
+      const valid = fixture(name);
+      expect(() => decodeUserTradesFrame(valid.subarray(0, valid.length - 1))).toThrow();
+    }
+  });
+
+  it("rejects the previous version-1 user-trade row layout", () => {
+    const active = fixture("user-trades.bin");
+    const passive = fixture("user-trades-passive.bin");
+    expect(() => decodeUserTradesFrame(active.subarray(0, 92 + 98))).toThrow();
+    expect(() => decodeUserTradesFrame(passive.subarray(0, 92 + 96))).toThrow();
   });
 
   it("represents lifecycle parents according to the bytes Rust actually carries", () => {

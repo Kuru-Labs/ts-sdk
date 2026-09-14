@@ -439,7 +439,7 @@ function decodeMarketTrades(
   const market = decodeReplayableMarketContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("trade count");
-  assertCountFits(reader, count, 35, "trade count");
+  assertCountFits(reader, count, 43, "trade count");
   const trades: ExchangeWsMarketTrade[] = [];
   for (let index = 0; index < count; index++) {
     trades.push({
@@ -447,7 +447,8 @@ function decodeMarketTrades(
       recordIndex: reader.readU16(`trade ${index} record index`),
       takerSide: decodeSide(reader.readU8(`trade ${index} taker side`), "trade taker"),
       price: reader.readI64(`trade ${index} price pp`),
-      baseFilled: reader.readU128(`trade ${index} base filled`)
+      baseFilled: reader.readU128(`trade ${index} base filled`),
+      blockTimestamp: reader.readU64(`trade ${index} block timestamp`)
     });
   }
   return {
@@ -654,7 +655,8 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       kind: "created",
       source,
       makerId,
-      ...decodeUserOrder(reader, index)
+      ...decodeUserOrder(reader, index),
+      blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
   if (code === 2) {
@@ -668,7 +670,8 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       tradeId: reader.readU64(`user-order event ${index} trade ID`),
       slotIdx: reader.readU8(`user-order event ${index} slot index`),
       filledSize: reader.readU128(`user-order event ${index} filled size`),
-      updatedSize: reader.readU128(`user-order event ${index} updated size`)
+      updatedSize: reader.readU128(`user-order event ${index} updated size`),
+      blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
   if (code === 3) {
@@ -678,7 +681,8 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       makerId: reader.readU64(`user-order event ${index} maker user ID`),
       marketAddress: reader.readAddress(`user-order event ${index} market address`),
       orderId: reader.readU64(`user-order event ${index} order ID`),
-      slotIdx: reader.readU8(`user-order event ${index} slot index`)
+      slotIdx: reader.readU8(`user-order event ${index} slot index`),
+      blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
   if (code === 4) {
@@ -689,7 +693,8 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       marketAddress: reader.readAddress(`user-order event ${index} market address`),
       orderId: reader.readU64(`user-order event ${index} order ID`),
       slotIdx: reader.readU8(`user-order event ${index} slot index`),
-      updatedSize: reader.readU128(`user-order event ${index} updated size`)
+      updatedSize: reader.readU128(`user-order event ${index} updated size`),
+      blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
   return invalidFrame(`Unknown user-order event code ${code}.`);
@@ -729,7 +734,7 @@ function decodeUserOrders(reader: ByteReader, header: DecodedHeader): ExchangeWs
   }
 
   const count = reader.readU32("user-order event count");
-  assertCountFits(reader, count, 80, "user-order event count");
+  assertCountFits(reader, count, 88, "user-order event count");
   const events: ExchangeWsUserOrderEvent[] = [];
   for (let index = 0; index < count; index++) {
     events.push(decodeUserOrderEvent(reader, index));
@@ -797,7 +802,8 @@ function decodeUserTradeLiquidity(reader: ByteReader, index: number): ExchangeWs
       slotIndex: reader.readU8(`user trade ${index} maker slot index`),
       orderId: reader.readU64(`user trade ${index} maker order ID`),
       makerSide: decodeSide(reader.readU8(`user trade ${index} maker side`), "user trade maker"),
-      remainingBaseAfter: reader.readU128(`user trade ${index} maker remaining base after`)
+      remainingBaseAfter: reader.readU128(`user trade ${index} maker remaining base after`),
+      makerFeePps: reader.readU32(`user trade ${index} maker fee PPS`)
     };
   }
   if (code === 2) {
@@ -817,7 +823,7 @@ function decodeUserTrades(reader: ByteReader, header: DecodedHeader): ExchangeWs
   const user = decodeUserContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("user-trade count");
-  assertCountFits(reader, count, 96, "user-trade count");
+  assertCountFits(reader, count, 153, "user-trade count");
   const trades: ExchangeWsUserTrade[] = [];
   for (let index = 0; index < count; index++) {
     trades.push({
@@ -831,7 +837,14 @@ function decodeUserTrades(reader: ByteReader, header: DecodedHeader): ExchangeWs
       takerSide: decodeSide(reader.readU8(`user trade ${index} taker side`), "user trade taker"),
       price: reader.readI64(`user trade ${index} price pp`),
       baseFilled: reader.readU128(`user trade ${index} base filled`),
-      liquidity: decodeUserTradeLiquidity(reader, index)
+      liquidity: decodeUserTradeLiquidity(reader, index),
+      txHash: reader.readHex(32, `user trade ${index} transaction hash`),
+      txIdx: reader.readU32(`user trade ${index} transaction index`),
+      logIdx: reader.readU32(`user trade ${index} log index`),
+      effectiveTakerFeePps: reader.readU32(`user trade ${index} effective taker fee PPS`),
+      builderFeePps: reader.readU32(`user trade ${index} builder fee PPS`),
+      matchEnd: reader.readBoolean(`user trade ${index} match end`),
+      blockTimestamp: reader.readU64(`user trade ${index} block timestamp`)
     });
   }
   return {

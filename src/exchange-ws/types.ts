@@ -84,6 +84,8 @@ export interface ExchangeWsL2DeltaFrame extends ExchangeWsReplayableMarketFrame 
 }
 
 export interface ExchangeWsMarketTrade {
+  /** Canonical source block-header timestamp in Unix seconds. */
+  blockTimestamp: bigint;
   tradeId: bigint;
   recordIndex: number;
   takerSide: ExchangeWsSide;
@@ -157,12 +159,14 @@ export interface ExchangeWsUserOrderSource {
 export interface ExchangeWsUserOrderCreatedEvent extends ExchangeWsUserOrder {
   kind: "created";
   source: ExchangeWsUserOrderSource;
+  blockTimestamp: bigint;
   makerId: bigint;
 }
 
 export interface ExchangeWsUserOrderTradeEvent {
   kind: "trade";
   source: ExchangeWsUserOrderSource;
+  blockTimestamp: bigint;
   takerId: bigint;
   makerId: bigint;
   marketAddress: Address;
@@ -176,6 +180,7 @@ export interface ExchangeWsUserOrderTradeEvent {
 export interface ExchangeWsUserOrderCancelledEvent {
   kind: "cancelled";
   source: ExchangeWsUserOrderSource;
+  blockTimestamp: bigint;
   makerId: bigint;
   marketAddress: Address;
   orderId: bigint;
@@ -185,6 +190,7 @@ export interface ExchangeWsUserOrderCancelledEvent {
 export interface ExchangeWsUserOrderRabReducedEvent {
   kind: "rab-reduced";
   source: ExchangeWsUserOrderSource;
+  blockTimestamp: bigint;
   makerId: bigint;
   marketAddress: Address;
   orderId: bigint;
@@ -239,6 +245,8 @@ export interface ExchangeWsActiveFifoLiquidity {
   orderId: bigint;
   makerSide: ExchangeWsSide;
   remainingBaseAfter: bigint;
+  /** Historical per-record maker fee; denominator 10,000,000. */
+  makerFeePps: number;
 }
 
 export interface ExchangeWsPassiveBandLiquidity {
@@ -252,6 +260,8 @@ export type ExchangeWsUserTradeLiquidity =
   | ExchangeWsPassiveBandLiquidity;
 
 export interface ExchangeWsUserTrade {
+  /** Canonical source block-header timestamp in Unix seconds. */
+  blockTimestamp: bigint;
   marketAddress: Address;
   tradeId: bigint;
   recordIndex: number;
@@ -261,6 +271,15 @@ export interface ExchangeWsUserTrade {
   price: bigint;
   baseFilled: bigint;
   liquidity: ExchangeWsUserTradeLiquidity;
+  txHash: Hex;
+  txIdx: number;
+  logIdx: number;
+  /** Historical match taker fee; denominator 10,000,000. */
+  effectiveTakerFeePps: number;
+  /** Historical match builder fee; denominator 10,000,000. */
+  builderFeePps: number;
+  /** Closes the source match, not the frame or subscriber's filtered rows. */
+  matchEnd: boolean;
 }
 
 export interface ExchangeWsUserTradesFrame extends ExchangeWsFrameHeader, ExchangeWsUserContext {

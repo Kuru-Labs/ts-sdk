@@ -74,8 +74,8 @@ exact predecessor equality for every subsequent frame.
   token decimals or x18. Snapshot and BBO fields are `totalBase`, `activeBase`, and `passiveBase`.
 - Native grouping `tickSize` is still a protocol tick count.
 - Wire version remains 1 for a coordinated testnet rollout. Native event prices use i64;
-  formatted L2/BBO/mid prices use i128. L2 delta tuples are 61 bytes, market trades 35,
-  snapshot orders 96, and active/passive user trades 98/96. The intermediate x18
+  formatted L2/BBO/mid prices use i128. L2 delta tuples are 61 bytes, market trades 43,
+  snapshot orders 96, and active/passive user trades 159/153. The intermediate x18
   event-price widening is removed. Older snapshot consumers assuming x18 units must
   also update, even where widths are unchanged. Deploy server and SDK together.
 - User balances remain in each token's native decimal domain.
@@ -123,3 +123,33 @@ The decoder fails closed with `KuruSdkError` when a frame has an invalid magic v
 version, unknown enum, impossible count, malformed optional value, nonzero reserved field,
 truncation, or trailing data. Treat such an error as a resync/reconnect boundary; do not apply a
 partially decoded frame.
+
+## User-trade fees and source identity (KUR-1717)
+
+Kind 9 now exposes `txHash`, `txIdx`, `logIdx`, `effectiveTakerFeePps`,
+`builderFeePps`, and `matchEnd` on each trade. Active FIFO liquidity additionally
+exposes `liquidity.makerFeePps`; passive liquidity has no maker fee field.
+Rates are historical event inputs in PPS (denominator 10,000,000).
+
+A packed log is normalized into individual trade records. The current projector
+emits one trade per publication; iterate `trades` in order without assuming an
+entire match fits in one frame. Takers receive their active, passive, and self
+fills. Makers receive only their own fills and may not receive the terminal row.
+`matchEnd` closes one match; a log can contain several matches. Source identity
+uses the block context, transaction/log fields, and existing `recordIndex`.
+
+The decoder exposes inputs only; accounting and unfinished-match state belong to
+the client. Preserve that state with its replay cursor, or replay from before an
+unfinished match if the buffer is lost. Existing epoch/cursor semantics are unchanged.
+
+Wire version remains 1 for testnet. This replaces the old 98/96-byte kind-9 rows;
+coordinate server and decoder deployment. Do not use this decoder against the
+old layout. See [the response changelog](user-trades-changelog.md).
+
+## Canonical event time
+
+`trades` and `userTrades` rows and all four `userOrders.events` variants expose
+`blockTimestamp` as a bigint in Unix seconds. It is retained from the source
+block proposal, so replay and live delivery agree even after newer blocks arrive.
+Order snapshots and the shared block-context shape are unchanged.
+See the [timestamp wire changelog](user-trades-changelog.md#kur-1719-canonical-event-timestamps).
