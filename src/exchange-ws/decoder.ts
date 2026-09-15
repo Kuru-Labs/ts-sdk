@@ -602,7 +602,7 @@ function decodeLifecycle(reader: ByteReader, header: DecodedHeader): ExchangeWsL
   );
 }
 
-function decodeUserOrder(reader: ByteReader, index: number): ExchangeWsUserOrder {
+function decodeUserOrder(reader: ByteReader, index: number): Omit<ExchangeWsUserOrder, "createdAt"> {
   const prefix = `user order ${index}`;
   const marketAddress = reader.readAddress(`${prefix} market address`);
   const orderId = reader.readU64(`${prefix} ID`);
@@ -719,10 +719,13 @@ function decodeUserOrders(reader: ByteReader, header: DecodedHeader): ExchangeWs
   };
   if (snapshot) {
     const count = reader.readU32("user-order snapshot count");
-    assertCountFits(reader, count, 96, "user-order snapshot count");
+    assertCountFits(reader, count, 104, "user-order snapshot count");
     const orders: ExchangeWsUserOrder[] = [];
     for (let index = 0; index < count; index++) {
-      orders.push(decodeUserOrder(reader, index));
+      orders.push({
+        ...decodeUserOrder(reader, index),
+        createdAt: reader.readU64(`user order ${index} creation timestamp`)
+      });
     }
     const reservedRemovalCount = reader.readU32("reserved user-order removal count");
     if (reservedRemovalCount !== 0) {

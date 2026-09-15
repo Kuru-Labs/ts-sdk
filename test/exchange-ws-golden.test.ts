@@ -127,7 +127,8 @@ describe("Exchange WebSocket Rust golden frames", () => {
         price: 42n,
         remainingBase: 43n,
         minSizeAfterBlock: 44n,
-        clientOrderId: `0x${"77".repeat(32)}`
+        clientOrderId: `0x${"77".repeat(32)}`,
+        createdAt: 1_600_000_000n
       }
     ]);
   });
