@@ -167,7 +167,7 @@ errors, expiry, and cancellation.
 
 ## Exchange WebSocket data
 
-`@kuru-labs/ts-sdk/exchange-ws` strictly decodes the Exchange Gateway's `KXMD` binary data frames
+`@toxicflow-labs/ts-sdk/exchange-ws` strictly decodes the Exchange Gateway's `KXMD` binary data frames
 into typed `bigint`-safe objects. It supports L2 books and deltas, trades, BBO, all mids, lifecycle
 controls, and all user order, balance, and trade frames. Every wire-version-1 result includes the
 `feedEpoch` that namespaces its market or user sequence cursor.
@@ -175,7 +175,7 @@ User-order snapshots expose complete `orders`; deltas expose causal `created`, `
 `cancelled`, and `rab-reduced` events with source positions and physical `slotIdx` values.
 
 ```ts
-import { decodeExchangeWsMessage } from "@kuru-labs/ts-sdk/exchange-ws";
+import { decodeExchangeWsMessage } from "@toxicflow-labs/ts-sdk/exchange-ws";
 
 socket.binaryType = "arraybuffer";
 socket.onmessage = async ({ data }) => {
