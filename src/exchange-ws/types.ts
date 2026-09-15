@@ -129,6 +129,8 @@ export interface ExchangeWsUserContext {
 }
 
 export interface ExchangeWsUserOrder {
+  /** Canonical creation-block timestamp in Unix seconds. */
+  createdAt: bigint;
   marketAddress: Address;
   orderId: bigint;
   slotIdx: number;
@@ -156,7 +158,7 @@ export interface ExchangeWsUserOrderSource {
   recordIdx: number;
 }
 
-export interface ExchangeWsUserOrderCreatedEvent extends ExchangeWsUserOrder {
+export interface ExchangeWsUserOrderCreatedEvent extends Omit<ExchangeWsUserOrder, "createdAt"> {
   kind: "created";
   source: ExchangeWsUserOrderSource;
   blockTimestamp: bigint;

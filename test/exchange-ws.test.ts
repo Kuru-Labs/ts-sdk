@@ -292,6 +292,7 @@ describe("Exchange WebSocket binary decoder", () => {
         .u64(44n)
         .u8(1)
         .hex(CLIENT_ORDER_ID)
+        .u64(1_600_000_000n)
         .u32(0);
     });
     expect(decodeUserOrdersFrame(snapshot)).toEqual({
@@ -314,7 +315,8 @@ describe("Exchange WebSocket binary decoder", () => {
           price: 42n,
           remainingBase: 43n,
           minSizeAfterBlock: 44n,
-          clientOrderId: CLIENT_ORDER_ID
+          clientOrderId: CLIENT_ORDER_ID,
+          createdAt: 1_600_000_000n
         }
       ]
     });

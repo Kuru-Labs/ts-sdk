@@ -86,3 +86,15 @@ Wire version remains 1 for the coordinated testnet rollout. Update server and
 decoder together; the older timestamp-free rows are incompatible with this
 layout. Timestamp zero is a valid Unix epoch value. Missing timestamp metadata
 fails server encoding; it is not replaced with zero or the current time.
+
+## KUR-1726: open-order creation time
+
+Every `userOrders` snapshot order exposes `createdAt: bigint`, the original
+creation-block timestamp in Unix seconds. It remains unchanged through partial
+fills and subsequent order updates and survives checkpoints and restarts.
+
+The snapshot order row appends an eight-byte big-endian u64 at offset 96,
+increasing its size from 96 to 104 bytes. Wire version remains 1 for testnet;
+roll out the Gateway and SDK decoder together. Delta event layouts remain
+unchanged: on a `created` event, use `blockTimestamp` to initialize the order's
+`createdAt`; preserve that value when applying later trade or reduction events.

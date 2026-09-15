@@ -75,7 +75,7 @@ exact predecessor equality for every subsequent frame.
 - Native grouping `tickSize` is still a protocol tick count.
 - Wire version remains 1 for a coordinated testnet rollout. Native event prices use i64;
   formatted L2/BBO/mid prices use i128. L2 delta tuples are 61 bytes, market trades 43,
-  snapshot orders 96, and active/passive user trades 159/153. The intermediate x18
+  snapshot orders 104, and active/passive user trades 159/153. The intermediate x18
   event-price widening is removed. Older snapshot consumers assuming x18 units must
   also update, even where widths are unchanged. Deploy server and SDK together.
 - User balances remain in each token's native decimal domain.
@@ -87,7 +87,9 @@ for the maker because they have no individual maker; self-fills repeat the same 
 
 ## User-order events
 
-User-order snapshots expose complete open orders through `orders`. Delta frames expose causal,
+User-order snapshots expose complete open orders through `orders`, including
+`createdAt: bigint` (original creation-block Unix seconds). Preserve it through
+later updates; initialize it from a created delta’s `blockTimestamp`. Delta frames expose causal,
 discriminated `events`: `created`, `trade`, `cancelled`, and `rab-reduced`. Every event retains its
 canonical source tuple (`txHash`, `txIdx`, `logIdx`, `recordIdx`), and every affected order
 retains its physical `slotIdx`.

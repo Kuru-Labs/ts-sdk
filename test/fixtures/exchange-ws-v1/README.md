@@ -29,3 +29,5 @@ variants; transaction hashes differ from the frame's block ID.
 KUR-1719 refreshes `trades.bin`, all five user-trade fixtures and all four user-order
 delta fixtures with per-event Unix-seconds timestamps (1,700,000,000). These are
 copied from the authoritative Rust encoder; other fixtures are unchanged.
+
+KUR-1726 appends snapshot `createdAt` at row offset 96, making each row 104 bytes.
