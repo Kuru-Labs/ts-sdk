@@ -14,6 +14,7 @@ import type {
   ExchangeWsExtendedL2BookFrame,
   ExchangeWsExtendedL2Level,
   ExchangeWsFrame,
+  ExchangeWsMessage,
   ExchangeWsL2BookFrame,
   ExchangeWsL2DeltaFrame,
   ExchangeWsL2DeltaUpdate,
@@ -602,7 +603,10 @@ function decodeLifecycle(reader: ByteReader, header: DecodedHeader): ExchangeWsL
   );
 }
 
-function decodeUserOrder(reader: ByteReader, index: number): Omit<ExchangeWsUserOrder, "createdAt"> {
+function decodeUserOrder(
+  reader: ByteReader,
+  index: number
+): Omit<ExchangeWsUserOrder, "createdAt"> {
   const prefix = `user order ${index}`;
   const marketAddress = reader.readAddress(`${prefix} market address`);
   const orderId = reader.readU64(`${prefix} ID`);
@@ -900,14 +904,22 @@ export function decodeExchangeWsFrame(input: ExchangeWsBinaryInput): ExchangeWsF
   return frame;
 }
 
+/** Decode the required eight-byte subscription envelope around a publisher payload. */
+export function decodeExchangeWsEnvelope(input: ExchangeWsBinaryInput): ExchangeWsMessage {
+  const reader = new ByteReader(input);
+  reader.require(8, "subscription id");
+  const id = reader.view.getBigUint64(0, false);
+  return { id, message: decodeExchangeWsFrame(reader.bytes.subarray(8)) };
+}
+
 export async function decodeExchangeWsMessage(
   input: ExchangeWsBinaryInput | ExchangeWsBlobLike
-): Promise<ExchangeWsFrame> {
+): Promise<ExchangeWsMessage> {
   if (input instanceof ArrayBuffer || ArrayBuffer.isView(input)) {
-    return decodeExchangeWsFrame(input);
+    return decodeExchangeWsEnvelope(input);
   }
   if (isBlobLike(input)) {
-    return decodeExchangeWsFrame(await input.arrayBuffer());
+    return decodeExchangeWsEnvelope(await input.arrayBuffer());
   }
   return invalidFrame("Exchange WebSocket message is not a supported binary payload.");
 }

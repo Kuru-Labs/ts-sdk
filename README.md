@@ -154,7 +154,8 @@ import { decodeExchangeWsMessage } from "@kuru-labs/ts-sdk/exchange-ws";
 socket.binaryType = "arraybuffer";
 socket.onmessage = async ({ data }) => {
   if (typeof data !== "string") {
-    const frame = await decodeExchangeWsMessage(data);
+    const { id, message: frame } = await decodeExchangeWsMessage(data);
+    // Route frame to the subscription identified by id within this socket.
     console.log(frame.kind, frame.view);
   }
 };
@@ -162,3 +163,10 @@ socket.onmessage = async ({ data }) => {
 
 See [the Exchange WebSocket decoder guide](docs/exchange-ws.md) for numeric units, topic-specific
 helpers, lifecycle handling, and validation behavior.
+
+Gateway binary messages begin with an eight-byte big-endian subscription `id`.
+Use `decodeExchangeWsEnvelope` for synchronous socket data or
+`decodeExchangeWsMessage` for binary/Blob inputs; both return `{ id, message }`.
+`decodeExchangeWsFrame` and stream-specific frame decoders accept only the inner
+publisher payload, after removing the prefix. Wire version remains 1; upgrade
+Gateway and SDK together. Unprefixed socket frames are not auto-detected.

@@ -338,3 +338,9 @@ export type ExchangeWsFrame =
   | ExchangeWsUserOrdersFrame
   | ExchangeWsUserBalancesFrame
   | ExchangeWsUserTradesFrame;
+
+/** Gateway binary message: socket-local subscription id plus decoded publisher payload. */
+export interface ExchangeWsMessage {
+  id: bigint;
+  message: ExchangeWsFrame;
+}
