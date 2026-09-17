@@ -539,18 +539,21 @@ describe("Exchange WebSocket binary decoder", () => {
     const view = new Uint8Array(wrapped.buffer, 2, payload.length);
     expect(decodeExchangeWsFrame(view)).toMatchObject({ kind: "allMids", mids: [] });
 
+    const envelope = new Uint8Array(8 + payload.length);
+    new DataView(envelope.buffer).setBigUint64(0, 101n, false);
+    envelope.set(payload, 8);
     await expect(
       decodeExchangeWsMessage({
         arrayBuffer() {
           return Promise.resolve(
-            payload.buffer.slice(
-              payload.byteOffset,
-              payload.byteOffset + payload.byteLength
-            ) as ArrayBuffer
+            envelope.buffer.slice(
+              envelope.byteOffset,
+              envelope.byteOffset + envelope.byteLength
+            )
           );
         }
       })
-    ).resolves.toMatchObject({ kind: "allMids" });
+    ).resolves.toMatchObject({ id: 101n, message: { kind: "allMids" } });
   });
 
   it("fails closed on malformed headers, fields, counts, and trailing data", () => {
