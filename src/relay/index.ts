@@ -42,6 +42,9 @@ export type {
   RelayExecuteReplaceBySlotPayload,
   RelayFailureResponse,
   RelayFetch,
+  RelayEncryptionKey,
+  RelayEncryptionKeyOptions,
+  RelayEncryptedPrivateKey,
   RelayIntentHeaderWire,
   RelayNativeOrderWire,
   RelayPayloadByMethod,
@@ -56,3 +59,5 @@ export type {
   RelayTriggerConditionWire,
   RelayTransactionType
 } from "./types";
+
+export { encryptRelayPrivateKey, decryptRelayPrivateKey } from "./encryption";

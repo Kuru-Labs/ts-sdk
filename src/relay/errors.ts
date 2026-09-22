@@ -3,6 +3,7 @@ import type { Address, Hex } from "viem";
 import type { RelayFailureResponse } from "./types";
 
 export type KuruRelayErrorKind =
+  | "ENCRYPTION"
   | "INPUT"
   | "AUTHENTICATION"
   | "HTTP"

@@ -226,3 +226,63 @@ after the application has reconciled the previous outcome and consciously chosen
 An injected `tokenProvider` is called when a request needs a token, but Relay authentication is never
 started implicitly. Supplying a structured `RelayAccessToken` enables local expiry and wallet checks.
 Caller cancellation and per-call timeouts are supported through `signal` and `timeoutMs`.
+
+## Restore an encrypted private key after refresh
+
+`requestEncryptionKey(wallet, { keyVersion?, accessToken?, signal?, timeoutMs? })`
+requests `POST /auth/mera/encryption-key` using the retained JWT or configured token
+provider. Omit `keyVersion` for the active version; request the envelope's stored
+version when restoring. The method does not cache encryption keys and sends
+`cache: "no-store"`; redirects are rejected. The relay must have the Mera keyring
+feature enabled (Relay PR #131). Disabled deployments return HTTP 404; retired
+versions return HTTP 409 / `KEY_VERSION_UNAVAILABLE`.
+
+```ts
+import {
+  createKuruRelayClient,
+  encryptRelayPrivateKey,
+  decryptRelayPrivateKey
+} from "@toxicflow-labs/ts-sdk/relay";
+
+const relay = createKuruRelayClient({ baseUrl, accessToken: existingJwt });
+const key = await relay.requestEncryptionKey(wallet);
+const envelope = await encryptRelayPrivateKey(privateKey, key);
+// Persist only this JSON envelope in IndexedDB (or another browser store).
+const stored = JSON.stringify(envelope);
+
+// After refresh, recover the session JWT using your application's auth flow.
+const restoredEnvelope = JSON.parse(stored);
+const restoredKey = await relay.requestEncryptionKey(wallet, {
+  keyVersion: restoredEnvelope.keyVersion
+});
+const restoredPrivateKey = await decryptRelayPrivateKey(restoredEnvelope, restoredKey);
+```
+
+Helpers use browser/Node.js 20+ Web Crypto, AES-256-GCM with a random 96-bit IV,
+128-bit tag, and the exact Relay AAD. Imported CryptoKeys are non-extractable.
+The envelope contains `formatVersion`, `wallet`, `keyVersion`, `algorithm`, `aad`,
+`iv`, and `ciphertext`; binary fields use standard padded Base64. Encryption
+accepts valid 32-byte secp256k1 private keys and restoration returns lowercase
+`0x` hex. No additional encryption dependency is needed. Cryptographic failures
+use `KuruRelayError` with kind `ENCRYPTION`; malformed inputs use `INPUT`.
+
+Never persist/log the JWT, `RelayEncryptionKey`, or decrypted private key. Only
+ciphertext is printed in the example. Clear retained key references and sessions
+on logout; JavaScript strings cannot be reliably zeroed. Authenticated same-origin
+JavaScript can request the decryption key, so this does not protect against XSS.
+For rotation, decrypt with the stored version, request the active version and
+re-encrypt; if a version is retired, unlock with the passkey again.
+
+### Executable round-trip example
+
+Set `PRIVATE_KEY` in your environment (0x-prefixed 32-byte hex), and optionally
+`KURU_RELAY_URL` (default `https://relay.testnet.kuru.io`), then run:
+
+```sh
+pnpm dlx tsx examples/relay/encryption-round-trip.ts
+```
+
+The example signs Relay's login challenge, obtains a JWT, fetches the encryption
+key, encrypts and prints the envelope, creates a fresh client with the session,
+re-fetches the same version, decrypts, recreates the signer and asserts both the
+private key and address match. It does not place orders or print plaintext secrets.

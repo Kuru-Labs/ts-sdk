@@ -3,6 +3,7 @@ import { isAddressEqual, isHex, size, type Address, type Hex } from "viem";
 import { normalizeAddress, normalizeWalletSignature } from "../trading-wallet/validation";
 import { signRelayChallenge, resolveRelayAuthenticationWallet } from "./auth";
 import { KuruRelayError, relayInputError } from "./errors";
+import { validateRelayEncryptionKey } from "./encryption";
 import {
   buildAuthorizeAccountSignerRelayRequest,
   buildCancelTriggerRelayRequest,
@@ -29,6 +30,8 @@ import type {
   RelayChallenge,
   RelayFailureResponse,
   RelayFetch,
+  RelayEncryptionKey,
+  RelayEncryptionKeyOptions,
   RelayRequestOptions,
   RelaySubmitBuilderParams,
   RelaySubmitOptions,
@@ -129,6 +132,73 @@ export function createKuruRelayClient(config: KuruRelayClientConfig) {
     return token;
   }
 
+  async function requestEncryptionKey(
+    walletInput: Address,
+    options: RelayEncryptionKeyOptions = {}
+  ): Promise<RelayEncryptionKey> {
+    const wallet = normalizeAddress(walletInput, "wallet");
+    if (options.keyVersion !== undefined && !/^[A-Za-z0-9_-]{1,64}$/.test(options.keyVersion)) {
+      throw relayInputError(
+        "INVALID_KEY_VERSION",
+        "keyVersion must be 1-64 letters, digits, underscores or hyphens."
+      );
+    }
+    const token = await resolveAccessToken(
+      options.accessToken ?? retainedToken,
+      config.tokenProvider,
+      wallet,
+      now
+    );
+    const result = await requestJson(
+      fetchImplementation,
+      `${baseUrl}/auth/mera/encryption-key`,
+      {
+        wallet,
+        ...(options.keyVersion === undefined ? {} : { key_version: options.keyVersion })
+      },
+      token,
+      options,
+      timeoutMs,
+      true
+    );
+    if (!result.response.ok) {
+      const failure = parseAuthenticationFailure(result.body);
+      throw new KuruRelayError(
+        result.response.status === 401 ? "AUTHENTICATION" : "HTTP",
+        "Relay encryption-key request failed.",
+        {
+          code: failure?.code ?? "ENCRYPTION_KEY_HTTP_ERROR",
+          httpStatus: result.response.status,
+          ...(failure ? { retryable: failure.retryable } : {})
+        }
+      );
+    }
+    try {
+      const value = record(result.body);
+      const key: RelayEncryptionKey = {
+        wallet: normalizeAddress(requiredString(value, "wallet") as Address, "wallet"),
+        keyVersion: requiredString(value, "key_version"),
+        algorithm: value.algorithm as "AES-256-GCM",
+        encryptionKey: requiredString(value, "encryption_key"),
+        aad: requiredString(value, "aad")
+      };
+      validateRelayEncryptionKey(key);
+      if (
+        !isAddressEqual(key.wallet, wallet) ||
+        (options.keyVersion !== undefined && key.keyVersion !== options.keyVersion)
+      ) {
+        throw new Error();
+      }
+      return key;
+    } catch {
+      throw new KuruRelayError(
+        "MALFORMED_RESPONSE",
+        "The relay encryption-key response was malformed.",
+        { code: "INVALID_ENCRYPTION_KEY_RESPONSE" }
+      );
+    }
+  }
+
   async function submit(
     request: AnyRelayRequest,
     options: RelaySubmitOptions = {}
@@ -185,6 +255,7 @@ export function createKuruRelayClient(config: KuruRelayClientConfig) {
     requestChallenge,
     exchangeToken,
     authenticate,
+    requestEncryptionKey,
     submit,
     createRequestId: nextRequestId,
     getAccessToken: () => retainedToken,
@@ -259,7 +330,8 @@ async function requestJson(
   body: unknown,
   accessToken: string | undefined,
   options: RelayRequestOptions,
-  defaultTimeoutMs: number
+  defaultTimeoutMs: number,
+  sensitive = false
 ) {
   const timeoutMs = normalizeTimeout(options.timeoutMs ?? defaultTimeoutMs);
   if (options.signal?.aborted) {
@@ -290,6 +362,7 @@ async function requestJson(
   try {
     response = await fetchImplementation(url, {
       method: "POST",
+      ...(sensitive ? { cache: "no-store" as const, redirect: "error" as const } : {}),
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
