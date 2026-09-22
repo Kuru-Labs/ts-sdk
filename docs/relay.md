@@ -6,6 +6,10 @@ methods supported by the service. It does not build or sign trading intents; use
 
 WebSocket support is intentionally outside this module.
 
+`createKuruRelayClient` requires an absolute HTTPS `baseUrl` without a query or
+fragment. HTTP URLs, including localhost, are rejected before any request to
+protect authentication credentials and encryption keys in transit.
+
 ## Recommended flow
 
 1. Prepare the user's trading wallet. This can be a secondary embedded/passkey wallet rather than

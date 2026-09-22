@@ -301,10 +301,10 @@ function normalizeBaseUrl(value: string): string {
   } catch {
     throw relayInputError("INVALID_BASE_URL", "Relay baseUrl must be an absolute URL.");
   }
-  if ((url.protocol !== "https:" && url.protocol !== "http:") || url.search || url.hash) {
+  if (url.protocol !== "https:" || url.search || url.hash) {
     throw relayInputError(
       "INVALID_BASE_URL",
-      "Relay baseUrl must use HTTP(S) and must not contain a query or fragment."
+      "Relay baseUrl must use HTTPS and must not contain a query or fragment."
     );
   }
   return url.toString().replace(/\/$/, "");
