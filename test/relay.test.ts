@@ -753,3 +753,42 @@ describe("relay signer adapters", () => {
     expect(signer.address).toBe(wallet.address.toLowerCase());
   });
 });
+
+describe("Relay base URL transport policy", () => {
+  it.each([
+    "http://relay.example",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://[::1]:8080",
+    "ws://relay.example",
+    "ftp://relay.example",
+    "/relay",
+    "https://relay.example?token=secret",
+    "https://relay.example#fragment"
+  ])("rejects %s before any request", (baseUrl) => {
+    const fetchMock = vi.fn<typeof fetch>();
+    expect(() => createKuruRelayClient({ baseUrl, fetch: fetchMock })).toThrow(
+      expect.objectContaining({ kind: "INPUT", code: "INVALID_BASE_URL" })
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts HTTPS and preserves path prefixes while normalizing the trailing slash", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        challengeId: CHALLENGE_ID,
+        message: "Sign this challenge",
+        expiresAt: new Date(Date.now() + 60_000).toISOString()
+      })
+    );
+    const client = createKuruRelayClient({
+      baseUrl: "https://relay.example/api/",
+      fetch: fetchMock
+    });
+    await client.requestChallenge(wallet.address);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://relay.example/api/auth/challenge",
+      expect.any(Object)
+    );
+  });
+});

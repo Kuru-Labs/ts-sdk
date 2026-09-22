@@ -236,3 +236,32 @@ export type RelaySubmitBuilderParams<T extends RelayRequestBuilderBase> = Omit<T
 
 export type LocalMessageAccount = Pick<LocalAccount, "address" | "signMessage">;
 export type MessageWalletClient = Pick<WalletClient, "signMessage">;
+
+/** Sensitive, in-memory-only key returned by Relay. Never persist or log this object. */
+export interface RelayEncryptionKey {
+  readonly wallet: Address;
+  readonly keyVersion: string;
+  readonly algorithm: "AES-256-GCM";
+  /** Standard padded Base64 encoding of 32 bytes. */
+  readonly encryptionKey: string;
+  /** Use the exact UTF-8 bytes supplied by Relay. */
+  readonly aad: string;
+}
+
+export interface RelayEncryptionKeyOptions extends RelaySubmitOptions {
+  /** Omit for the active version; supply the stored version when restoring. */
+  readonly keyVersion?: string;
+}
+
+/** JSON-safe browser storage record. Contains no plaintext key material. */
+export interface RelayEncryptedPrivateKey {
+  readonly formatVersion: 1;
+  readonly wallet: Address;
+  readonly keyVersion: string;
+  readonly algorithm: "AES-256-GCM";
+  readonly aad: string;
+  /** Standard padded Base64, 12 bytes. */
+  readonly iv: string;
+  /** Standard padded Base64, 32 ciphertext bytes plus the 16-byte GCM tag. */
+  readonly ciphertext: string;
+}

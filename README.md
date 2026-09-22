@@ -196,3 +196,8 @@ Use `decodeExchangeWsEnvelope` for synchronous socket data or
 `decodeExchangeWsFrame` and stream-specific frame decoders accept only the inner
 publisher payload, after removing the prefix. Wire version remains 1; upgrade
 Gateway and SDK together. Unprefixed socket frames are not auto-detected.
+
+Relay supports browser signing-key restoration with `requestEncryptionKey`,
+`encryptRelayPrivateKey`, and `decryptRelayPrivateKey`. See the
+[encryption guide](docs/relay.md#restore-an-encrypted-private-key-after-refresh) and
+[round-trip example](examples/relay/encryption-round-trip.ts).
