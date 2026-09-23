@@ -1,3 +1,5 @@
+import type { ContractFunctionName, ReadContractReturnType } from "viem";
+
 import { spotOrderBookAbi } from "../generated";
 import type { KuruClientConfig, WriteOverrides } from "../types";
 import { executeWrite, readContract } from "../utils";
@@ -32,6 +34,10 @@ import type {
   UserMarketParams
 } from "./types";
 
+type SpotOrderBookRead<
+  TFunctionName extends ContractFunctionName<typeof spotOrderBookAbi, "pure" | "view">
+> = ReadContractReturnType<typeof spotOrderBookAbi, TFunctionName>;
+
 export function createSpotClient(config: KuruClientConfig) {
   return {
     buildBatchRequest,
@@ -43,7 +49,7 @@ export function createSpotClient(config: KuruClientConfig) {
     buildSwapRequest,
 
     getMarketParams: (params: { market: `0x${string}` }) =>
-      readContract(config, {
+      readContract<SpotOrderBookRead<"getMarketParams">>(config, {
         address: params.market,
         abi: spotOrderBookAbi,
         functionName: "getMarketParams",
@@ -57,7 +63,7 @@ export function createSpotClient(config: KuruClientConfig) {
         args: []
       }),
     getL2Book: (params: { market: `0x${string}`; levels: bigint }) =>
-      readContract(config, {
+      readContract<SpotOrderBookRead<"getL2Book">>(config, {
         address: params.market,
         abi: spotOrderBookAbi,
         functionName: "getL2Book",
@@ -99,14 +105,14 @@ export function createSpotClient(config: KuruClientConfig) {
         args: []
       }),
     getPassiveBand: (params: { market: `0x${string}`; lowPrice: bigint }) =>
-      readContract(config, {
+      readContract<SpotOrderBookRead<"getPassiveBand">>(config, {
         address: params.market,
         abi: spotOrderBookAbi,
         functionName: "getPassiveBand",
         args: [params.lowPrice]
       }),
     getPassivePosition: (params: { market: `0x${string}`; positionId: bigint }) =>
-      readContract(config, {
+      readContract<SpotOrderBookRead<"getPassivePosition">>(config, {
         address: params.market,
         abi: spotOrderBookAbi,
         functionName: "getPassivePosition",

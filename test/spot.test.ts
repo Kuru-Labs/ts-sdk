@@ -1,7 +1,8 @@
 import { encodeFunctionData, numberToHex } from "viem";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { KuruSdkError } from "../src/errors";
+import { createSpotClient } from "../src/spot/client";
 import {
   NativeExecInstruction,
   NativeSide,
@@ -261,5 +262,30 @@ describe("spot order helpers", () => {
         ]
       })
     ).not.toThrow();
+  });
+});
+
+describe("spot client reads", () => {
+  it("forwards typed read requests to the public client", async () => {
+    const market = "0x00000000000000000000000000000000000000ab";
+    const band = {
+      lowPrice: 100,
+      highPrice: 110,
+      quoteAtLow: 1n,
+      baseAtHigh: 2n,
+      totalShares: 3n,
+      feeGrowthBasePerShareX128: 4n,
+      feeGrowthQuotePerShareX128: 5n
+    };
+    const readContract = vi.fn(() => Promise.resolve(band));
+    const client = createSpotClient({ publicClient: { readContract } as any });
+
+    const result = await client.getPassiveBand({ market, lowPrice: 100n });
+
+    expect(result).toBe(band);
+    const request = (readContract.mock.calls as any)[0][0];
+    expect(request.address).toBe(market);
+    expect(request.functionName).toBe("getPassiveBand");
+    expect(request.args).toEqual([100n]);
   });
 });

@@ -70,6 +70,24 @@ void client.spot.replaceBySlotPacked({
   simulate: false
 });
 
+const marketParams = await client.spot.getMarketParams({ market });
+marketParams[0] satisfies number;
+marketParams[1] satisfies bigint;
+marketParams[5] satisfies bigint;
+
+const l2Book = await client.spot.getL2Book({ market, levels: 10n });
+l2Book[0] satisfies readonly number[];
+l2Book[1] satisfies readonly bigint[];
+
+const passiveBand = await client.spot.getPassiveBand({ market, lowPrice: 1n });
+passiveBand.lowPrice satisfies number;
+passiveBand.quoteAtLow satisfies bigint;
+
+const passivePosition = await client.spot.getPassivePosition({ market, positionId: 1n });
+passivePosition.ownerId satisfies number;
+passivePosition.highPrice satisfies number;
+passivePosition.shares satisfies bigint;
+
 void client.spot.getPostFillHook({ market, userId: 1n });
 void client.spot.setPostFillHook({ market, userId: 1n, hook: user });
 void client.spot.getPostFillHookGasLimit({ market });
