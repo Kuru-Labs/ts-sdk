@@ -1,6 +1,6 @@
 import type { Address } from "viem";
 
-import { spotOrderBookAbi } from "../generated";
+import { orderBookAbi } from "../generated";
 import type { KuruContractRequest } from "../utils";
 import { normalizeNativeOrders } from "./orders";
 import type {
@@ -22,8 +22,8 @@ function spotRequest(
   market: Address,
   functionName: string,
   args: readonly unknown[],
-  abi = spotOrderBookAbi
-): KuruContractRequest<typeof spotOrderBookAbi> {
+  abi = orderBookAbi
+): KuruContractRequest<typeof orderBookAbi> {
   return {
     address: market,
     abi,
@@ -32,8 +32,8 @@ function spotRequest(
   };
 }
 
-function spotOverloadAbi(name: string, inputTypes: readonly string[]): typeof spotOrderBookAbi {
-  const fragment = spotOrderBookAbi.find(
+function spotOverloadAbi(name: string, inputTypes: readonly string[]): typeof orderBookAbi {
+  const fragment = orderBookAbi.find(
     (item) =>
       item.type === "function" &&
       item.name === name &&
@@ -45,12 +45,10 @@ function spotOverloadAbi(name: string, inputTypes: readonly string[]): typeof sp
     throw new Error(`Missing ${name}(${inputTypes.join(",")}) ABI fragment.`);
   }
 
-  return [fragment] as unknown as typeof spotOrderBookAbi;
+  return [fragment] as unknown as typeof orderBookAbi;
 }
 
-export function buildBatchRequest(
-  params: BatchParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+export function buildBatchRequest(params: BatchParams): KuruContractRequest<typeof orderBookAbi> {
   const orders = normalizeNativeOrders(params.orders);
   const cancelSlotIdxs = [...(params.cancelSlotIdxs ?? [])];
   const clientOrderId = params.clientOrderId;
@@ -93,7 +91,7 @@ export function buildBatchRequest(
 
 export function buildCancelBySlotsRequest(
   params: UserMarketParams & { cancelSlotIdxs: readonly number[]; clientOrderId?: `0x${string}` }
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   const base = {
     market: params.market,
     userId: params.userId,
@@ -108,13 +106,13 @@ export function buildCancelBySlotsRequest(
 
 export function buildCancelAllOrdersRequest(
   params: UserMarketParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "cancelAllOrders", [params.userId]);
 }
 
 export function buildProtocolCancelBySlotsRequest(
   params: UserMarketParams & { slotIdxs: readonly number[]; clientOrderId?: `0x${string}` }
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   const slotIdxs = [...params.slotIdxs];
   if (params.clientOrderId) {
     return spotRequest(
@@ -134,7 +132,7 @@ export function buildProtocolCancelBySlotsRequest(
 
 export function buildReplaceBySlotPackedRequest(
   params: ReplaceBySlotPackedParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   if (params.clientOrderId && params.builderConfig) {
     return spotRequest(
       params.market,
@@ -170,7 +168,7 @@ export function buildReplaceBySlotPackedRequest(
   );
 }
 
-export function buildSwapRequest(params: SwapParams): KuruContractRequest<typeof spotOrderBookAbi> {
+export function buildSwapRequest(params: SwapParams): KuruContractRequest<typeof orderBookAbi> {
   const args = [
     params.userId,
     params.isBuy,
@@ -198,7 +196,7 @@ export function buildSwapRequest(params: SwapParams): KuruContractRequest<typeof
 
 export function buildEstimateSwapRequest(
   params: EstimateSwapParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   if (params.userId !== undefined && params.builderFeePps !== undefined) {
     return spotRequest(
       params.market,
@@ -236,7 +234,7 @@ export function buildEstimateSwapRequest(
 
 export function buildMintPassiveLiquidityRequest(
   params: MintPassiveLiquidityParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   const hasSlippage = params.minSharesOut !== undefined || params.deadline !== undefined;
 
   if (hasSlippage) {
@@ -272,7 +270,7 @@ export function buildMintPassiveLiquidityRequest(
 
 export function buildBatchMintPassiveLiquidityRequest(
   params: BatchMintPassiveLiquidityParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "batchMintPassiveLiquidity", [
     params.userId,
     params.mints.map((mint) => ({ ...mint })),
@@ -282,7 +280,7 @@ export function buildBatchMintPassiveLiquidityRequest(
 
 export function buildBurnPassiveLiquidityRequest(
   params: BurnPassiveLiquidityParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "burnPassiveLiquidity", [
     params.userId,
     params.positionId,
@@ -292,24 +290,24 @@ export function buildBurnPassiveLiquidityRequest(
 
 export function buildClaimPassiveFeesRequest(
   params: ClaimPassiveFeesParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "claimPassiveFees", [params.userId, params.positionId]);
 }
 
 export function buildSetPostFillHookRequest(
   params: SetPostFillHookParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "setPostFillHook", [params.userId, params.hook]);
 }
 
 export function buildSetPostFillHookGasLimitRequest(
   params: SetPostFillHookGasLimitParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "setPostFillHookGasLimit", [params.gasLimit]);
 }
 
 export function buildSetPostFillHookMinQuoteNotionalRequest(
   params: SetPostFillHookMinQuoteNotionalParams
-): KuruContractRequest<typeof spotOrderBookAbi> {
+): KuruContractRequest<typeof orderBookAbi> {
   return spotRequest(params.market, "setPostFillHookMinQuoteNotional", [params.minQuoteNotional]);
 }

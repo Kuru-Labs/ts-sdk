@@ -4,7 +4,7 @@ export {
   kuruTradingWalletAbi,
   spotRouterAbi,
   orderBookAbi,
-  spotOrderBookAbi,
+  withdrawalLimiterAbi,
   spotPeripheryAbi,
   erc20MetadataAbi,
   contractAbis,

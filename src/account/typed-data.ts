@@ -25,9 +25,10 @@ export interface RevokeAccountSignerTypedDataParams {
 export interface CreateSubaccountTypedDataParams {
   accountCore: Address;
   chainId: number;
-  root: Address;
-  subaccount: Address;
-  nonce: bigint;
+  rootOwner: Address;
+  authorizer: Address;
+  subaccountSeq: number;
+  authNonce: bigint;
   deadline: bigint;
 }
 
@@ -98,16 +99,18 @@ export function buildCreateSubaccountTypedData(params: CreateSubaccountTypedData
     primaryType: "CreateSubaccount",
     types: {
       CreateSubaccount: [
-        { name: "root", type: "address" },
-        { name: "subaccount", type: "address" },
-        { name: "nonce", type: "uint256" },
+        { name: "rootOwner", type: "address" },
+        { name: "authorizer", type: "address" },
+        { name: "subaccountSeq", type: "uint16" },
+        { name: "authNonce", type: "uint256" },
         { name: "deadline", type: "uint256" }
       ]
     },
     message: {
-      root: params.root,
-      subaccount: params.subaccount,
-      nonce: params.nonce,
+      rootOwner: params.rootOwner,
+      authorizer: params.authorizer,
+      subaccountSeq: params.subaccountSeq,
+      authNonce: params.authNonce,
       deadline: params.deadline
     }
   } as const;

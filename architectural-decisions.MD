@@ -1,5 +1,28 @@
 # Architectural Decisions
 
+## 2026-09-29: Adopt auditFixes IDs and wallet-v2 without compatibility adapters
+
+**Status:** accepted; development migration.
+
+Pin compiled ABIs to `cdac5ae1311ce4793f80d604d25f9713fcfed57d` and expose the current
+ID-only AccountCore interfaces. Retire address-child APIs, separate builder-fee claims and
+the `spotOrderBookAbi` alias. The alias portion of the earlier ABI convention is reverted:
+the development codebase should have one canonical `orderBookAbi` export.
+
+Wallet signing uses domain version 2; AccountCore authorization stays at version 1. Do not
+offer an old-domain switch or infer a version from a chain ID. Keep signing pure and require
+callers to supply the target deployment, root epoch, intent nonce and deadline explicitly.
+New wallet actions produce direct contract requests. Extend HTTP Relay methods only when
+their server wire schema is defined; contract ABI names do not define service endpoints.
+
+Packed operation metadata belongs in the existing decoders. Expose zero-delta sentinels
+explicitly without deleting them, because they carry useful operation receipts. Consumers
+must exclude them from book state and preserve log ordering for hook-generated records.
+
+The tradeoff is an intentional breaking SDK API. Contract-backed local tests pin the exact
+revision and exercise execution as well as hashes, while normal package use stays independent
+of a sibling contracts checkout. Deployment and Monad-specific gas verification remain separate.
+
 ## 2026-08-27: SDK Uses Committed Spot/Account ABIs Pinned To Contracts Main
 
 **Status:** accepted

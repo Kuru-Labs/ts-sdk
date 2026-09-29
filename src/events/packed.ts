@@ -2,6 +2,20 @@ import { hexToBytes, type Hex } from "viem";
 
 import { KuruSdkError } from "../errors";
 
+export enum OperationOutcome {
+  NONE = 0,
+  FILLED = 1,
+  RESTED = 2,
+  COMPLETED_NO_REST = 3,
+  IOC_PARTIAL = 4,
+  IOC_UNFILLED = 5,
+  POST_ONLY_NOT_PLACED = 6,
+  CANCELLED = 7,
+  PROTOCOL_CANCELLED = 8,
+  CANCEL_NOOP = 9,
+  DUST_REMAINDER_DISCARDED = 10
+}
+
 export interface PackedTrade {
   makerId: bigint;
   slotIdx: number;
@@ -9,6 +23,11 @@ export interface PackedTrade {
   makerIsBuy: boolean;
   makerIsPassive: boolean;
   isMatchEnd: boolean;
+  outcome: OperationOutcome;
+  /** Per-call operation index; absent on untagged records (including swaps). */
+  operationIndex: number | undefined;
+  /** Caller-selected replacement slot; absent for native orders and untagged records. */
+  replacementSlot: number | undefined;
   price: bigint;
   fillSize: bigint;
   orderId: bigint;
@@ -22,6 +41,10 @@ export interface PackedBookUpdate {
   slotIdx: number;
   bookFlags: number;
   isLive: boolean;
+  outcome: OperationOutcome;
+  operationIndex: number | undefined;
+  /** An operation receipt with no book mutation. Never apply it to L2/L3. */
+  isSentinel: boolean;
   makerIsBuy: boolean;
   price: bigint;
   size: bigint;
@@ -57,15 +80,22 @@ function decodeFirstPackedWord(bytes: Uint8Array, offset: number) {
     makerIsBuy: (makerFlags & 1) === 1,
     price: (word >> 168n) & ((1n << 32n) - 1n),
     fillSize: (word >> 72n) & ((1n << 96n) - 1n),
-    orderId: (word >> 8n) & ((1n << 64n) - 1n)
+    orderId: (word >> 8n) & ((1n << 64n) - 1n),
+    operationIndex: Number(word & 0xffn)
   };
 }
 
 function decodeTradeRecord(bytes: Uint8Array, offset: number): PackedTrade {
   const firstWord = decodeFirstPackedWord(bytes, offset);
   const secondWord = bytesToBigInt(bytes, offset + 32, 32);
+  const outcome: OperationOutcome = (firstWord.makerFlags >> 3) & 0x1f;
+  const replacementSlot = Number((secondWord >> 128n) & 0xffn);
   return {
     ...firstWord,
+    outcome,
+    operationIndex: outcome === OperationOutcome.NONE ? undefined : firstWord.operationIndex,
+    replacementSlot:
+      outcome === OperationOutcome.NONE || replacementSlot === 0xff ? undefined : replacementSlot,
     makerIsPassive: (firstWord.makerFlags & 2) !== 0,
     isMatchEnd: (firstWord.makerFlags & 4) !== 0,
     updatedSize: (secondWord >> 160n) & ((1n << 96n) - 1n),
@@ -90,11 +120,22 @@ export function decodeBookUpdatesPacked(packedUpdates: Hex): PackedBookUpdate[] 
   const records: PackedBookUpdate[] = [];
   for (let offset = 0; offset < bytes.length; offset += 39) {
     const update = decodeFirstPackedWord(bytes, offset);
+    const outcome: OperationOutcome = (update.makerFlags >> 1) & 0x1f;
+    const isLive = (update.makerFlags & 0x80) !== 0;
     records.push({
       makerId: update.makerId,
       slotIdx: update.slotIdx,
       bookFlags: update.makerFlags,
-      isLive: (update.makerFlags & 0x80) !== 0,
+      isLive,
+      outcome,
+      operationIndex: outcome === OperationOutcome.NONE ? undefined : update.operationIndex,
+      isSentinel:
+        !isLive &&
+        outcome !== OperationOutcome.NONE &&
+        update.makerId === 0n &&
+        update.price === 0n &&
+        update.fillSize === 0n &&
+        update.orderId === 0n,
       makerIsBuy: update.makerIsBuy,
       price: update.price,
       size: update.fillSize,

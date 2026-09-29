@@ -1,6 +1,7 @@
 import type { Address, Hex, TypedDataDomain } from "viem";
 
 import type { NativeOrder, NativeOrderInput } from "../spot";
+import type { PreparedWalletAction } from "./actions";
 
 export type WalletUintInput = bigint | number | string;
 
@@ -74,7 +75,14 @@ export interface WalletTypedDataDefinition {
     | "BatchIntent"
     | "CreateReplaceTriggerIntent"
     | "CreateBatchTriggerIntent"
-    | "CancelTriggerIntent";
+    | "CancelTriggerIntent"
+    | "CancelOrdersByIdIntent"
+    | "CancelAllIntent"
+    | "FokSwapIntent"
+    | "CreateFokSwapTriggerIntent"
+    | "CreateTwapIntent"
+    | "CancelTwapIntent"
+    | "EmitSignedData";
   readonly types: Readonly<Record<string, readonly WalletTypedDataField[]>>;
   readonly message: Readonly<Record<string, unknown>>;
 }
@@ -144,7 +152,8 @@ export type PreparedWalletIntent =
   | PreparedBatchIntent
   | PreparedCreateReplaceTriggerIntent
   | PreparedCreateBatchTriggerIntent
-  | PreparedCancelTriggerIntent;
+  | PreparedCancelTriggerIntent
+  | PreparedWalletAction;
 
 export type SignedWalletIntent<TIntent extends PreparedWalletIntent = PreparedWalletIntent> =
   TIntent & {

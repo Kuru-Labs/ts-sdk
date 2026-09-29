@@ -1,18 +1,19 @@
 export { createAccountClient } from "./client";
+export * from "./withdrawals";
 export {
   buildApproveBuilderRequest,
   buildApproveErc20Request,
   buildAuthorizeAccountSignerBySigRequest,
   buildAuthorizeAccountSignerRequest,
-  buildClaimBuilderFeesRequest,
-  buildDepositForAccountRequest,
+  buildCreateSubaccountRequest,
+  buildCreateSubaccountBySigRequest,
+  buildDepositToOwnerRequest,
   buildDepositRequest,
   buildRevokeAccountSignerBySigRequest,
   buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
   buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
-  buildWithdrawFromAccountRequest,
   buildWithdrawRequest,
   isNativeToken
 } from "./requests";
@@ -33,14 +34,14 @@ export type {
   AuthorizeAccountSignerParams,
   BuilderAddressParams,
   BuilderApprovalParams,
-  ClaimBuilderFeesParams,
-  DepositForAccountParams,
+  CreateSubaccountParams,
+  CreateSubaccountBySigParams,
+  DepositToOwnerParams,
   DepositParams,
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
-  WithdrawFromAccountParams,
   WithdrawParams
 } from "./types";

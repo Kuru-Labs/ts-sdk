@@ -93,7 +93,7 @@ describe("KuruTradingWallet hashes and typed data", () => {
 
   it("matches all pinned wallet intent digests", () => {
     const batch = prepareBatchIntent(validBatchInput());
-    expect(batch.digest).toBe("0x10a944f5200156360213a0577437f192af408f4a827d93960594eaaa1e6fb837");
+    expect(batch.digest).toBe("0xe35efb27cd4940a331bc3bf352bcbe526709aa9caaf6dac82d45d3b5916aa445");
 
     const createBatch = prepareCreateBatchTriggerIntent({
       ...validBatchInput(),
@@ -101,7 +101,7 @@ describe("KuruTradingWallet hashes and typed data", () => {
       conditionHash
     });
     expect(createBatch.digest).toBe(
-      "0xb8a977cbc92d4a4f82116fe895c02b11df692ab3138cf60477520f5554f652a2"
+      "0x038255bae55794c1e9d6ff19c40d76435b40a36370b78547085d61dcfff9f021"
     );
 
     const normalizedHeader = normalizeWalletIntentHeader(headerInput);
@@ -126,10 +126,10 @@ describe("KuruTradingWallet hashes and typed data", () => {
     expect(replaceTypedData.primaryType).toBe("ReplaceBySlotIntent");
     expect(createReplaceTypedData.primaryType).toBe("CreateReplaceTriggerIntent");
     expect(hashTypedData(replaceTypedData as Parameters<typeof hashTypedData>[0])).toBe(
-      "0xe8df7afc21b74f24428e1fc83a36a455295e73518fd0030dac9718f41ff8ef27"
+      "0xf50a4b1b9658d6e06e6887b4a786e8ff3a1dd865e0796e810e3384d2de1c4934"
     );
     expect(hashTypedData(createReplaceTypedData as Parameters<typeof hashTypedData>[0])).toBe(
-      "0x6176c68b88f25eb78b1e596becab44fda964c0f6ca2583c9aaa7151ed11ab507"
+      "0x546b2e80e40c559390999c07aa75cc658a9c3e134c5bc188020427238162d2fc"
     );
 
     const cancel = prepareCancelTriggerIntent({
@@ -142,11 +142,11 @@ describe("KuruTradingWallet hashes and typed data", () => {
       triggerId
     });
     expect(cancel.digest).toBe(
-      "0x6b17e946f652211f341f94edf44b3a05785ab3e021b48ad4b1dc5fc30c2d26c4"
+      "0x76a670dc03d156ea539fe027279695286337994af4609c272356ca9c5ee2fc6b"
     );
   });
 
-  it("recovers the pinned wallet signature", async () => {
+  it("does not accept a pinned v1 signature as the wallet under v2", async () => {
     const typedData = buildReplaceBySlotTypedData({
       wallet,
       chainId: 143,
@@ -156,7 +156,14 @@ describe("KuruTradingWallet hashes and typed data", () => {
     });
     const signature =
       "0x2b879d2f884a63000331fac5163771d1d5f60353375f6bcebcbb856cb7db926259bf55ce412cfea544d0a1675c2c485629eb2043a3cdba6a0ad4f3ef9174f19b1c";
-    await expect(recoverWalletIntentSigner(typedData, signature)).resolves.toBe(wallet);
+    expect(typedData.domain.version).toBe("2");
+    await expect(
+      recoverWalletIntentSigner(
+        { ...typedData, domain: { ...typedData.domain, version: "1" } },
+        signature
+      )
+    ).resolves.toBe(wallet);
+    await expect(recoverWalletIntentSigner(typedData, signature)).resolves.not.toBe(wallet);
   });
 });
 

@@ -7,31 +7,30 @@ export interface AccountCoreOverride {
 }
 
 export interface AccountReadParams extends AccountCoreOverride {
-  user: Address;
+  accountId: bigint;
   token: Address;
 }
 
 export interface DepositParams extends AccountCoreOverride, WriteOverrides {
+  rootAccountId: bigint;
   token: Address;
   amount: bigint;
 }
 
-export interface DepositForAccountParams extends DepositParams {
-  account: Address;
+export interface DepositToOwnerParams extends Omit<DepositParams, "rootAccountId"> {
+  rootOwner: Address;
 }
 
 export interface WithdrawParams extends AccountCoreOverride, WriteOverrides {
+  rootAccountId: bigint;
+  recipient: Address;
   token: Address;
   amount: bigint;
 }
 
-export interface WithdrawFromAccountParams extends WithdrawParams {
-  account: Address;
-}
-
 export interface TransferBetweenAccountsParams extends AccountCoreOverride, WriteOverrides {
-  fromAccount: Address;
-  toAccount: Address;
+  fromAccountId: bigint;
+  toAccountId: bigint;
   token: Address;
   amount: bigint;
 }
@@ -72,8 +71,16 @@ export interface BuilderAddressParams extends AccountCoreOverride, WriteOverride
   builder: Address;
 }
 
-export interface ClaimBuilderFeesParams extends AccountCoreOverride, WriteOverrides {
-  asset: Address;
+export interface CreateSubaccountParams extends AccountCoreOverride, WriteOverrides {
+  rootOwner: Address;
+}
+
+export interface CreateSubaccountBySigParams extends CreateSubaccountParams {
+  authorizer: Address;
+  subaccountSeq: number;
+  authNonce: bigint;
+  deadline: bigint;
+  signature: Hex;
 }
 
 /** Governance-controlled protocol-wide post-fill-hook access for an account. */

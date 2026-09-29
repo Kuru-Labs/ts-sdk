@@ -22,22 +22,24 @@ describe("account helpers", () => {
     const request = buildDepositRequest({
       accountCore,
       token: NATIVE_TOKEN_ADDRESS,
+      rootAccountId: 1n,
       amount: 10n
     });
 
     expect(request.value).toBe(10n);
-    expect(request.args).toEqual([zeroAddress, 10n]);
+    expect(request.args).toEqual([1n, zeroAddress, 10n]);
   });
 
   it("does not attach call value for ERC20 deposits", () => {
     const request = buildDepositRequest({
       accountCore,
       token,
+      rootAccountId: 1n,
       amount: 10n
     });
 
     expect(request.value).toBeUndefined();
-    expect(request.args).toEqual([token, 10n]);
+    expect(request.args).toEqual([1n, token, 10n]);
   });
 
   it("builds deterministic client order ids and relative deadlines", () => {
