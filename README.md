@@ -39,9 +39,7 @@ runtime, tests, and build. A GitHub checkout does not need any sibling contracts
 
 The committed ABI surface is pinned to contracts `auditFixes` commit
 `cdac5ae1311ce4793f80d604d25f9713fcfed57d`, merged into contracts main as `42ef525`.
-Use `orderBookAbi`; the legacy `spotOrderBookAbi` alias is removed.
-To refresh artifacts after compiling the intended contracts revision, run
-`node scripts/sync-abis.mjs /path/to/contracts` and format the generated files.
+The order book ABI is exported as `orderBookAbi`.
 
 ## Current Contract Shape
 
