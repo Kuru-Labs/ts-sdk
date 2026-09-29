@@ -24,7 +24,7 @@ const headerFields = [
 export function tradingWalletDomain(wallet: Address, chainId: number): TypedDataDomain {
   return {
     name: "KuruTradingWallet",
-    version: "1",
+    version: "2",
     chainId: normalizeChainId(chainId),
     verifyingContract: normalizeAddress(wallet, "wallet")
   };

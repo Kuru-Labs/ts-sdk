@@ -4,7 +4,7 @@ import { contractAbis, contractMetadata } from "../src/generated";
 
 describe("generated contract surface", () => {
   it("pins the committed contracts commit", () => {
-    expect(contractMetadata.contractsCommit).toBe("e37bc3961c23e0bdb0ce23477cffc2b2482a1b72");
+    expect(contractMetadata.contractsCommit).toBe("cdac5ae1311ce4793f80d604d25f9713fcfed57d");
   });
 
   it("includes only the production ABI allowlist", () => {
@@ -13,9 +13,9 @@ describe("generated contract surface", () => {
       "IERC20Metadata",
       "KuruTradingWallet",
       "OrderBook",
-      "SpotOrderBook",
       "SpotPeriphery",
-      "SpotRouter"
+      "SpotRouter",
+      "WithdrawalLimiter"
     ]);
 
     for (const [name, metadata] of Object.entries(contractMetadata.artifacts)) {
@@ -30,7 +30,8 @@ describe("generated contract surface", () => {
       "KuruTradingWallet",
       "OrderBook",
       "SpotPeriphery",
-      "SpotRouter"
+      "SpotRouter",
+      "WithdrawalLimiter"
     ]);
 
     const walletFunctions = contractAbis.KuruTradingWallet.filter(

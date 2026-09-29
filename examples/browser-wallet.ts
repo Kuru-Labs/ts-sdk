@@ -24,9 +24,10 @@ export const kuru = createKuruClient({
   }
 });
 
-export async function depositNativeMon(amount: bigint) {
+export async function depositNativeMon(rootAccountId: bigint, amount: bigint) {
   return kuru.account.deposit({
     token: NATIVE_TOKEN_ADDRESS,
+    rootAccountId,
     amount
   });
 }

@@ -5,7 +5,7 @@ export {
   kuruTradingWalletAbi,
   kuruErrorAbi,
   orderBookAbi,
-  spotOrderBookAbi,
+  withdrawalLimiterAbi,
   spotPeripheryAbi,
   spotRouterAbi
 } from "../generated";

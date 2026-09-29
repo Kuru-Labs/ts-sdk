@@ -27,7 +27,7 @@ const kuru = createKuruClient({
 });
 
 const balance = await kuru.account.getBalance({
-  user: "0x...",
+  accountId: 123n,
   token: NATIVE_TOKEN_ADDRESS
 });
 ```
@@ -37,13 +37,24 @@ const balance = await kuru.account.getBalance({
 The SDK is self-contained. Committed ABIs live in `src/generated/abis.ts` and are used by the
 runtime, tests, and build. A GitHub checkout does not need any sibling contracts repository.
 
-The committed ABI surface is pinned to `spot-contracts-v2` main commit
-`e37bc3961c23e0bdb0ce23477cffc2b2482a1b72`. The spot market artifact is now `OrderBook`;
-`spotOrderBookAbi` remains exported as a compatibility alias.
+The committed ABI surface is pinned to contracts `auditFixes` commit
+`cdac5ae1311ce4793f80d604d25f9713fcfed57d`, merged into contracts main as `42ef525`.
+The order book ABI is exported as `orderBookAbi`.
 
 ## Current Contract Shape
 
 - Builder fees are expressed as PPS (`feePps`, `builderFeePps`), matching the contracts.
+- Accounts and children use IDs. Resolve the root with `getRootAccountId({ rootOwner })`.
+  Use `depositToOwner({ rootOwner, token, amount })` to fund/register a root, or
+  `deposit({ rootAccountId, token, amount })` for an existing root. Transfer funds to children
+  with `transferBetweenAccounts({ fromAccountId, toAccountId, token, amount })`.
+- Withdraw from a root using `withdraw({ rootAccountId, token, amount, recipient })`.
+  Children must return funds to their root first. Builder fees now credit the builder's
+  root balance and use ordinary withdrawals; the separate claim helpers are removed.
+- Signer authorization/revocation uses the root owner address and one root-wide epoch.
+  Read it for any child with `getAccountAuthorizationEpoch({ accountId })`.
+- `buildCreateSubaccountTypedData` signs root owner, authorizer, next child sequence,
+  root epoch and deadline. AccountCore's EIP-712 domain remains version 1.
 - Spot `swap` and `estimateSwap` no longer take `limitPrice`.
 - Legacy intent executor helpers are not exposed. EIP-7702 trading uses the dedicated
   `@toxicflow-labs/ts-sdk/trading-wallet` module.
@@ -51,7 +62,7 @@ The committed ABI surface is pinned to `spot-contracts-v2` main commit
 ## Delegated Trading Wallets
 
 The trading-wallet module is deliberately split from relay transport. It builds, hashes, and signs
-the five current `KuruTradingWallet` EIP-712 intents, and it can create the EIP-7702 authorization
+`KuruTradingWallet` EIP-712 version-2 intents, and it can create the EIP-7702 authorization
 that delegates a wallet EOA to the configured implementation.
 
 ```ts

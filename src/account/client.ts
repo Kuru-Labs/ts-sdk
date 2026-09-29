@@ -8,15 +8,15 @@ import {
   buildApproveErc20Request,
   buildAuthorizeAccountSignerBySigRequest,
   buildAuthorizeAccountSignerRequest,
-  buildClaimBuilderFeesRequest,
-  buildDepositForAccountRequest,
+  buildCreateSubaccountRequest,
+  buildCreateSubaccountBySigRequest,
+  buildDepositToOwnerRequest,
   buildDepositRequest,
   buildRevokeAccountSignerBySigRequest,
   buildRevokeAccountSignerRequest,
   buildRevokeBuilderRequest,
   buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
-  buildWithdrawFromAccountRequest,
   buildWithdrawRequest
 } from "./requests";
 import type {
@@ -26,15 +26,15 @@ import type {
   AuthorizeAccountSignerParams,
   BuilderAddressParams,
   BuilderApprovalParams,
-  ClaimBuilderFeesParams,
-  DepositForAccountParams,
+  CreateSubaccountParams,
+  CreateSubaccountBySigParams,
+  DepositToOwnerParams,
   DepositParams,
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
-  WithdrawFromAccountParams,
   WithdrawParams
 } from "./types";
 
@@ -53,18 +53,13 @@ export function createAccountClient(config: KuruClientConfig) {
         ...params,
         accountCore: resolveAccountCore(config, params.accountCore)
       }),
-    buildDepositForAccountRequest: (params: DepositForAccountParams) =>
-      buildDepositForAccountRequest({
+    buildDepositToOwnerRequest: (params: DepositToOwnerParams) =>
+      buildDepositToOwnerRequest({
         ...params,
         accountCore: resolveAccountCore(config, params.accountCore)
       }),
     buildWithdrawRequest: (params: WithdrawParams) =>
       buildWithdrawRequest({
-        ...params,
-        accountCore: resolveAccountCore(config, params.accountCore)
-      }),
-    buildWithdrawFromAccountRequest: (params: WithdrawFromAccountParams) =>
-      buildWithdrawFromAccountRequest({
         ...params,
         accountCore: resolveAccountCore(config, params.accountCore)
       }),
@@ -80,36 +75,36 @@ export function createAccountClient(config: KuruClientConfig) {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
         functionName: "getBalance",
-        args: [params.user, params.token]
+        args: [params.accountId, params.token]
       }),
     getSpotReservedBalance: (params: AccountReadParams) =>
       readContract<bigint>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
         functionName: "getSpotReservedBalance",
-        args: [params.user, params.token]
+        args: [params.accountId, params.token]
       }),
-    getAccountId: (params: AccountCoreOverride & { user: Address }) =>
-      readContract<bigint>(config, {
+    getRootAccountId: (params: AccountCoreOverride & { rootOwner: Address }) =>
+      readContract<number>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
-        functionName: "userRegistry",
-        args: [params.user]
-      }),
-    getAccountOwner: (params: AccountCoreOverride & { account: Address }) =>
+        functionName: "rootAccountIdOf",
+        args: [params.rootOwner]
+      }).then(BigInt),
+    getAccountOwner: (params: AccountCoreOverride & { accountId: bigint }) =>
       readContract<Address>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
         functionName: "getAccountOwner",
-        args: [params.account]
+        args: [params.accountId]
       }),
-    getSubaccounts: (params: AccountCoreOverride & { rootAccount: Address }) =>
-      readContract<readonly Address[]>(config, {
+    getSubaccounts: (params: AccountCoreOverride & { rootAccountId: bigint }) =>
+      readContract<readonly number[]>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
         functionName: "getSubaccounts",
-        args: [params.rootAccount]
-      }),
+        args: [params.rootAccountId]
+      }).then((ids) => ids.map(BigInt)),
     getSignerAuthorizationNonce: (params: AccountCoreOverride & { account: Address }) =>
       readContract<bigint>(config, {
         address: resolveAccountCore(config, params.accountCore),
@@ -117,14 +112,14 @@ export function createAccountClient(config: KuruClientConfig) {
         functionName: "accountSignerAuthorizationNonces",
         args: [params.account]
       }),
-    isAuthorizedAccountSigner: (
-      params: AccountCoreOverride & { account: Address; signer: Address; permission: number }
+    isAuthorizedAccountSignerById: (
+      params: AccountCoreOverride & { accountId: bigint; signer: Address; permission: number }
     ) =>
       readContract<boolean>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
-        functionName: "isAuthorizedAccountSigner",
-        args: [params.account, params.signer, params.permission]
+        functionName: "isAuthorizedAccountSignerById",
+        args: [params.accountId, params.signer, params.permission]
       }),
     getBuilderApproval: (
       params: AccountCoreOverride & { rootAccount: Address; builder: Address }
@@ -135,12 +130,47 @@ export function createAccountClient(config: KuruClientConfig) {
         functionName: "getBuilderApproval",
         args: [params.rootAccount, params.builder]
       }),
-    getClaimableBuilderFees: (params: AccountCoreOverride & { builder: Address; asset: Address }) =>
+    getAccountAuthorizationEpoch: (params: AccountCoreOverride & { accountId: bigint }) =>
       readContract<bigint>(config, {
         address: resolveAccountCore(config, params.accountCore),
         abi: accountCoreAbi,
-        functionName: "getClaimableBuilderFees",
-        args: [params.builder, params.asset]
+        functionName: "accountAuthorizationEpoch",
+        args: [params.accountId]
+      }),
+    getAccountRootId: (params: AccountCoreOverride & { accountId: bigint }) =>
+      readContract<number>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "getAccountRootId",
+        args: [params.accountId]
+      }).then(BigInt),
+    getAccountSubaccountSeq: (params: AccountCoreOverride & { accountId: bigint }) =>
+      readContract<number>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "getAccountSubaccountSeq",
+        args: [params.accountId]
+      }),
+    getWithdrawalLimiter: (params: AccountCoreOverride = {}) =>
+      readContract<Address>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "withdrawalLimiter",
+        args: []
+      }),
+    getApprovedWithdrawalNonce: (params: AccountCoreOverride & { rootOwner: Address }) =>
+      readContract<bigint>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "approvedWithdrawalNonces",
+        args: [params.rootOwner]
+      }),
+    getWithdrawalAuthorityEpoch: (params: AccountCoreOverride = {}) =>
+      readContract<bigint>(config, {
+        address: resolveAccountCore(config, params.accountCore),
+        abi: accountCoreAbi,
+        functionName: "withdrawalAuthorityEpoch",
+        args: []
       }),
     getPostFillHookAccess: (params: AccountCoreOverride & { accountId: bigint }) =>
       readContract<boolean>(config, {
@@ -166,14 +196,14 @@ export function createAccountClient(config: KuruClientConfig) {
         }),
         overrides: params
       }),
-    depositForAccount: (params: DepositForAccountParams) =>
+    depositToOwner: (params: DepositToOwnerParams) =>
       executeWrite({
         config,
-        request: buildDepositForAccountRequest({
+        request: buildDepositToOwnerRequest({
           ...params,
           accountCore: resolveAccountCore(config, params.accountCore)
         }),
-        overrides: simulateOnly(params)
+        overrides: params
       }),
     withdraw: (params: WithdrawParams) =>
       executeWrite({
@@ -184,14 +214,14 @@ export function createAccountClient(config: KuruClientConfig) {
         }),
         overrides: params
       }),
-    withdrawFromAccount: (params: WithdrawFromAccountParams) =>
+    createSubaccount: (params: CreateSubaccountParams) =>
       executeWrite({
         config,
-        request: buildWithdrawFromAccountRequest({
+        request: buildCreateSubaccountRequest({
           ...params,
           accountCore: resolveAccountCore(config, params.accountCore)
         }),
-        overrides: simulateOnly(params)
+        overrides: params
       }),
     transferBetweenAccounts: (params: TransferBetweenAccountsParams) =>
       executeWrite({
@@ -256,10 +286,10 @@ export function createAccountClient(config: KuruClientConfig) {
         }),
         overrides: params
       }),
-    claimBuilderFees: (params: ClaimBuilderFeesParams) =>
+    createSubaccountBySig: (params: CreateSubaccountBySigParams) =>
       executeWrite({
         config,
-        request: buildClaimBuilderFeesRequest({
+        request: buildCreateSubaccountBySigRequest({
           ...params,
           accountCore: resolveAccountCore(config, params.accountCore)
         }),

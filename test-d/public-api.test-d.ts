@@ -38,6 +38,7 @@ const client = createKuruClient({
 const depositRequest = buildDepositRequest({
   accountCore,
   token: NATIVE_TOKEN_ADDRESS,
+  rootAccountId: 1n,
   amount: 1n
 });
 depositRequest.functionName satisfies string;
@@ -59,7 +60,7 @@ buildBatchRequest({
 });
 
 void client.account.getBalance({
-  user,
+  accountId: 1n,
   token: NATIVE_TOKEN_ADDRESS
 });
 

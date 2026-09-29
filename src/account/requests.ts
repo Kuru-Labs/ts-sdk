@@ -8,15 +8,15 @@ import type {
   AuthorizeAccountSignerParams,
   BuilderAddressParams,
   BuilderApprovalParams,
-  ClaimBuilderFeesParams,
-  DepositForAccountParams,
+  CreateSubaccountParams,
+  CreateSubaccountBySigParams,
+  DepositToOwnerParams,
   DepositParams,
   Erc20AddressParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
-  WithdrawFromAccountParams,
   WithdrawParams
 } from "./types";
 
@@ -46,18 +46,18 @@ export function buildDepositRequest(
   return accountCoreRequest(
     params.accountCore,
     "deposit",
-    [params.token, params.amount],
+    [params.rootAccountId, params.token, params.amount],
     isNativeToken(params.token) ? params.amount : undefined
   );
 }
 
-export function buildDepositForAccountRequest(
-  params: DepositForAccountParams & { accountCore: Address }
+export function buildDepositToOwnerRequest(
+  params: DepositToOwnerParams & { accountCore: Address }
 ): KuruContractRequest<typeof accountCoreAbi> {
   return accountCoreRequest(
     params.accountCore,
-    "depositForAccount",
-    [params.account, params.token, params.amount],
+    "deposit",
+    [params.rootOwner, params.token, params.amount],
     isNativeToken(params.token) ? params.amount : undefined
   );
 }
@@ -65,16 +65,11 @@ export function buildDepositForAccountRequest(
 export function buildWithdrawRequest(
   params: WithdrawParams & { accountCore: Address }
 ): KuruContractRequest<typeof accountCoreAbi> {
-  return accountCoreRequest(params.accountCore, "withdraw", [params.token, params.amount]);
-}
-
-export function buildWithdrawFromAccountRequest(
-  params: WithdrawFromAccountParams & { accountCore: Address }
-): KuruContractRequest<typeof accountCoreAbi> {
-  return accountCoreRequest(params.accountCore, "withdrawFromAccount", [
-    params.account,
+  return accountCoreRequest(params.accountCore, "withdraw", [
+    params.rootAccountId,
     params.token,
-    params.amount
+    params.amount,
+    params.recipient
   ]);
 }
 
@@ -82,8 +77,8 @@ export function buildTransferBetweenAccountsRequest(
   params: TransferBetweenAccountsParams & { accountCore: Address }
 ): KuruContractRequest<typeof accountCoreAbi> {
   return accountCoreRequest(params.accountCore, "transferBetweenAccounts", [
-    params.fromAccount,
-    params.toAccount,
+    params.fromAccountId,
+    params.toAccountId,
     params.token,
     params.amount
   ]);
@@ -153,10 +148,23 @@ export function buildRevokeBuilderRequest(
   return accountCoreRequest(params.accountCore, "revokeBuilder", [params.builder]);
 }
 
-export function buildClaimBuilderFeesRequest(
-  params: ClaimBuilderFeesParams & { accountCore: Address }
+export function buildCreateSubaccountRequest(
+  params: CreateSubaccountParams & { accountCore: Address }
 ): KuruContractRequest<typeof accountCoreAbi> {
-  return accountCoreRequest(params.accountCore, "claimBuilderFees", [params.asset]);
+  return accountCoreRequest(params.accountCore, "createSubaccount", [params.rootOwner]);
+}
+
+export function buildCreateSubaccountBySigRequest(
+  params: CreateSubaccountBySigParams & { accountCore: Address }
+): KuruContractRequest<typeof accountCoreAbi> {
+  return accountCoreRequest(params.accountCore, "createSubaccountBySig", [
+    params.rootOwner,
+    params.authorizer,
+    params.subaccountSeq,
+    params.authNonce,
+    params.deadline,
+    params.signature
+  ]);
 }
 
 export function buildSetPostFillHookAccessRequest(

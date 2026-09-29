@@ -1,4 +1,4 @@
-import { spotOrderBookAbi } from "../generated";
+import { orderBookAbi } from "../generated";
 import type { KuruClientConfig, WriteOverrides } from "../types";
 import { executeWrite, readContract } from "../utils";
 import {
@@ -45,70 +45,77 @@ export function createSpotClient(config: KuruClientConfig) {
     getMarketParams: (params: { market: `0x${string}` }) =>
       readContract(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getMarketParams",
+        args: []
+      }),
+    getBaseSizeMultiplier: (params: { market: `0x${string}` }) =>
+      readContract<bigint>(config, {
+        address: params.market,
+        abi: orderBookAbi,
+        functionName: "baseSizeMultiplier",
         args: []
       }),
     bestBidAsk: (params: { market: `0x${string}` }) =>
       readContract<readonly [bigint, bigint]>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "bestBidAsk",
         args: []
       }),
     getL2Book: (params: { market: `0x${string}`; levels: bigint }) =>
       readContract(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getL2Book",
         args: [params.levels]
       }),
     getOrderId: (params: UserMarketParams & { slotIdx: number }) =>
       readContract<bigint>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getOrderId",
         args: [params.userId, params.slotIdx]
       }),
     getOrderMinSizeAfterBlock: (params: UserMarketParams & { slotIdx: number }) =>
       readContract<bigint>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getOrderMinSizeAfterBlock",
         args: [params.userId, params.slotIdx]
       }),
     getPostFillHook: (params: UserMarketParams) =>
       readContract<`0x${string}`>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getPostFillHook",
         args: [params.userId]
       }),
     getPostFillHookGasLimit: (params: { market: `0x${string}` }) =>
       readContract<bigint>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "postFillHookGasLimit",
         args: []
       }),
     getPostFillHookMinQuoteNotional: (params: { market: `0x${string}` }) =>
       readContract<bigint>(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "postFillHookMinQuoteNotional",
         args: []
       }),
     getPassiveBand: (params: { market: `0x${string}`; lowPrice: bigint }) =>
       readContract(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getPassiveBand",
         args: [params.lowPrice]
       }),
     getPassivePosition: (params: { market: `0x${string}`; positionId: bigint }) =>
       readContract(config, {
         address: params.market,
-        abi: spotOrderBookAbi,
+        abi: orderBookAbi,
         functionName: "getPassivePosition",
         args: [params.positionId]
       }),
