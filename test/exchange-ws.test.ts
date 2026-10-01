@@ -50,6 +50,10 @@ class FixtureWriter {
     return this.unsigned(value, 16);
   }
 
+  u256(value: bigint): this {
+    return this.unsigned(value, 32);
+  }
+
   i128(value: bigint): this {
     return this.signed(value, 16);
   }
@@ -326,7 +330,7 @@ describe("Exchange WebSocket binary decoder", () => {
       blockContext(writer);
       writer.u32(1).u8(3);
       userOrderSource(writer);
-      writer.u64(7n).hex(MARKET_B).u64(12n).u8(7).u64(1_700_000_000n);
+      writer.u64(7n).hex(MARKET_B).u64(12n).u8(7).u64(7n).zeros(32).u8(0).zeros(32).u8(0).u64(1_700_000_000n);
     });
     expect(decodeUserOrdersFrame(delta)).toEqual({
       wireVersion: 1,
@@ -342,6 +346,7 @@ describe("Exchange WebSocket binary decoder", () => {
       events: [
         {
           kind: "cancelled",
+          action: { accountId: 7n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
           blockTimestamp: 1_700_000_000n,
           source: {
             txHash: TX_HASH,
@@ -362,11 +367,11 @@ describe("Exchange WebSocket binary decoder", () => {
     const unknown = frame(7, 3, 0, (writer) => {
       userContext(writer);
       blockContext(writer);
-      writer.u32(1).u8(5);
+      writer.u32(1).u8(6);
       userOrderSource(writer);
       writer.u64(7n).hex(MARKET_A).u64(11n).u8(2).u64(1_700_000_000n);
     });
-    expect(() => decodeUserOrdersFrame(unknown)).toThrow(/Unknown user-order event code 5/);
+    expect(() => decodeUserOrdersFrame(unknown)).toThrow(/Unknown user-order event code 6/);
 
     const truncated = frame(7, 3, 0, (writer) => {
       userContext(writer);
@@ -382,11 +387,22 @@ describe("Exchange WebSocket binary decoder", () => {
     const balances = frame(8, 2, 0, (writer) => {
       userContext(writer);
       blockContext(writer);
-      writer.u32(1).zeros(12).hex(TOKEN).u128(123n).u128(456n);
+      writer
+        .u32(1)
+        .zeros(12)
+        .hex(TOKEN)
+        .u256((1n << 128n) + 123n)
+        .u256((1n << 256n) - 1n);
     });
     expect(decodeUserBalancesFrame(balances)).toMatchObject({
       snapshot: false,
-      balances: [{ tokenAddress: TOKEN, freeBalance: 123n, reservedBalance: 456n }]
+      balances: [
+        {
+          tokenAddress: TOKEN,
+          freeBalance: (1n << 128n) + 123n,
+          reservedBalance: (1n << 256n) - 1n
+        }
+      ]
     });
   });
 
@@ -416,6 +432,7 @@ describe("Exchange WebSocket binary decoder", () => {
         .u32(100)
         .u32(50)
         .u8(0)
+        .u64(7n).zeros(32).u8(0).zeros(32).u8(0)
         .u64(1_700_000_000n)
         .hex(MARKET_B)
         .u64(8n)
@@ -434,6 +451,7 @@ describe("Exchange WebSocket binary decoder", () => {
         .u32(123)
         .u32(456)
         .u8(1)
+        .u64(7n).zeros(32).u8(0).zeros(32).u8(10).u8(4).u8(8)
         .u64(1_700_000_000n);
     });
 
@@ -460,6 +478,7 @@ describe("Exchange WebSocket binary decoder", () => {
         logIdx: 34,
         effectiveTakerFeePps: 100,
         builderFeePps: 50,
+        action: { accountId: 7n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
         matchEnd: false
       },
       {
@@ -481,6 +500,7 @@ describe("Exchange WebSocket binary decoder", () => {
         logIdx: 78,
         effectiveTakerFeePps: 123,
         builderFeePps: 456,
+        action: { accountId: 7n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: { outcome: 10, operationIndex: 4, replacementSlot: 8 },
         matchEnd: true
       }
     ]);
@@ -546,10 +566,7 @@ describe("Exchange WebSocket binary decoder", () => {
       decodeExchangeWsMessage({
         arrayBuffer() {
           return Promise.resolve(
-            envelope.buffer.slice(
-              envelope.byteOffset,
-              envelope.byteOffset + envelope.byteLength
-            )
+            envelope.buffer.slice(envelope.byteOffset, envelope.byteOffset + envelope.byteLength)
           );
         }
       })
@@ -584,7 +601,7 @@ describe("Exchange WebSocket binary decoder", () => {
     const invalidPadding = frame(8, 3, 0, (writer) => {
       userContext(writer);
       blockContext(writer);
-      writer.u32(1).u8(1).zeros(11).hex(TOKEN).u128(1n).u128(2n);
+      writer.u32(1).u8(1).zeros(11).hex(TOKEN).u256(1n).u256(2n);
     });
     expect(() => decodeExchangeWsFrame(invalidPadding)).toThrow(/left padding/);
   });

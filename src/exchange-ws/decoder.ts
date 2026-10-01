@@ -28,6 +28,9 @@ import type {
   ExchangeWsUserBalance,
   ExchangeWsUserBalancesFrame,
   ExchangeWsUserContext,
+  ExchangeWsAction,
+  ExchangeWsOperation,
+  ExchangeWsOperationOutcome,
   ExchangeWsUserOrder,
   ExchangeWsUserOrderEvent,
   ExchangeWsUserOrderSource,
@@ -134,6 +137,12 @@ class ByteReader {
     const high = this.readU64(`${field} high word`);
     const low = this.readU64(`${field} low word`);
     return (high << 64n) | low;
+  }
+
+  readU256(field: string): bigint {
+    const high = this.readU128(`${field} high half`);
+    const low = this.readU128(`${field} low half`);
+    return (high << 128n) | low;
   }
 
   readI128(field: string): bigint {
@@ -649,7 +658,7 @@ function decodeUserOrderSource(reader: ByteReader, index: number): ExchangeWsUse
 
 function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUserOrderEvent {
   const code = reader.readU8(`user-order event ${index} code`);
-  if (code < 1 || code > 4) {
+  if (code < 1 || code > 5) {
     invalidFrame(`Unknown user-order event code ${code}.`);
   }
   const source = decodeUserOrderSource(reader, index);
@@ -660,22 +669,29 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       source,
       makerId,
       ...decodeUserOrder(reader, index),
+      action: decodeAction(reader),
+      operation: decodeOperation(reader),
       blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
   if (code === 2) {
+    return { kind: "trade", source, ...decodeUserTrade(reader, index) };
+  }
+  if (code === 5) {
+    const marketAddress = reader.readAddress("sentinel market");
+    const action = decodeAction(reader);
+    const operation = decodeOperation(reader);
+    if (operation === null || ![3, 5, 6, 9].includes(operation.outcome)) {
+      return invalidFrame("Invalid book sentinel outcome.");
+    }
     return {
-      kind: "trade",
+      kind: "operation-sentinel",
       source,
-      takerId: reader.readU64(`user-order event ${index} taker user ID`),
-      makerId: reader.readU64(`user-order event ${index} maker user ID`),
-      marketAddress: reader.readAddress(`user-order event ${index} market address`),
-      orderId: reader.readU64(`user-order event ${index} order ID`),
-      tradeId: reader.readU64(`user-order event ${index} trade ID`),
-      slotIdx: reader.readU8(`user-order event ${index} slot index`),
-      filledSize: reader.readU128(`user-order event ${index} filled size`),
-      updatedSize: reader.readU128(`user-order event ${index} updated size`),
-      blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
+      marketAddress,
+      action,
+      operation,
+      slotIdx: reader.readU8("sentinel slot"),
+      blockTimestamp: reader.readU64("sentinel block timestamp")
     };
   }
   if (code === 3) {
@@ -686,6 +702,8 @@ function decodeUserOrderEvent(reader: ByteReader, index: number): ExchangeWsUser
       marketAddress: reader.readAddress(`user-order event ${index} market address`),
       orderId: reader.readU64(`user-order event ${index} order ID`),
       slotIdx: reader.readU8(`user-order event ${index} slot index`),
+      action: decodeAction(reader),
+      operation: decodeOperation(reader),
       blockTimestamp: reader.readU64(`user-order event ${index} block timestamp`)
     };
   }
@@ -762,8 +780,8 @@ function decodeTokenAddress(reader: ByteReader, field: string): Address {
 function decodeUserBalance(reader: ByteReader, index: number): ExchangeWsUserBalance {
   return {
     tokenAddress: decodeTokenAddress(reader, `user balance ${index} token address`),
-    freeBalance: reader.readU128(`user balance ${index} free balance`),
-    reservedBalance: reader.readU128(`user balance ${index} reserved balance`)
+    freeBalance: reader.readU256(`user balance ${index} free balance`),
+    reservedBalance: reader.readU256(`user balance ${index} reserved balance`)
   };
 }
 
@@ -782,7 +800,7 @@ function decodeUserBalances(
     ? decodeOptionalBlockContext(reader, "state head")
     : decodeBlockContext(reader, "source");
   const count = reader.readU32("user-balance count");
-  assertCountFits(reader, count, 64, "user-balance count");
+  assertCountFits(reader, count, 96, "user-balance count");
   const balances: ExchangeWsUserBalance[] = [];
   for (let index = 0; index < count; index++) {
     balances.push(decodeUserBalance(reader, index));
@@ -825,34 +843,69 @@ function decodeUserTradeLiquidity(reader: ByteReader, index: number): ExchangeWs
   return invalidFrame(`Unknown user-trade liquidity code ${code}.`);
 }
 
+function decodeAction(reader: ByteReader): ExchangeWsAction {
+  const accountId = reader.readU64("action account ID");
+  const executor = decodeTokenAddress(reader, "action executor");
+  const hasClientId = reader.readBoolean("action client ID presence");
+  const clientId = reader.readHex(32, "action client ID");
+  return { accountId, executor, clientOrderId: hasClientId ? clientId : null };
+}
+
+function decodeOperation(reader: ByteReader): ExchangeWsOperation | null {
+  const outcome = reader.readU8("operation outcome");
+  if (outcome === 0) return null;
+  if (outcome > 10) return invalidFrame(`Unknown operation outcome ${outcome}.`);
+  return {
+    outcome: outcome as ExchangeWsOperationOutcome,
+    operationIndex: reader.readU8("operation index")
+  };
+}
+
+function decodeTradeOperation(reader: ByteReader): ExchangeWsUserTrade["operation"] {
+  const operation = decodeOperation(reader);
+  return operation === null
+    ? null
+    : { ...operation, replacementSlot: reader.readU8("replacement slot") };
+}
+
+function decodeUserTrade(reader: ByteReader, index: number): ExchangeWsUserTrade {
+  const trade: ExchangeWsUserTrade = {
+    marketAddress: reader.readAddress(`user trade ${index} market address`),
+    tradeId: reader.readU64(`user trade ${index} ID`),
+    recordIndex: reader.readU16(`user trade ${index} record index`),
+    users: [
+      reader.readU64(`user trade ${index} taker user ID`),
+      reader.readU64(`user trade ${index} maker user ID`)
+    ],
+    takerSide: decodeSide(reader.readU8(`user trade ${index} taker side`), "user trade taker"),
+    price: reader.readI64(`user trade ${index} price pp`),
+    baseFilled: reader.readU128(`user trade ${index} base filled`),
+    liquidity: decodeUserTradeLiquidity(reader, index),
+    txHash: reader.readHex(32, `user trade ${index} transaction hash`),
+    txIdx: reader.readU32(`user trade ${index} transaction index`),
+    logIdx: reader.readU32(`user trade ${index} log index`),
+    effectiveTakerFeePps: reader.readU32(`user trade ${index} effective taker fee PPS`),
+    builderFeePps: reader.readU32(`user trade ${index} builder fee PPS`),
+    matchEnd: reader.readBoolean(`user trade ${index} match end`),
+    action: decodeAction(reader),
+    operation: decodeTradeOperation(reader),
+    blockTimestamp: reader.readU64(`user trade ${index} block timestamp`)
+  };
+  if (trade.operation !== null && !trade.matchEnd) {
+    return invalidFrame("Trade outcome requires matchEnd.");
+  }
+  return trade;
+}
+
 function decodeUserTrades(reader: ByteReader, header: DecodedHeader): ExchangeWsUserTradesFrame {
   assertFlags(header.flags, 0, "user trades");
   const user = decodeUserContext(reader);
   const sourceBlock = decodeBlockContext(reader, "source");
   const count = reader.readU32("user-trade count");
-  assertCountFits(reader, count, 153, "user-trade count");
+  assertCountFits(reader, count, 227, "user-trade count");
   const trades: ExchangeWsUserTrade[] = [];
   for (let index = 0; index < count; index++) {
-    trades.push({
-      marketAddress: reader.readAddress(`user trade ${index} market address`),
-      tradeId: reader.readU64(`user trade ${index} ID`),
-      recordIndex: reader.readU16(`user trade ${index} record index`),
-      users: [
-        reader.readU64(`user trade ${index} taker user ID`),
-        reader.readU64(`user trade ${index} maker user ID`)
-      ],
-      takerSide: decodeSide(reader.readU8(`user trade ${index} taker side`), "user trade taker"),
-      price: reader.readI64(`user trade ${index} price pp`),
-      baseFilled: reader.readU128(`user trade ${index} base filled`),
-      liquidity: decodeUserTradeLiquidity(reader, index),
-      txHash: reader.readHex(32, `user trade ${index} transaction hash`),
-      txIdx: reader.readU32(`user trade ${index} transaction index`),
-      logIdx: reader.readU32(`user trade ${index} log index`),
-      effectiveTakerFeePps: reader.readU32(`user trade ${index} effective taker fee PPS`),
-      builderFeePps: reader.readU32(`user trade ${index} builder fee PPS`),
-      matchEnd: reader.readBoolean(`user trade ${index} match end`),
-      blockTimestamp: reader.readU64(`user trade ${index} block timestamp`)
-    });
+    trades.push(decodeUserTrade(reader, index));
   }
   return {
     wireVersion: 1,

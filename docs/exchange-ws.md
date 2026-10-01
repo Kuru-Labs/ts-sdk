@@ -83,7 +83,8 @@ exact predecessor equality for every subsequent frame.
 Market and user trade frames both expose `recordIndex`. The stable identity of a market fill is
 `(marketAddress, tradeId, recordIndex)`; do not substitute its array position inside a batch.
 Each user trade also exposes `users` as `[takerUserId, makerUserId]`. Passive-band fills use `0n`
-for the maker because they have no individual maker; self-fills repeat the same user ID.
+for the maker because they have no individual maker. Active fills have distinct taker
+and maker IDs; contracts prevent self fills.
 
 ## User-order events
 

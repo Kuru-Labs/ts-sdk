@@ -159,27 +159,45 @@ export interface ExchangeWsUserOrderSource {
 }
 
 export interface ExchangeWsUserOrderCreatedEvent extends Omit<ExchangeWsUserOrder, "createdAt"> {
+  action: ExchangeWsAction;
+  operation: ExchangeWsOperation | null;
   kind: "created";
   source: ExchangeWsUserOrderSource;
   blockTimestamp: bigint;
   makerId: bigint;
 }
 
-export interface ExchangeWsUserOrderTradeEvent {
+/** Nonzero operation outcome code defined by the packed contract events. */
+export type ExchangeWsOperationOutcome = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export interface ExchangeWsOperation {
+  outcome: ExchangeWsOperationOutcome;
+  operationIndex: number;
+}
+export interface ExchangeWsTradeOperation extends ExchangeWsOperation {
+  replacementSlot: number;
+}
+export interface ExchangeWsAction {
+  accountId: bigint;
+  executor: Address;
+  clientOrderId: Hex | null;
+}
+export interface ExchangeWsUserOrderTradeEvent extends ExchangeWsUserTrade {
   kind: "trade";
   source: ExchangeWsUserOrderSource;
+}
+export interface ExchangeWsUserOrderSentinelEvent {
+  kind: "operation-sentinel";
+  source: ExchangeWsUserOrderSource;
   blockTimestamp: bigint;
-  takerId: bigint;
-  makerId: bigint;
   marketAddress: Address;
-  orderId: bigint;
-  tradeId: bigint;
+  action: ExchangeWsAction;
+  operation: ExchangeWsOperation;
   slotIdx: number;
-  filledSize: bigint;
-  updatedSize: bigint;
 }
 
 export interface ExchangeWsUserOrderCancelledEvent {
+  action: ExchangeWsAction;
+  operation: ExchangeWsOperation | null;
   kind: "cancelled";
   source: ExchangeWsUserOrderSource;
   blockTimestamp: bigint;
@@ -204,7 +222,8 @@ export type ExchangeWsUserOrderEvent =
   | ExchangeWsUserOrderCreatedEvent
   | ExchangeWsUserOrderTradeEvent
   | ExchangeWsUserOrderCancelledEvent
-  | ExchangeWsUserOrderRabReducedEvent;
+  | ExchangeWsUserOrderRabReducedEvent
+  | ExchangeWsUserOrderSentinelEvent;
 
 export interface ExchangeWsUserOrdersDeltaFrame extends ExchangeWsUserOrdersFrameBase {
   snapshot: false;
@@ -262,6 +281,8 @@ export type ExchangeWsUserTradeLiquidity =
   | ExchangeWsPassiveBandLiquidity;
 
 export interface ExchangeWsUserTrade {
+  action: ExchangeWsAction;
+  operation: ExchangeWsTradeOperation | null;
   /** Canonical source block-header timestamp in Unix seconds. */
   blockTimestamp: bigint;
   marketAddress: Address;
