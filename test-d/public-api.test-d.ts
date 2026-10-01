@@ -129,7 +129,9 @@ if (exchangeFrame.kind === "userOrders" && !exchangeFrame.snapshot) {
   const event = exchangeFrame.events[0];
   event?.source.recordIdx satisfies number | undefined;
   if (event?.kind === "trade") {
-    event.filledSize satisfies bigint;
-    event.updatedSize satisfies bigint;
+    event.baseFilled satisfies bigint;
+    if (event.liquidity.kind === "activeFifo") {
+      event.liquidity.remainingBaseAfter satisfies bigint;
+    }
   }
 }

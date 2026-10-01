@@ -25,6 +25,8 @@ const FIXTURES = [
   ["user-orders-snapshot.bin", "userOrders"],
   ["user-orders-delta.bin", "userOrders"],
   ["user-orders-trade.bin", "userOrders"],
+  ["user-orders-sentinel.bin", "userOrders"],
+  ["user-orders-passive-trade.bin", "userOrders"],
   ["user-orders-cancelled.bin", "userOrders"],
   ["user-orders-rab-reduced.bin", "userOrders"],
   ["user-balances-snapshot.bin", "userBalances"],
@@ -32,7 +34,6 @@ const FIXTURES = [
   ["user-trades.bin", "userTrades"],
   ["user-trades-maker.bin", "userTrades"],
   ["user-trades-mixed-maker.bin", "userTrades"],
-  ["user-trades-self-fill.bin", "userTrades"],
   ["user-trades-passive.bin", "userTrades"]
 ] as const;
 
@@ -144,6 +145,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
     expect(userOrderEvents("user-orders-delta.bin")).toEqual([
       {
         kind: "created",
+        action: { accountId: 1n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
         blockTimestamp: 1_700_000_000n,
         source,
         makerId: 7n,
@@ -162,19 +164,18 @@ describe("Exchange WebSocket Rust golden frames", () => {
         kind: "trade",
         blockTimestamp: 1_700_000_000n,
         source,
-        takerId: 8n,
-        makerId: 7n,
-        marketAddress: `0x${"11".repeat(20)}`,
-        orderId: 11n,
-        tradeId: 12n,
-        slotIdx: 2,
-        filledSize: 13n,
-        updatedSize: 30n
+        marketAddress: `0x${"11".repeat(20)}`, users: [8n, 7n], tradeId: 12n, recordIndex: 2,
+        takerSide: "buy", price: 3n, baseFilled: 13n,
+        liquidity: { kind: "activeFifo", slotIndex: 2, orderId: 11n, makerSide: "sell", remainingBaseAfter: 30n, makerFeePps: 27 },
+        txHash: `0x${"66".repeat(32)}`, txIdx: 12, logIdx: 34, effectiveTakerFeePps: 100, builderFeePps: 50, matchEnd: true,
+        action: { accountId: 8n, executor: `0x${"ab".repeat(20)}`, clientOrderId: `0x${"cd".repeat(32)}` },
+        operation: { outcome: 1, operationIndex: 7, replacementSlot: 255 }
       }
     ]);
     expect(userOrderEvents("user-orders-cancelled.bin")).toEqual([
       {
         kind: "cancelled",
+        action: { accountId: 1n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
         blockTimestamp: 1_700_000_000n,
         source,
         makerId: 7n,
@@ -197,8 +198,19 @@ describe("Exchange WebSocket Rust golden frames", () => {
     ]);
   });
 
+  it("preserves sentinel and passive-fill outcomes without inventing an active order", () => {
+    const sentinel = userOrderEvents("user-orders-sentinel.bin")[0];
+    expect(sentinel).toMatchObject({ kind: "operation-sentinel", action: { accountId: 7n }, operation: { outcome: 3, operationIndex: 9 }, slotIdx: 255 });
+    expect(sentinel).not.toHaveProperty("orderId");
+    const fill = userOrderEvents("user-orders-passive-trade.bin")[0];
+    expect(fill).toMatchObject({ kind: "trade", users: [7n, 0n], liquidity: { kind: "passiveBand" }, operation: { outcome: 10, operationIndex: 4, replacementSlot: 8 }, matchEnd: true });
+    const malformed = fixture("user-orders-sentinel.bin").slice();
+    malformed[228] = 2; // RESTED is not a valid sentinel outcome.
+    expect(() => decodeUserOrdersFrame(malformed)).toThrow(/sentinel outcome/);
+  });
+
   it("rejects malformed and unknown authoritative user-order event codes", () => {
-    for (const code of [0, 5]) {
+    for (const code of [0, 6]) {
       const bytes = fixture("user-orders-delta.bin").slice();
       bytes[92] = code;
       expect(() => decodeUserOrdersFrame(bytes)).toThrow(`Unknown user-order event code ${code}.`);
@@ -233,6 +245,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         logIdx: 34,
         effectiveTakerFeePps: 100,
         builderFeePps: 50,
+        action: { accountId: 7n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
         matchEnd: false
       }
     ]);
@@ -248,10 +261,6 @@ describe("Exchange WebSocket Rust golden frames", () => {
       [7n, 8n],
       [7n, 9n]
     ]);
-
-    const selfFill = decodeUserTradesFrame(fixture("user-trades-self-fill.bin"));
-    expect(selfFill.trades).toHaveLength(1);
-    expect(selfFill.trades[0]?.users).toEqual([7n, 7n]);
 
     const passive = decodeUserTradesFrame(fixture("user-trades-passive.bin"));
     expect(passive.trades).toEqual([
@@ -274,6 +283,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
         logIdx: 78,
         effectiveTakerFeePps: 123,
         builderFeePps: 456,
+        action: { accountId: 7n, executor: `0x${"00".repeat(20)}`, clientOrderId: null }, operation: null,
         matchEnd: true
       }
     ]);
@@ -282,7 +292,7 @@ describe("Exchange WebSocket Rust golden frames", () => {
   it("rejects invalid match flags and truncated fee/source tails", () => {
     for (const name of ["user-trades.bin", "user-trades-passive.bin"]) {
       const bytes = Buffer.from(fixture(name));
-      bytes[bytes.length - 9] = 2;
+      bytes[bytes.length - 83] = 2;
       expect(() => decodeUserTradesFrame(bytes)).toThrow(/match end/);
       const valid = fixture(name);
       expect(() => decodeUserTradesFrame(valid.subarray(0, valid.length - 1))).toThrow();
