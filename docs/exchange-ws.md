@@ -6,7 +6,7 @@ Wire version 1 carries a big-endian `feedEpoch` in every frame. The decoder expo
 sequence cursors are only meaningful within that feed epoch.
 
 ```ts
-import { decodeExchangeWsMessage } from "@kuru-labs/ts-sdk/exchange-ws";
+import { decodeExchangeWsMessage } from "@toxicflow-labs/ts-sdk/exchange-ws";
 
 const socket = new WebSocket("wss://example.test/ws");
 socket.binaryType = "arraybuffer";
@@ -42,7 +42,7 @@ socket.onmessage = async (message) => {
 Topic-specific helpers are available when the subscription already identifies the expected frame:
 
 ```ts
-import { decodeL2BookFrame, decodeUserTradesFrame } from "@kuru-labs/ts-sdk/exchange-ws";
+import { decodeL2BookFrame, decodeUserTradesFrame } from "@toxicflow-labs/ts-sdk/exchange-ws";
 ```
 
 They perform the same validation as the generic decoder and also reject a valid frame of the wrong
