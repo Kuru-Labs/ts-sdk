@@ -20,3 +20,9 @@ export {
   type KuruContractRequest
 } from "./transaction";
 export { requireConfiguredAddress, type AddressKey } from "./address";
+export {
+  getTradingSessions,
+  type TradingSession,
+  type TradingSessionPhase,
+  type TradingSessions
+} from "./trading-sessions";
