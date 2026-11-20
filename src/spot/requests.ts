@@ -1,7 +1,8 @@
 import type { Address } from "viem";
 
-import { orderBookAbi } from "../generated";
-import type { KuruContractRequest } from "../utils";
+import { accountCoreAbi, orderBookAbi } from "../generated";
+import type { KuruClientConfig } from "../types";
+import { readContract, requireConfiguredAddress, type KuruContractRequest } from "../utils";
 import { normalizeNativeOrders } from "./orders";
 import type {
   BatchMintPassiveLiquidityParams,
@@ -9,6 +10,8 @@ import type {
   BurnPassiveLiquidityParams,
   ClaimPassiveFeesParams,
   EstimateSwapParams,
+  LimitOrderSettings,
+  LimitOrderSettingsParams,
   MintPassiveLiquidityParams,
   ReplaceBySlotPackedParams,
   SetPostFillHookGasLimitParams,
@@ -17,6 +20,51 @@ import type {
   SwapParams,
   UserMarketParams
 } from "./types";
+
+export async function getLimitOrderSettings(
+  config: Pick<KuruClientConfig, "publicClient" | "addresses">,
+  { market, accountId }: LimitOrderSettingsParams
+): Promise<LimitOrderSettings> {
+  const accountCore = requireConfiguredAddress(config.addresses, "accountCore");
+  const [tickSize, makerMarketFee, takerMarketFee, feeMultiplier] = await Promise.all([
+    readContract<number>(config, { address: market, abi: orderBookAbi, functionName: "tickSize" }),
+    readContract<bigint>(config, {
+      address: market,
+      abi: orderBookAbi,
+      functionName: "makerFeePps"
+    }),
+    readContract<bigint>(config, {
+      address: market,
+      abi: orderBookAbi,
+      functionName: "takerFeePps"
+    }),
+    readContract<bigint>(config, {
+      address: accountCore,
+      abi: accountCoreAbi,
+      functionName: "PPS_MULTIPLIER"
+    })
+  ]);
+  const [effectiveMakerFeePps, effectiveTakerFeePps] = await Promise.all([
+    readContract<number>(config, {
+      address: accountCore,
+      abi: accountCoreAbi,
+      functionName: "effectiveSpotMakerFeePps",
+      args: [accountId, makerMarketFee]
+    }),
+    readContract<number>(config, {
+      address: accountCore,
+      abi: accountCoreAbi,
+      functionName: "effectiveSpotTakerFeePps",
+      args: [accountId, takerMarketFee]
+    })
+  ]);
+  return {
+    tickSize: BigInt(tickSize),
+    effectiveMakerFeePps: BigInt(effectiveMakerFeePps),
+    effectiveTakerFeePps: BigInt(effectiveTakerFeePps),
+    feeMultiplier
+  };
+}
 
 function spotRequest(
   market: Address,

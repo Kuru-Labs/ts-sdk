@@ -1,7 +1,8 @@
-import type { Address } from "viem";
+import { encodeFunctionData, type Address } from "viem";
 
 import { NATIVE_TOKEN_ADDRESS } from "../constants";
 import { accountCoreAbi, erc20MetadataAbi } from "../generated";
+import type { KuruClientConfig } from "../types";
 import type { KuruContractRequest } from "../utils";
 import type {
   AuthorizeAccountSignerBySigParams,
@@ -10,9 +11,13 @@ import type {
   BuilderApprovalParams,
   CreateSubaccountParams,
   CreateSubaccountBySigParams,
+  DepositCallParams,
   DepositToOwnerParams,
   DepositParams,
+  EncodedDepositCall,
   Erc20AddressParams,
+  PreparedTransactionRequest,
+  PrepareTokenApprovalParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
@@ -60,6 +65,59 @@ export function buildDepositToOwnerRequest(
     [params.rootOwner, params.token, params.amount],
     isNativeToken(params.token) ? params.amount : undefined
   );
+}
+
+export function encodeDepositCall(
+  params: DepositCallParams & { accountCore: Address }
+): EncodedDepositCall {
+  return {
+    toContractAddress: params.accountCore,
+    toContractCallData: encodeFunctionData({
+      abi: accountCoreAbi,
+      functionName: "deposit",
+      args: [params.owner, params.token, params.amount]
+    })
+  };
+}
+
+export async function prepareTokenApproval(
+  config: Pick<KuruClientConfig, "publicClient">,
+  { owner, token, spender, amount }: PrepareTokenApprovalParams
+): Promise<PreparedTransactionRequest> {
+  await config.publicClient.simulateContract({
+    address: token,
+    abi: erc20MetadataAbi,
+    functionName: "approve",
+    args: [spender, amount],
+    account: owner
+  });
+  return {
+    to: token,
+    data: encodeFunctionData({
+      abi: erc20MetadataAbi,
+      functionName: "approve",
+      args: [spender, amount]
+    }),
+    value: 0n
+  };
+}
+
+export async function prepareDeposit(
+  config: Pick<KuruClientConfig, "publicClient">,
+  { owner, token, amount, accountCore }: DepositCallParams & { accountCore: Address }
+): Promise<PreparedTransactionRequest> {
+  const request = buildDepositToOwnerRequest({
+    accountCore,
+    rootOwner: owner,
+    token,
+    amount
+  });
+  await config.publicClient.simulateContract({ ...request, account: owner } as any);
+  return {
+    to: request.address,
+    data: encodeDepositCall({ owner, token, amount, accountCore }).toContractCallData,
+    value: request.value ?? 0n
+  };
 }
 
 export function buildWithdrawRequest(

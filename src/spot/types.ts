@@ -50,6 +50,22 @@ export interface MarketAddressParam {
   market: Address;
 }
 
+export interface LimitOrderSettingsParams extends MarketAddressParam {
+  accountId: bigint;
+}
+
+export interface LimitOrderSettings {
+  tickSize: bigint;
+  effectiveMakerFeePps: bigint;
+  effectiveTakerFeePps: bigint;
+  feeMultiplier: bigint;
+}
+
+export interface SwapEstimate {
+  amountInUsed: bigint;
+  amountOut: bigint;
+}
+
 export interface UserMarketParams extends MarketAddressParam {
   userId: bigint;
 }

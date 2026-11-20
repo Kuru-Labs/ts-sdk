@@ -1,6 +1,7 @@
 import type { Address } from "viem";
 
-import { accountCoreAbi, erc20MetadataAbi } from "../generated";
+import { NATIVE_TOKEN_ADDRESS } from "../constants";
+import { accountCoreAbi, erc20MetadataAbi, kuruTradingWalletAbi } from "../generated";
 import type { KuruClientConfig, WriteOverrides } from "../types";
 import { executeWrite, readContract, requireConfiguredAddress } from "../utils";
 import {
@@ -17,24 +18,35 @@ import {
   buildRevokeBuilderRequest,
   buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
-  buildWithdrawRequest
+  buildWithdrawRequest,
+  encodeDepositCall,
+  prepareDeposit,
+  prepareTokenApproval
 } from "./requests";
 import type {
   AccountCoreOverride,
   AccountReadParams,
+  AssetBalanceParams,
   AuthorizeAccountSignerBySigParams,
   AuthorizeAccountSignerParams,
   BuilderAddressParams,
   BuilderApprovalParams,
   CreateSubaccountParams,
   CreateSubaccountBySigParams,
+  DelegationState,
+  DelegationStateParams,
+  DepositCallParams,
   DepositToOwnerParams,
   DepositParams,
+  EncodedDepositCall,
   Erc20AddressParams,
+  PreparedTransactionRequest,
+  PrepareTokenApprovalParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
+  TradingWalletNonceParams,
   WithdrawParams
 } from "./types";
 
@@ -64,6 +76,13 @@ export function createAccountClient(config: KuruClientConfig) {
         accountCore: resolveAccountCore(config, params.accountCore)
       }),
     buildApproveErc20Request,
+    encodeDepositCall: (params: DepositCallParams): EncodedDepositCall =>
+      encodeDepositCall({ ...params, accountCore: resolveAccountCore(config) }),
+    prepareTokenApproval: (
+      params: PrepareTokenApprovalParams
+    ): Promise<PreparedTransactionRequest> => prepareTokenApproval(config, params),
+    prepareDeposit: (params: DepositCallParams): Promise<PreparedTransactionRequest> =>
+      prepareDeposit(config, { ...params, accountCore: resolveAccountCore(config) }),
     buildSetPostFillHookAccessRequest: (params: SetPostFillHookAccessParams) =>
       buildSetPostFillHookAccessRequest({
         ...params,
@@ -77,6 +96,36 @@ export function createAccountClient(config: KuruClientConfig) {
         functionName: "getBalance",
         args: [params.accountId, params.token]
       }),
+    getAssetBalance: ({ owner, token }: AssetBalanceParams): Promise<bigint> =>
+      token.toLowerCase() === NATIVE_TOKEN_ADDRESS
+        ? config.publicClient.getBalance({ address: owner })
+        : readContract<bigint>(config, {
+            address: token,
+            abi: erc20MetadataAbi,
+            functionName: "balanceOf",
+            args: [owner]
+          }),
+    getLastSeenOrderNonce: ({ wallet }: TradingWalletNonceParams): Promise<bigint> =>
+      readContract<bigint>(config, {
+        address: wallet,
+        abi: kuruTradingWalletAbi,
+        functionName: "lastSeenOrderNonce",
+        args: []
+      }),
+    getDelegationState: async ({
+      authority,
+      delegate
+    }: DelegationStateParams): Promise<DelegationState> => {
+      const code = await config.publicClient.getCode({ address: authority });
+      if (code?.toLowerCase() === `0xef0100${delegate.slice(2).toLowerCase()}`) {
+        return { isDelegated: true };
+      }
+      const pendingNonce = await config.publicClient.getTransactionCount({
+        address: authority,
+        blockTag: "pending"
+      });
+      return { isDelegated: false, pendingNonce: BigInt(pendingNonce) };
+    },
     getSpotReservedBalance: (params: AccountReadParams) =>
       readContract<bigint>(config, {
         address: resolveAccountCore(config, params.accountCore),
