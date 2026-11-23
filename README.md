@@ -8,6 +8,8 @@ committed in `src/generated`.
 
 ## Quick Start
 
+For frontend integration, see [the migration guide](docs/frontend-migration.md).
+
 ```bash
 pnpm install
 pnpm typecheck

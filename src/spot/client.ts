@@ -15,7 +15,8 @@ import {
   buildSetPostFillHookGasLimitRequest,
   buildSetPostFillHookMinQuoteNotionalRequest,
   buildSetPostFillHookRequest,
-  buildSwapRequest
+  buildSwapRequest,
+  getLimitOrderSettings
 } from "./requests";
 import type {
   BatchMintPassiveLiquidityParams,
@@ -23,12 +24,14 @@ import type {
   BurnPassiveLiquidityParams,
   ClaimPassiveFeesParams,
   EstimateSwapParams,
+  LimitOrderSettingsParams,
   MintPassiveLiquidityParams,
   ReplaceBySlotPackedParams,
   SetPostFillHookGasLimitParams,
   SetPostFillHookMinQuoteNotionalParams,
   SetPostFillHookParams,
   SwapParams,
+  SwapEstimate,
   UserMarketParams
 } from "./types";
 
@@ -41,6 +44,9 @@ export function createSpotClient(config: KuruClientConfig) {
     buildSetPostFillHookGasLimitRequest,
     buildSetPostFillHookMinQuoteNotionalRequest,
     buildSwapRequest,
+
+    getLimitOrderSettings: (params: LimitOrderSettingsParams) =>
+      getLimitOrderSettings(config, params),
 
     getMarketParams: (params: { market: `0x${string}` }) =>
       readContract(config, {
@@ -119,8 +125,8 @@ export function createSpotClient(config: KuruClientConfig) {
         functionName: "getPassivePosition",
         args: [params.positionId]
       }),
-    estimateSwap: (params: EstimateSwapParams) =>
-      readContract(config, buildEstimateSwapRequest(params)),
+    estimateSwap: (params: EstimateSwapParams): Promise<SwapEstimate> =>
+      readContract<SwapEstimate>(config, buildEstimateSwapRequest(params)),
 
     batch: (params: BatchParams) =>
       executeWrite({

@@ -11,6 +11,22 @@ export interface AccountReadParams extends AccountCoreOverride {
   token: Address;
 }
 
+export interface AssetBalanceParams {
+  owner: Address;
+  token: Address;
+}
+
+export interface TradingWalletNonceParams {
+  wallet: Address;
+}
+
+export interface DelegationStateParams {
+  authority: Address;
+  delegate: Address;
+}
+
+export type DelegationState = { isDelegated: true } | { isDelegated: false; pendingNonce: bigint };
+
 export interface DepositParams extends AccountCoreOverride, WriteOverrides {
   rootAccountId: bigint;
   token: Address;
@@ -19,6 +35,28 @@ export interface DepositParams extends AccountCoreOverride, WriteOverrides {
 
 export interface DepositToOwnerParams extends Omit<DepositParams, "rootAccountId"> {
   rootOwner: Address;
+}
+
+export interface DepositCallParams {
+  owner: Address;
+  token: Address;
+  amount: bigint;
+}
+
+export interface EncodedDepositCall {
+  toContractAddress: Address;
+  toContractCallData: Hex;
+  value: bigint;
+}
+
+export interface PrepareTokenApprovalParams extends DepositCallParams {
+  spender: Address;
+}
+
+export interface PreparedTransactionRequest {
+  to: Address;
+  data: Hex;
+  value: bigint;
 }
 
 export interface WithdrawParams extends AccountCoreOverride, WriteOverrides {

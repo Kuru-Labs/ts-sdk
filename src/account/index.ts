@@ -15,7 +15,10 @@ export {
   buildSetPostFillHookAccessRequest,
   buildTransferBetweenAccountsRequest,
   buildWithdrawRequest,
-  isNativeToken
+  encodeDepositCall,
+  isNativeToken,
+  prepareDeposit,
+  prepareTokenApproval
 } from "./requests";
 export {
   accountCoreDomain,
@@ -30,18 +33,26 @@ export {
 export type {
   AccountCoreOverride,
   AccountReadParams,
+  AssetBalanceParams,
   AuthorizeAccountSignerBySigParams,
   AuthorizeAccountSignerParams,
   BuilderAddressParams,
   BuilderApprovalParams,
   CreateSubaccountParams,
   CreateSubaccountBySigParams,
+  DelegationState,
+  DelegationStateParams,
+  DepositCallParams,
   DepositToOwnerParams,
   DepositParams,
+  EncodedDepositCall,
   Erc20AddressParams,
+  PreparedTransactionRequest,
+  PrepareTokenApprovalParams,
   RevokeAccountSignerBySigParams,
   RevokeAccountSignerParams,
   SetPostFillHookAccessParams,
   TransferBetweenAccountsParams,
+  TradingWalletNonceParams,
   WithdrawParams
 } from "./types";

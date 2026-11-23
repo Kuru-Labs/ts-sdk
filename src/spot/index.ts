@@ -33,7 +33,8 @@ export {
   buildSetPostFillHookGasLimitRequest,
   buildSetPostFillHookMinQuoteNotionalRequest,
   buildSetPostFillHookRequest,
-  buildSwapRequest
+  buildSwapRequest,
+  getLimitOrderSettings
 } from "./requests";
 export {
   NativeExecInstruction,
@@ -44,6 +45,8 @@ export {
   type BurnPassiveLiquidityParams,
   type ClaimPassiveFeesParams,
   type EstimateSwapParams,
+  type LimitOrderSettings,
+  type LimitOrderSettingsParams,
   type MarketAddressParam,
   type MintPassiveLiquidityParams,
   type NativeExecInstructionInput,
@@ -61,5 +64,6 @@ export {
   type SetPostFillHookMinQuoteNotionalParams,
   type SetPostFillHookParams,
   type SwapParams,
+  type SwapEstimate,
   type UserMarketParams
 } from "./types";
