@@ -51,7 +51,7 @@ describe("ABI-free frontend methods", () => {
   });
 
   it("simulates approval and deposit before returning ABI-free wallet requests", async () => {
-    const simulateContract = vi.fn().mockResolvedValue({ request: {} });
+    const simulateContract = vi.fn().mockResolvedValue({ result: true, request: {} });
     const client = createKuruClient({
       publicClient: { simulateContract } as any,
       addresses: { accountCore }
@@ -77,6 +77,30 @@ describe("ABI-free frontend methods", () => {
     expect(deposit).toMatchObject({ to: accountCore, value: 9n });
     expect(simulateContract).toHaveBeenCalledTimes(2);
     expect(simulateContract.mock.calls[1]?.[0]).toMatchObject({ account: owner, value: 9n });
+  });
+
+  it("rejects an approval simulation that returns false", async () => {
+    const simulateContract = vi.fn().mockResolvedValue({ result: false, request: {} });
+    const client = createKuruClient({ publicClient: { simulateContract } as any });
+
+    await expect(
+      client.account.prepareTokenApproval({ owner, token, spender: accountCore, amount: 6n })
+    ).rejects.toThrow("Token approval returned false.");
+  });
+
+  it("includes native deposit value in encoded calls", () => {
+    const client = createKuruClient({
+      publicClient: {} as any,
+      addresses: { accountCore }
+    });
+
+    expect(
+      client.account.encodeDepositCall({ owner, token: zeroAddress, amount: 9n })
+    ).toMatchObject({
+      toContractAddress: accountCore,
+      value: 9n
+    });
+    expect(client.account.encodeDepositCall({ owner, token, amount: 9n }).value).toBe(0n);
   });
 
   it("reads a pending nonce only when the wallet is not already delegated", async () => {

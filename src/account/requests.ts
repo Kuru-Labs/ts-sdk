@@ -76,7 +76,8 @@ export function encodeDepositCall(
       abi: accountCoreAbi,
       functionName: "deposit",
       args: [params.owner, params.token, params.amount]
-    })
+    }),
+    value: isNativeToken(params.token) ? params.amount : 0n
   };
 }
 
@@ -84,13 +85,16 @@ export async function prepareTokenApproval(
   config: Pick<KuruClientConfig, "publicClient">,
   { owner, token, spender, amount }: PrepareTokenApprovalParams
 ): Promise<PreparedTransactionRequest> {
-  await config.publicClient.simulateContract({
+  const { result } = await config.publicClient.simulateContract({
     address: token,
     abi: erc20MetadataAbi,
     functionName: "approve",
     args: [spender, amount],
     account: owner
   });
+  if (result === false) {
+    throw new Error("Token approval returned false.");
+  }
   return {
     to: token,
     data: encodeFunctionData({

@@ -46,6 +46,7 @@ export interface DepositCallParams {
 export interface EncodedDepositCall {
   toContractAddress: Address;
   toContractCallData: Hex;
+  value: bigint;
 }
 
 export interface PrepareTokenApprovalParams extends DepositCallParams {
