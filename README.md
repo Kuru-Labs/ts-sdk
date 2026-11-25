@@ -34,6 +34,41 @@ const balance = await kuru.account.getBalance({
 });
 ```
 
+## Underlying Equity Trading Sessions
+
+`getTradingSessions` accepts the market API's `exchangeRegion` and
+`exchangeTimezone`. It returns the scheduled phase and the UTC session windows
+for the current exchange trading date. Pass a `Date` as the third argument to
+evaluate a particular instant.
+
+```ts
+import { getTradingSessions } from "@toxicflow-labs/ts-sdk";
+
+const schedule = getTradingSessions(
+  "US",
+  "America/New_York",
+  new Date("2026-11-17T03:00:00Z")
+);
+// schedule?.status: { phase: "overnight", state: "open" }
+// schedule?.sessions[0]?.startsAt: "2026-11-17T01:00:00Z"
+```
+
+The helper supports U.S. equities in `America/New_York` for published
+2026–2028 trading dates. It uses [NYSE Arca's daytime calendar and early closes](https://www.nyse.com/trade/hours-calendars)
+and [Blue Ocean's overnight hours](https://my.blueocean-tech.io/faq/how-does-blue-oceanats-operate).
+The overnight phase belongs to the following exchange trading date. Session
+starts are inclusive and ends are exclusive. Weekends and holidays return
+`{ phase: null, state: "closed" }` with an empty session list. A gap within a
+trading date returns the same status with that date's scheduled sessions.
+Missing or unsupported market metadata and dates outside the calendar return
+`null`.
+
+This is a schedule for display. Live venue interruptions and symbol-specific
+eligibility require a market data provider. Alpaca offers an authenticated
+[market calendar](https://docs.alpaca.markets/us/reference/calendar-2),
+[market clock](https://docs.alpaca.markets/us/reference/clock-1), and
+[TypeScript SDK](https://github.com/alpacahq/alpaca-trade-api-js/).
+
 ## Contract Artifacts
 
 The SDK is self-contained. Committed ABIs live in `src/generated/abis.ts` and are used by the
